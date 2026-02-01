@@ -1,0 +1,9 @@
+#title: Document with Includes
+
+[#include file="header.pdoc"]
+
+#h2: Main Content
+
+#p: This is the main body of the document.
+
+[#include file="footer.pdoc"]

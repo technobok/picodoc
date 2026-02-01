@@ -45,7 +45,7 @@ code. Changing the grammar after implementation begins is expensive.
       Immutable once set. Inherited through nested calls. Passed to external
       filters in JSON payload
 - [x] Write formal grammar (EBNF notation): `grammar.ebnf`
-- [ ] Create a comprehensive set of example documents that exercise all features
+- [x] Create a comprehensive set of example documents that exercise all features
 - [x] Fix typos and inconsistencies in the spec (spelling, `=p` examples)
 
 **Exit criteria:** A complete, unambiguous grammar specification and a set of
