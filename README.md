@@ -75,6 +75,142 @@ spans multiple lines.
 This is a second paragraph.
 ```
 
+## Installation
+
+Requires **Python 3.14+** and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone <repo-url> picodoc
+cd picodoc
+uv sync            # install core dependencies
+```
+
+To also install the LSP server (for editor diagnostics):
+
+```bash
+uv sync --group dev          # dev group includes picodoc[lsp]
+# or, in a non-dev install:
+uv pip install picodoc[lsp]
+```
+
+Verify the installation:
+
+```bash
+uv run picodoc --help
+```
+
+## Usage
+
+Compile a `.pdoc` file to HTML:
+
+```bash
+uv run picodoc input.pdoc -o output.html
+```
+
+Without `-o`, HTML is written to stdout:
+
+```bash
+uv run picodoc input.pdoc > output.html
+```
+
+### CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `-o FILE` | Write output to FILE instead of stdout |
+| `-e NAME=VALUE` | Set an environment variable (accessible via `#env.NAME`; repeatable) |
+| `--css FILE` | Inject a CSS file into `<head>` (repeatable) |
+| `--js FILE` | Inject a JS file into `<head>` (repeatable) |
+| `--meta NAME=VALUE` | Add a `<meta>` tag (repeatable) |
+| `--filter-path DIR` | Extra directory to search for filters (repeatable) |
+| `--filter-timeout SECS` | Filter execution timeout in seconds (default: 5.0) |
+| `--config FILE` | Config file path (default: auto-discovers `picodoc.toml` next to input) |
+| `--watch` | Watch the input file for changes and recompile on save |
+| `--debug` | Dump the AST to stderr |
+
+### Config File
+
+Place a `picodoc.toml` next to your input file (or point to one with
+`--config`). CLI flags override config values.
+
+```toml
+[env]
+title = "My Document"
+author = "Jane Doe"
+
+[css]
+files = ["style.css", "code.css"]
+
+[js]
+files = ["main.js"]
+
+[meta]
+viewport = "width=device-width, initial-scale=1"
+
+[filters]
+paths = ["./filters"]
+timeout = 10.0
+```
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Syntax error (lex or parse failure) |
+| 2 | Evaluation error or invalid arguments |
+
+## Neovim Setup
+
+The `editor/nvim` directory contains filetype detection, syntax highlighting,
+and filetype settings for PicoDoc. The LSP server provides inline diagnostics.
+
+### Syntax Highlighting
+
+Add the runtime path to your `init.lua`:
+
+```lua
+vim.opt.runtimepath:append("/path/to/picodoc/editor/nvim")
+```
+
+This gives you:
+
+- **Filetype detection** -- `.pdoc` files are recognised as `picodoc`.
+- **Comment toggling** -- `gc` (via built-in or comment plugin) uses the
+  `#comment:` form.
+- **Syntax groups** -- structural macros (`#title`, `#h2`, `#p`, ...),
+  conditionals (`#set`, `#ifeq`, `#include`, ...), inline macros (`#b`,
+  `#i`, `#url`, ...), environment references (`#env.NAME`), strings,
+  escape sequences, arguments, and brackets are all highlighted.
+
+### LSP Diagnostics
+
+Requires the `picodoc[lsp]` extra (see Installation). Add this to your
+`init.lua` (Neovim 0.11+):
+
+```lua
+vim.lsp.config("picodoc", {
+  cmd = { "/path/to/picodoc/.venv/bin/picodoc-lsp" },
+  filetypes = { "picodoc" },
+  root_markers = { "picodoc.toml", "pyproject.toml" },
+})
+vim.lsp.enable("picodoc")
+```
+
+Replace `/path/to/picodoc/.venv/bin/picodoc-lsp` with the actual path to the
+`picodoc-lsp` binary inside your virtualenv.
+
+What the LSP provides:
+
+- **Error diagnostics** (red squiggles) for lex and parse errors -- reported
+  as you type with the exact source span.
+- **Warning diagnostics** (yellow squiggles) for evaluation errors -- includes
+  the macro expansion call stack when applicable.
+
+To verify it works, open a `.pdoc` file and introduce a syntax error (e.g.
+an unclosed bracket). A diagnostic should appear inline. Check `:LspInfo`
+to confirm the server is attached.
+
 ## Comparison to Similar Languages
 
 ### Feature Matrix
