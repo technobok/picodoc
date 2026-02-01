@@ -22,8 +22,8 @@ code. Changing the grammar after implementation begins is expensive.
       Strings: `\\ \" \[ \n \t \xHH \UHHHHHHHH`
       (`\[` enters code mode in strings, literal `[` in prose)
 - [x] Define macro expansion order: recursive multi-pass AST walking with
-      global max depth (configurable, default ~64) and per-macro `depth:`
-      parameter on `#set` (`depth=N`)
+      convergence-based termination (expand until only text + render-time
+      builtins remain) and global max call stack depth (default ~64)
 - [x] Out-of-order definitions: macros may be used before defined; all `#set`
       definitions collected in first pass before resolution
 - [x] Duplicate definitions at same scope are an immediate error
@@ -40,7 +40,7 @@ code. Changing the grammar after implementation begins is expensive.
       macros and external filters do not
 - [x] External filter protocol: JSON on stdin (args + env), PicoDoc markup
       on stdout (re-expanded by evaluator). Filters return markup by default;
-      use `#literal` or `depth=0` for final output
+      use `#literal` to prevent re-expansion of final output
 - [x] `env.*` global environment: defined via CLI, config, or document `#set`.
       Immutable once set. Inherited through nested calls. Passed to external
       filters in JSON payload
@@ -131,7 +131,7 @@ HTML Renderer:
 
 Implement the `#set` macro for user-defined macros within documents.
 
-- [ ] Implement `#set` parsing (dynamic parameter list, optional `depth:`)
+- [ ] Implement `#set` parsing (dynamic parameter list)
 - [ ] Implement definition collection pass (gather all `#set` nodes)
 - [ ] Implement out-of-order definition resolution
 - [ ] Implement duplicate definition detection (same scope = immediate error)
@@ -155,16 +155,15 @@ the AST.
 
 - [ ] Implement multi-pass AST walker (walk, expand, mark complete, re-walk)
 - [ ] Implement convergence detection (terminate when no nodes changed)
-- [ ] Implement global max recursion depth (configurable via CLI/config,
+- [ ] Implement global max call stack depth (configurable via CLI/config,
       default ~64)
-- [ ] Implement per-macro `depth:` limit (0 = output is final, no re-expansion)
 - [ ] Implement argument binding and scope creation at call sites
 - [ ] Implement `env.*` global environment
-- [ ] Handle expansion errors (undefined macro, depth limit exceeded, with
-      context: which macro, expansion chain)
+- [ ] Handle expansion errors (undefined macro, call stack limit exceeded,
+      with context: which macro, expansion chain)
 - [ ] Implement `--debug` flag to dump AST state after each expansion pass
 - [ ] Test suite: expansion of nested calls, scope isolation, env inheritance,
-      depth limits, convergence, mutual recursion detection
+      call stack limits, convergence, mutual recursion detection
 
 **Exit criteria:** Full pipeline works end-to-end: source -> tokens -> AST ->
 collected definitions -> resolved defaults -> expanded AST -> HTML.

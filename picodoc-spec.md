@@ -256,14 +256,12 @@
   the macro call at the call site
 - macro expansion uses recursive multi-pass AST walking. After parsing, the
   evaluator walks the AST expanding macro nodes, marks fully-expanded nodes as
-  complete, and re-walks until all nodes are resolved or the depth limit is hit
-- a global max recursion depth (configurable via CLI/config) catches infinite
-  or excessive expansion. A sensible default (eg 64) is used if not specified
-- individual macros may specify a 'depth' parameter in their #set definition
-  to limit output re-expansion depth. depth=0 means the macro's output is
-  final text and will not be re-parsed for further macro calls. If unset, the
-  global limit applies. Depth tracks full call stack depth; self-recursion is
-  not considered separately
+  complete, and re-walks until convergence: when the AST contains only text
+  nodes and render-time builtins, expansion is complete
+- a global max call stack depth (configurable via CLI/config) catches infinite
+  or excessive recursion. A sensible default (eg 64) is used if not specified
+- macros that produce text which should not be re-expanded can wrap their
+  output in #literal to prevent further expansion
 - out-of-order definition and use is allowed: macros may be used before they
   are defined in the document. The compiler collects all #set definitions in a
   first pass before resolving and expanding
@@ -430,8 +428,8 @@ Examples:
 - a filter that wants to return final HTML can wrap its output in #literal
   to prevent further expansion. A filter returning plain text with no macro
   calls passes through unchanged
-- the depth parameter on the filter's macro registration applies: depth=0
-  means the output is treated as final text regardless
+- a filter that wants to prevent re-expansion of its output can wrap it in
+  #literal
 - filter discovery: the converter checks a filters/ directory alongside the
   document, then a configured filter path, then $PATH. The executable name
   maps to the macro name (or is configured via a registry/config file)

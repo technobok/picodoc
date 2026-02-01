@@ -197,26 +197,23 @@ evaluator:
    require expansion passes).
 3. **Walks** the AST, expanding macro nodes and marking fully-expanded nodes
    as complete.
-4. **Re-walks** until all nodes are resolved or the depth limit is reached.
+4. **Re-walks** until convergence: the AST contains only text nodes and
+   render-time builtins.
 
 Key rules:
 
-- **Global max recursion depth** (configurable via CLI/config, sensible default
-  e.g. 64) catches infinite or excessive expansion.
-- **Per-macro depth** via `depth=N` parameter on `#set`. `depth=0` means the
-  macro's output is final text (no re-expansion). Unset inherits the global
-  limit. Depth tracks full call stack depth; self-recursion is not treated
-  separately.
+- **Convergence-based termination.** Expansion is complete when no unexpanded
+  macro calls remain — only text and render-time builtins survive.
+- **Global max call stack depth** (configurable via CLI/config, sensible default
+  e.g. 64) catches infinite or excessive recursion.
+- **`#literal`** prevents re-expansion: macros that produce text which should
+  not be re-parsed can wrap their output in `#literal`.
 - **Out-of-order definitions** are allowed: macros may be used before they are
   defined in the document. All definitions are collected before resolution.
 - **Duplicate definitions** at the same scope are an immediate error.
 - **Default values** are evaluated during the resolution pass (after all
   definitions are collected), not at definition time. Default value evaluation
   may itself require multiple expansion passes.
-- **`#set` inside macro bodies**: under discussion. If allowed, definitions
-  would be scoped to that expansion and lower scopes, and out-of-order rules
-  would apply within the body. Alternatively, `#set` could be restricted to
-  top-level only, consistent with the flat namespace.
 
 **7. Identifier character set narrowed.**
 
