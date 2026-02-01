@@ -24,34 +24,16 @@ PHASE3_EXAMPLES = [
 ]
 
 PHASE4_EXAMPLES = [
-    pytest.param(
-        "03-strings",
-        "03-strings.pdoc",
-        "03-strings.html",
-        id="03-strings",
-        marks=pytest.mark.skip(reason="Phase 4: user macro expansion"),
-    ),
-    pytest.param(
-        "04-user-macros",
-        "04-user-macros.pdoc",
-        "04-user-macros.html",
-        id="04-user-macros",
-        marks=pytest.mark.skip(reason="Phase 4: user macro expansion"),
-    ),
-    pytest.param(
-        "07-conditionals",
-        "07-conditionals.pdoc",
-        "07-conditionals.html",
-        id="07-conditionals",
-        marks=pytest.mark.skip(reason="Phase 4: user macro expansion"),
-    ),
+    ("03-strings", "03-strings.pdoc", "03-strings.html"),
+    ("04-user-macros", "04-user-macros.pdoc", "04-user-macros.html"),
+    ("07-conditionals", "07-conditionals.pdoc", "07-conditionals.html"),
 ]
 
 
 @pytest.mark.parametrize(
     "name,pdoc,html",
     PHASE3_EXAMPLES + PHASE4_EXAMPLES,
-    ids=[e[0] for e in PHASE3_EXAMPLES] + [None] * len(PHASE4_EXAMPLES),
+    ids=[e[0] for e in PHASE3_EXAMPLES + PHASE4_EXAMPLES],
 )
 def test_example(name: str, pdoc: str, html: str) -> None:
     pdoc_path = EXAMPLES_DIR / pdoc

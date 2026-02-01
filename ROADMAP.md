@@ -131,18 +131,18 @@ HTML Renderer:
 
 Implement the `#set` macro for user-defined macros within documents.
 
-- [ ] Implement `#set` parsing (dynamic parameter list)
-- [ ] Implement definition collection pass (gather all `#set` nodes)
-- [ ] Implement out-of-order definition resolution
-- [ ] Implement duplicate definition detection (same scope = immediate error)
-- [ ] Implement default argument values (evaluated during resolution pass,
+- [x] Implement `#set` parsing (dynamic parameter list)
+- [x] Implement definition collection pass (gather all `#set` nodes)
+- [x] Implement out-of-order definition resolution
+- [x] Implement duplicate definition detection (same scope = immediate error)
+- [x] Implement default argument values (evaluated during resolution pass,
       after all definitions collected; may require multiple expansion passes)
-- [ ] Implement required argument validation (`?` marker)
-- [ ] Implement the `body` parameter in user macros
-- [ ] Implement flat namespace with dot convention
-- [ ] Implement variable/constant macros (zero-argument `#set`)
-- [ ] Implement scope shadowing rules
-- [ ] Test suite: macro definition, invocation, default values, shadowing,
+- [x] Implement required argument validation (`?` marker)
+- [x] Implement the `body` parameter in user macros
+- [x] Implement flat namespace with dot convention
+- [x] Implement variable/constant macros (zero-argument `#set`)
+- [x] Implement scope shadowing rules
+- [x] Test suite: macro definition, invocation, default values, shadowing,
       out-of-order use, duplicate detection, error cases
 
 **Exit criteria:** User-defined macros work correctly, including out-of-order

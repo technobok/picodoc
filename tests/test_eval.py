@@ -8,6 +8,7 @@ import pytest
 
 from picodoc.ast import (
     Body,
+    CodeSection,
     Document,
     Escape,
     InterpString,
@@ -15,6 +16,7 @@ from picodoc.ast import (
     NamedArg,
     Paragraph,
     RawString,
+    RequiredMarker,
     Text,
 )
 from picodoc.errors import EvalError
@@ -342,3 +344,211 @@ class TestValueResolution:
         ctx.definitions["version"] = _call("set", body=_body(_text("1.0")))
         ref = _call("version")
         assert _resolve_value(ref, ctx) == "1.0"
+
+
+def _req() -> RequiredMarker:
+    return RequiredMarker(S)
+
+
+def _narg(
+    name: str,
+    value: Text | InterpString | RawString | MacroCall | RequiredMarker,
+) -> NamedArg:
+    return NamedArg(name, value, S, S)
+
+
+def _body_text(node: MacroCall) -> str:
+    """Extract concatenated text from a MacroCall's Body children."""
+    assert isinstance(node.body, Body)
+    return "".join(c.value for c in node.body.children if isinstance(c, (Text, Escape)))
+
+
+class TestUserMacro:
+    def test_simple_variable(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "version"),), _body(_text("1.0"))),
+            _call("p", body=_body(_text("v="), _call("version"))),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "v=1.0"
+
+    def test_variable_trailing_dot(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "version"),), _body(_text("1.0"))),
+            _call("p", body=_body(_text("v="), _call("version."))),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "v=1.0."
+
+    def test_macro_with_required_args(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "greeting"), _narg("target", _req()), _narg("body", _req())),
+            _body(_text("Dear "), _call("target"), _text(", "), _call("body")),
+        )
+        wrapper = _call(
+            "p",
+            body=_body(
+                _call(
+                    "greeting",
+                    (_arg("target", "World"),),
+                    _body(_text("hello")),
+                    bracketed=True,
+                )
+            ),
+        )
+        doc = _doc(defn, wrapper)
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "Dear World, hello"
+
+    def test_macro_with_defaults(self) -> None:
+        defn = _call(
+            "set",
+            (
+                _arg("name", "box"),
+                _narg("style", _text("default")),
+                _narg("body", _req()),
+            ),
+            _body(_text("("), _call("style"), _text(") "), _call("body")),
+        )
+        # Call with default style
+        call1 = _call("box", (), _body(_text("content")), bracketed=True)
+        # Call with explicit style
+        call2 = _call("box", (_arg("style", "fancy"),), _body(_text("other")), bracketed=True)
+        doc = _doc(
+            defn,
+            _call("p", body=_body(call1)),
+            _call("p", body=_body(call2)),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "(default) content"
+        assert _body_text(result.children[1]) == "(fancy) other"
+
+    def test_out_of_order_definition(self) -> None:
+        doc = _doc(
+            _call("p", body=_body(_call("project"))),
+            _call("set", (_arg("name", "project"),), _body(_text("PicoDoc"))),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "PicoDoc"
+
+    def test_duplicate_definition(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "x"),), _body(_text("1"))),
+            _call("set", (_arg("name", "x"),), _body(_text("2"))),
+        )
+        with pytest.raises(EvalError, match="duplicate definition: x"):
+            evaluate(doc)
+
+    def test_body_param_binding(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "wrap"), _narg("body", _req())),
+            _body(_text("["), _call("body"), _text("]")),
+        )
+        call = _call("wrap", (), _body(_text("inside")), bracketed=True)
+        doc = _doc(defn, _call("p", body=_body(call)))
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "[inside]"
+
+    def test_macro_ref_as_arg_value(self) -> None:
+        source = (
+            "[#set name=site-url : https://example.com]\n"
+            '#p: Visit [#url link=#site-url text="our site"] today.\n'
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        p = result.children[0]
+        assert isinstance(p.body, Body)
+        # Should contain: Text("Visit "), MacroCall("url" with resolved link), Text(" today.")
+        url_node = next(c for c in p.body.children if isinstance(c, MacroCall))
+        link_arg = next(a for a in url_node.args if a.name == "link")
+        assert isinstance(link_arg.value, Text)
+        assert link_arg.value.value == "https://example.com"
+
+    def test_string_literal_body_set(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "motto"),),
+            InterpString((_text("Write less, mean more."),), S),
+        )
+        doc = _doc(defn, _call("p", body=_body(_call("motto"))))
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "Write less, mean more."
+
+    def test_string_code_section(self) -> None:
+        defn = _call("set", (_arg("name", "version"),), _body(_text("1.0")))
+        interp = InterpString(
+            (_text("Hello, "), CodeSection((_call("version"),), S), _text("!")),
+            S,
+        )
+        p = _call("p", (), interp)
+        doc = _doc(defn, p)
+        result = evaluate(doc)
+        # The InterpString body should have expanded code section
+        p_node = result.children[0]
+        assert isinstance(p_node.body, InterpString)
+        cs = next(part for part in p_node.body.parts if isinstance(part, CodeSection))
+        assert len(cs.body) == 1
+        assert isinstance(cs.body[0], Text)
+        assert cs.body[0].value == "1.0"
+
+    def test_nested_user_macro(self) -> None:
+        inner = _call(
+            "set",
+            (_arg("name", "inner"), _narg("x", _req())),
+            _body(_text("("), _call("x"), _text(")")),
+        )
+        outer = _call(
+            "set",
+            (_arg("name", "outer"), _narg("y", _req())),
+            _body(
+                _call("inner", (_narg("x", _call("y")),), bracketed=True),
+            ),
+        )
+        call = _call("outer", (_arg("y", "val"),), bracketed=True)
+        doc = _doc(inner, outer, _call("p", body=_body(call)))
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "(val)"
+
+    def test_recursion_limit(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "loop"),),
+            _body(_call("loop")),
+        )
+        doc = _doc(defn, _call("p", body=_body(_call("loop"))))
+        with pytest.raises(EvalError, match="macro call depth limit"):
+            evaluate(doc)
+
+    def test_scope_shadowing(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "x"),), _body(_text("global"))),
+            _call(
+                "set",
+                (_arg("name", "show"), _narg("x", _req())),
+                _body(_call("x")),
+            ),
+            _call(
+                "p",
+                body=_body(
+                    _call("show", (_arg("x", "local"),), bracketed=True),
+                    _text(" "),
+                    _call("x"),
+                ),
+            ),
+        )
+        result = evaluate(doc)
+        # Inside show: x=local. After show: x=global.
+        assert _body_text(result.children[0]) == "local global"
+
+    def test_missing_required_arg(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "greet"), _narg("target", _req())),
+            _body(_text("Hi "), _call("target")),
+        )
+        call = _call("greet", (), bracketed=True)
+        doc = _doc(defn, _call("p", body=_body(call)))
+        with pytest.raises(EvalError, match="missing required argument: target"):
+            evaluate(doc)

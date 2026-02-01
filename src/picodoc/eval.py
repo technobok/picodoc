@@ -1,4 +1,4 @@
-"""Single-pass AST evaluator — expands builtins, collects #set, wraps paragraphs."""
+"""Two-pass AST evaluator — collects #set definitions, expands builtins and user macros."""
 
 from __future__ import annotations
 
@@ -12,12 +12,13 @@ from picodoc.ast import (
     Escape,
     InterpString,
     MacroCall,
+    NamedArg,
     Paragraph,
     RawString,
     RequiredMarker,
     Text,
 )
-from picodoc.builtins import resolve_name
+from picodoc.builtins import BUILTINS, resolve_name
 from picodoc.errors import EvalError
 from picodoc.tokens import Span
 
@@ -31,6 +32,8 @@ class EvalContext:
     definitions: dict[str, MacroCall] = field(default_factory=dict)
     include_stack: list[str] = field(default_factory=list)
     max_include_depth: int = 16
+    call_stack: list[str] = field(default_factory=list)
+    max_call_depth: int = 64
 
 
 def evaluate(doc: Document, filename: str = "input.pdoc") -> Document:
@@ -43,10 +46,40 @@ def evaluate(doc: Document, filename: str = "input.pdoc") -> Document:
         source_dir=source_dir,
         include_stack=[str(Path(filename).resolve())],
     )
+    _collect_definitions(doc.children, ctx)
     expanded = _expand_top_level(doc.children, ctx)
     # Filter to MacroCall nodes — Text/Escape from conditionals are whitespace
     children = tuple(c for c in expanded if isinstance(c, MacroCall))
     return Document(children, doc.span)
+
+
+# ---------------------------------------------------------------------------
+# Pass 1: Definition collection
+# ---------------------------------------------------------------------------
+
+
+def _collect_definitions(
+    children: tuple[MacroCall | Paragraph, ...],
+    ctx: EvalContext,
+) -> None:
+    """Scan top-level #set definitions for out-of-order resolution."""
+    for child in children:
+        if not isinstance(child, MacroCall):
+            continue
+        name = resolve_name(child.name)
+        if name != "set":
+            continue
+        name_val = _get_arg(child, "name")
+        if name_val is None:
+            continue
+        def_name = _resolve_value(name_val, ctx)
+        if def_name in ctx.definitions:
+            raise EvalError(
+                f"duplicate definition: {def_name}",
+                child.span,
+                "",
+            )
+        ctx.definitions[def_name] = child
 
 
 # ---------------------------------------------------------------------------
@@ -106,9 +139,20 @@ def _expand_macro(
     if name == "table":
         return _expand_table(node, ctx)
 
-    # Render-time macro: recurse into body to expand nested builtins
+    # User macro expansion
+    if name in ctx.definitions and name not in BUILTINS:
+        return _expand_user_macro(node, name, ctx)
+
+    # Trailing dot: #version. → expand "version" + Text(".")
+    if name.endswith(".") and name[:-1] in ctx.definitions and name[:-1] not in BUILTINS:
+        expanded = _expand_user_macro(node, name[:-1], ctx)
+        expanded.append(Text(".", node.span))
+        return expanded
+
+    # Render-time macro: resolve args and recurse into body
+    new_args = _resolve_macro_args(node.args, ctx)
     new_body = _recurse_body(node.body, ctx)
-    return [MacroCall(node.name, node.args, new_body, node.bracketed, node.span)]
+    return [MacroCall(node.name, new_args, new_body, node.bracketed, node.span)]
 
 
 def _recurse_body(
@@ -120,7 +164,9 @@ def _recurse_body(
     if isinstance(body, Body):
         expanded = _expand_body_children(body.children, ctx)
         return Body(tuple(expanded), body.span)
-    # InterpString and RawString: no expansion needed in Phase 3
+    if isinstance(body, InterpString):
+        return _expand_interp_string(body, ctx)
+    # RawString: no expansion needed
     return body
 
 
@@ -135,6 +181,185 @@ def _expand_body_children(
         else:
             result.append(child)
     return result
+
+
+# ---------------------------------------------------------------------------
+# User macro expansion
+# ---------------------------------------------------------------------------
+
+
+def _expand_user_macro(
+    node: MacroCall,
+    name: str,
+    ctx: EvalContext,
+) -> list[MacroCall | Text | Escape]:
+    """Expand a user-defined macro call."""
+    defn = ctx.definitions[name]
+
+    # Extract param declarations (skip name=)
+    params: dict[str, tuple[bool, Text | InterpString | RawString | MacroCall | None]] = {}
+    for arg in defn.args:
+        if arg.name == "name":
+            continue
+        if isinstance(arg.value, RequiredMarker):
+            params[arg.name] = (True, None)
+        else:
+            params[arg.name] = (False, arg.value)
+
+    # Bind call-site args to params
+    bindings: dict[str, list[Text | Escape | MacroCall]] = {}
+    for arg in node.args:
+        if arg.name in params:
+            bindings[arg.name] = _value_to_body_children(arg.value, node.span)
+
+    # Body binding
+    if "body" in params and "body" not in bindings and node.body is not None:
+        bindings["body"] = _body_to_children(node.body, node.span)
+
+    # Defaults for unbound params
+    for param_name, (required, default) in params.items():
+        if param_name not in bindings:
+            if required:
+                raise EvalError(
+                    f"missing required argument: {param_name}",
+                    node.span,
+                    "",
+                )
+            if default is not None:
+                bindings[param_name] = _value_to_body_children(default, node.span)
+            else:
+                bindings[param_name] = []
+
+    # Recursion check
+    if len(ctx.call_stack) >= ctx.max_call_depth:
+        raise EvalError(
+            f"macro call depth limit ({ctx.max_call_depth}) exceeded",
+            node.span,
+            "",
+        )
+
+    ctx.call_stack.append(name)
+    try:
+        # Resolve bindings (expand macro refs in bound values before shadowing)
+        resolved_bindings: dict[str, list[Text | Escape | MacroCall]] = {}
+        for param_name, raw_values in bindings.items():
+            resolved_bindings[param_name] = _expand_body_children(tuple(raw_values), ctx)
+
+        # Scope shadowing: temporarily inject param bindings as definitions
+        saved: dict[str, MacroCall] = {}
+        shadowed_names: list[str] = []
+        for param_name, value in resolved_bindings.items():
+            if param_name in ctx.definitions:
+                saved[param_name] = ctx.definitions[param_name]
+            body = Body(tuple(value), node.span)
+            synthetic = MacroCall(
+                "set",
+                (NamedArg("name", Text(param_name, node.span), node.span, node.span),),
+                body,
+                True,
+                node.span,
+            )
+            ctx.definitions[param_name] = synthetic
+            shadowed_names.append(param_name)
+
+        try:
+            # Expand definition body
+            if isinstance(defn.body, Body):
+                result = _expand_body_children(defn.body.children, ctx)
+            elif isinstance(defn.body, InterpString):
+                expanded_interp = _expand_interp_string(defn.body, ctx)
+                result = _interp_to_children(expanded_interp)
+            elif isinstance(defn.body, RawString):
+                result = [Text(defn.body.value, defn.body.span)]
+            else:
+                result = []
+        finally:
+            # Restore definitions
+            for param_name in shadowed_names:
+                if param_name in saved:
+                    ctx.definitions[param_name] = saved[param_name]
+                else:
+                    del ctx.definitions[param_name]
+    finally:
+        ctx.call_stack.pop()
+
+    return result
+
+
+def _value_to_body_children(
+    value: Text | InterpString | RawString | MacroCall | RequiredMarker,
+    span: Span,
+) -> list[Text | Escape | MacroCall]:
+    """Convert an argument value to body children."""
+    if isinstance(value, (Text, Escape)):
+        return [value]
+    if isinstance(value, MacroCall):
+        return [value]
+    if isinstance(value, InterpString):
+        return _interp_to_children(value)
+    if isinstance(value, RawString):
+        return [Text(value.value, span)]
+    return []
+
+
+def _body_to_children(
+    body: Body | InterpString | RawString,
+    span: Span,
+) -> list[Text | Escape | MacroCall]:
+    """Convert a body to a list of children."""
+    if isinstance(body, Body):
+        return list(body.children)
+    if isinstance(body, InterpString):
+        return _interp_to_children(body)
+    if isinstance(body, RawString):
+        return [Text(body.value, span)]
+    return []
+
+
+def _interp_to_children(
+    interp: InterpString,
+) -> list[Text | Escape | MacroCall]:
+    """Flatten an InterpString to body children."""
+    result: list[Text | Escape | MacroCall] = []
+    for part in interp.parts:
+        if isinstance(part, Text):
+            result.append(part)
+        elif isinstance(part, CodeSection):
+            result.extend(part.body)
+    return result
+
+
+def _expand_interp_string(
+    interp: InterpString,
+    ctx: EvalContext,
+) -> InterpString:
+    """Expand code sections within an InterpString."""
+    new_parts: list[Text | CodeSection] = []
+    for part in interp.parts:
+        if isinstance(part, CodeSection):
+            expanded = _expand_body_children(part.body, ctx)
+            new_parts.append(CodeSection(tuple(expanded), part.span))
+        else:
+            new_parts.append(part)
+    return InterpString(tuple(new_parts), interp.span)
+
+
+def _resolve_macro_args(
+    args: tuple[NamedArg, ...],
+    ctx: EvalContext,
+) -> tuple[NamedArg, ...]:
+    """Resolve macro references in argument values for render-time builtins."""
+    new_args: list[NamedArg] = []
+    for arg in args:
+        if isinstance(arg.value, MacroCall):
+            ref = resolve_name(arg.value.name)
+            if ref in ctx.definitions:
+                text = _extract_def_text(ctx.definitions[ref])
+                new_value = Text(text, arg.value.span)
+                new_args.append(NamedArg(arg.name, new_value, arg.name_span, arg.span))
+                continue
+        new_args.append(arg)
+    return tuple(new_args)
 
 
 # ---------------------------------------------------------------------------
