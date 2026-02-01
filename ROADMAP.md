@@ -76,17 +76,17 @@ all known invalid inputs with clear error messages.
 
 Build the parser that converts the token stream into an AST.
 
-- [ ] Define AST node types (Document, Paragraph, MacroCall, MacroArg,
-      StringLiteral, RawStringLiteral, BareText, etc.)
-- [ ] Implement recursive descent parser
-- [ ] Implement macro call parsing (hash + identifier + arguments)
-- [ ] Implement named argument parsing (identifier + equals + value)
-- [ ] Implement `body` argument parsing (positional, paragraph, multi-line)
-- [ ] Implement square bracket grouping and nesting
-- [ ] Implement bare paragraph detection and auto `#p` insertion
-- [ ] Greedy argument consumption to end of line
-- [ ] Error reporting: unexpected tokens, missing arguments, unknown arguments
-- [ ] Test suite: AST structure verification for all example documents
+- [x] Define AST node types (Document, Paragraph, MacroCall, NamedArg,
+      InterpString, RawString, Body, Text, Escape, CodeSection, RequiredMarker)
+- [x] Implement recursive descent parser
+- [x] Implement macro call parsing (hash + identifier + arguments)
+- [x] Implement named argument parsing (identifier + equals + value)
+- [x] Implement `body` argument parsing (inline, paragraph, bracketed, string)
+- [x] Implement square bracket grouping and nesting
+- [x] Implement bare paragraph detection
+- [x] Greedy argument consumption to end of line
+- [x] Error reporting: unexpected tokens, missing arguments, unknown arguments
+- [x] Test suite: AST structure verification for all example documents
 
 **Exit criteria:** Parser produces correct ASTs for all example documents and
 rejects malformed input with helpful messages.
