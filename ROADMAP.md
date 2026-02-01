@@ -99,31 +99,31 @@ evaluation, removed from AST) and render-time (survive as structured nodes,
 mapped to HTML by the renderer).
 
 Expansion-time built-ins:
-- [ ] Implement `#set` collection and removal from AST
-- [ ] Implement `#table` pipe-delimited body parsing (emits `#tr`/`#th`/`#td`)
-- [ ] Validate that `#table` output re-expansion works via multi-pass evaluator
-- [ ] Implement `#ifeq`, `#ifne` (string comparison, return body or empty)
-- [ ] Implement `#ifset` (privileged: queries definition registry)
-- [ ] Implement `#include` (privileged: file reading, inserts content)
-- [ ] Implement `#comment` (removed from AST)
+- [x] Implement `#set` collection and removal from AST
+- [x] Implement `#table` pipe-delimited body parsing (emits `#tr`/`#th`/`#td`)
+- [x] Validate that `#table` output re-expansion works via multi-pass evaluator
+- [x] Implement `#ifeq`, `#ifne` (string comparison, return body or empty)
+- [x] Implement `#ifset` (privileged: queries definition registry)
+- [x] Implement `#include` (privileged: file reading, inserts content)
+- [x] Implement `#comment` (removed from AST)
 
 Render-time built-ins (survive expansion as structured AST nodes):
-- [ ] Define built-in macro registry with parameter declarations
-- [ ] Implement structural: `#title`/`#h1`/`#-`, `#h2`/`#--`,
+- [x] Define built-in macro registry with parameter declarations
+- [x] Implement structural: `#title`/`#h1`/`#-`, `#h2`/`#--`,
       `#h3`/`#---`, `#h4`, `#h5`, `#h6`, `#p`, `#hr`
-- [ ] Implement inline: `#b`/`#**`, `#i`/`#__`, `#url`
-- [ ] Implement code/literal: `#code` (with language attribute), `#literal`
-- [ ] Implement lists: `#ul`, `#ol`, `#*`/`#li`
-- [ ] Implement tables: `#tr`, `#td`, `#th`
-- [ ] Implement document: `#meta`, `#link`, `#script`, `#lang`
+- [x] Implement inline: `#b`/`#**`, `#i`/`#__`, `#url`
+- [x] Implement code/literal: `#code` (with language attribute), `#literal`
+- [x] Implement lists: `#ul`, `#ol`, `#*`/`#li`
+- [x] Implement tables: `#tr`, `#td`, `#th`
+- [x] Implement document: `#meta`, `#link`, `#script`, `#lang`
 
 HTML Renderer:
-- [ ] Implement renderer that walks expanded AST (text + render-time nodes)
-- [ ] Map each render-time built-in to its HTML element(s)
+- [x] Implement renderer that walks expanded AST (text + render-time nodes)
+- [x] Map each render-time built-in to its HTML element(s)
 - [ ] Validate nesting (eg `#td` only inside `#tr` inside `#table`)
-- [ ] Handle HTML escaping of text content (prevent XSS from document text)
-- [ ] Implement full HTML document output (doctype, head, body wrapping)
-- [ ] Test suite: `.pdoc` input -> expected `.html` output pairs
+- [x] Handle HTML escaping of text content (prevent XSS from document text)
+- [x] Implement full HTML document output (doctype, head, body wrapping)
+- [x] Test suite: `.pdoc` input -> expected `.html` output pairs
 
 **Exit criteria:** Can convert the example documents into correct, valid HTML.
 

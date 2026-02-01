@@ -68,6 +68,20 @@ def assert_call(
         assert node.bracketed == bracketed, f"Expected bracketed={bracketed}, got {node.bracketed}"
 
 
+@pytest.fixture
+def compile_source():
+    """Return a helper that compiles source to HTML (parse + evaluate + render)."""
+    from picodoc.eval import evaluate
+    from picodoc.render import render
+
+    def _compile(source: str, filename: str = "test.pdoc") -> str:
+        doc = parse(source, filename)
+        doc = evaluate(doc, filename)
+        return render(doc)
+
+    return _compile
+
+
 def body_text(node: MacroCall | Paragraph) -> str:
     """Extract concatenated text from a node's body (Body or Paragraph)."""
     if isinstance(node, Paragraph):
