@@ -153,16 +153,17 @@ definitions, default value resolution, and error cases.
 Build the multi-pass macro expansion engine that resolves all macro calls in
 the AST.
 
-- [ ] Implement multi-pass AST walker (walk, expand, mark complete, re-walk)
-- [ ] Implement convergence detection (terminate when no nodes changed)
-- [ ] Implement global max call stack depth (configurable via CLI/config,
+- [x] Implement multi-pass AST walker (walk, expand, mark complete, re-walk)
+- [x] Implement convergence detection (terminate when no nodes changed)
+- [x] Implement global max call stack depth (configurable via CLI/config,
       default ~64)
-- [ ] Implement argument binding and scope creation at call sites
-- [ ] Implement `env.*` global environment
-- [ ] Handle expansion errors (undefined macro, call stack limit exceeded,
+- [x] Implement argument binding and scope creation at call sites
+- [x] Implement `env.*` global environment
+- [x] Handle expansion errors (undefined macro, call stack limit exceeded,
       with context: which macro, expansion chain)
 - [ ] Implement `--debug` flag to dump AST state after each expansion pass
-- [ ] Test suite: expansion of nested calls, scope isolation, env inheritance,
+      (deferred to Phase 6 CLI)
+- [x] Test suite: expansion of nested calls, scope isolation, env inheritance,
       call stack limits, convergence, mutual recursion detection
 
 **Exit criteria:** Full pipeline works end-to-end: source -> tokens -> AST ->

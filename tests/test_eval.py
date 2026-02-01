@@ -554,6 +554,200 @@ class TestUserMacro:
             evaluate(doc)
 
 
+class TestEnv:
+    def test_env_from_evaluate_param(self) -> None:
+        doc = _doc(_call("p", body=_body(_text("mode="), _call("env.mode"))))
+        result = evaluate(doc, env={"mode": "draft"})
+        assert _body_text(result.children[0]) == "mode=draft"
+
+    def test_env_from_set(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "env.mode"),), _body(_text("draft"))),
+            _call("p", body=_body(_call("env.mode"))),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "draft"
+
+    def test_env_set_overrides_preseeded(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "env.mode"),), _body(_text("final"))),
+            _call("p", body=_body(_call("env.mode"))),
+        )
+        result = evaluate(doc, env={"mode": "draft"})
+        assert _body_text(result.children[0]) == "final"
+
+    def test_env_duplicate_set_error(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "env.mode"),), _body(_text("a"))),
+            _call("set", (_arg("name", "env.mode"),), _body(_text("b"))),
+        )
+        with pytest.raises(EvalError, match=r"duplicate definition: env\.mode"):
+            evaluate(doc)
+
+    def test_env_ifset_preseeded(self) -> None:
+        doc = _doc(
+            _call(
+                "ifset",
+                (_arg("name", "env.mode"),),
+                _body(_call("p", body=_body(_text("yes")))),
+            ),
+        )
+        result = evaluate(doc, env={"mode": "draft"})
+        assert len(result.children) == 1
+        assert _body_text(result.children[0]) == "yes"
+
+    def test_env_ifset_unset(self) -> None:
+        doc = _doc(
+            _call(
+                "ifset",
+                (_arg("name", "env.missing"),),
+                _body(_call("p", body=_body(_text("yes")))),
+            ),
+        )
+        result = evaluate(doc)
+        assert len(result.children) == 0
+
+    def test_env_ifeq(self) -> None:
+        doc = _doc(
+            _call(
+                "ifeq",
+                (
+                    _narg("lhs", _call("env.mode")),
+                    _arg("rhs", "draft"),
+                ),
+                _body(_call("p", body=_body(_text("match")))),
+            ),
+        )
+        result = evaluate(doc, env={"mode": "draft"})
+        assert len(result.children) == 1
+        assert _body_text(result.children[0]) == "match"
+
+    def test_env_inherited_in_user_macro(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "show-mode"),),
+            _body(_call("env.mode")),
+        )
+        doc = _doc(
+            defn,
+            _call("p", body=_body(_call("show-mode"))),
+        )
+        result = evaluate(doc, env={"mode": "draft"})
+        assert _body_text(result.children[0]) == "draft"
+
+    def test_env_cannot_be_shadowed(self) -> None:
+        defn = _call(
+            "set",
+            (_arg("name", "bad"), _narg("env.mode", _req())),
+            _body(_call("env.mode")),
+        )
+        call = _call("bad", (_arg("env.mode", "hacked"),), bracketed=True)
+        doc = _doc(defn, _call("p", body=_body(call)))
+        with pytest.raises(EvalError, match="cannot shadow environment variable"):
+            evaluate(doc, env={"mode": "safe"})
+
+    def test_env_undefined_returns_empty(self) -> None:
+        doc = _doc(_call("p", body=_body(_text("x"), _call("env.missing"), _text("y"))))
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "xy"
+
+
+class TestMutualRecursion:
+    def test_mutual_recursion_hits_depth_limit(self) -> None:
+        ping = _call("set", (_arg("name", "ping"),), _body(_call("pong")))
+        pong = _call("set", (_arg("name", "pong"),), _body(_call("ping")))
+        doc = _doc(ping, pong, _call("p", body=_body(_call("ping"))))
+        with pytest.raises(EvalError, match="macro call depth limit"):
+            evaluate(doc)
+
+    def test_mutual_recursion_error_includes_chain(self) -> None:
+        ping = _call("set", (_arg("name", "ping"),), _body(_call("pong")))
+        pong = _call("set", (_arg("name", "pong"),), _body(_call("ping")))
+        doc = _doc(ping, pong, _call("p", body=_body(_call("ping"))))
+        with pytest.raises(EvalError) as exc_info:
+            evaluate(doc)
+        err = exc_info.value
+        assert len(err.call_stack) > 1
+        assert "ping" in err.call_stack
+        assert "pong" in err.call_stack
+
+
+class TestConvergence:
+    def test_user_macro_in_table_cell(self) -> None:
+        source = "[#set name=status : Active]\n#table:\n  Name | Status\n  Alice | #status\n"
+        doc = parse(source)
+        result = evaluate(doc)
+        table = result.children[0]
+        assert isinstance(table, MacroCall) and table.name == "table"
+        assert isinstance(table.body, Body)
+        rows = [c for c in table.body.children if isinstance(c, MacroCall)]
+        assert len(rows) == 2
+        # Second row, second cell should contain "Active"
+        tr2 = rows[1]
+        assert isinstance(tr2.body, Body)
+        cells = [c for c in tr2.body.children if isinstance(c, MacroCall)]
+        assert len(cells) == 2
+        cell2 = cells[1]
+        assert isinstance(cell2.body, Body)
+        text = "".join(c.value for c in cell2.body.children if isinstance(c, (Text, Escape)))
+        assert text == "Active"
+
+    def test_nested_macro_in_conditional(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "mode"),), _body(_text("draft"))),
+            _call("set", (_arg("name", "label"),), _body(_text("DRAFT"))),
+            _call(
+                "ifeq",
+                (_narg("lhs", _call("mode")), _arg("rhs", "draft")),
+                _body(_call("p", body=_body(_call("label")))),
+            ),
+        )
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        assert _body_text(result.children[0]) == "DRAFT"
+
+    def test_chained_macro_resolution(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "alpha"),), _body(_text("hello"))),
+            _call(
+                "set",
+                (_arg("name", "beta"),),
+                _body(_call("alpha")),
+            ),
+            _call("p", body=_body(_call("beta"))),
+        )
+        result = evaluate(doc)
+        assert _body_text(result.children[0]) == "hello"
+
+
+class TestErrorChain:
+    def test_depth_error_includes_chain(self) -> None:
+        defn = _call("set", (_arg("name", "loop"),), _body(_call("loop")))
+        doc = _doc(defn, _call("p", body=_body(_call("loop"))))
+        with pytest.raises(EvalError) as exc_info:
+            evaluate(doc)
+        err = exc_info.value
+        assert len(err.call_stack) > 0
+        assert "loop" in err.call_stack
+
+    def test_missing_arg_error_includes_chain(self) -> None:
+        inner = _call(
+            "set",
+            (_arg("name", "inner"), _narg("x", _req())),
+            _body(_call("x")),
+        )
+        outer = _call(
+            "set",
+            (_arg("name", "outer"),),
+            _body(_call("inner", (), bracketed=True)),
+        )
+        doc = _doc(inner, outer, _call("p", body=_body(_call("outer"))))
+        with pytest.raises(EvalError) as exc_info:
+            evaluate(doc)
+        err = exc_info.value
+        assert "outer" in err.call_stack
+
+
 class TestNestingValidation:
     def test_td_outside_tr(self) -> None:
         doc = _doc(_call("td", body=_body(_text("cell"))))

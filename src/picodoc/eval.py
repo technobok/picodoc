@@ -34,9 +34,14 @@ class EvalContext:
     max_include_depth: int = 16
     call_stack: list[str] = field(default_factory=list)
     max_call_depth: int = 64
+    env: dict[str, str] = field(default_factory=dict)
 
 
-def evaluate(doc: Document, filename: str = "input.pdoc") -> Document:
+def evaluate(
+    doc: Document,
+    filename: str = "input.pdoc",
+    env: dict[str, str] | None = None,
+) -> Document:
     """Expand expansion-time builtins, collect #set, wrap paragraphs."""
     source_dir = Path(filename).parent
     if not source_dir.parts:
@@ -46,6 +51,8 @@ def evaluate(doc: Document, filename: str = "input.pdoc") -> Document:
         source_dir=source_dir,
         include_stack=[str(Path(filename).resolve())],
     )
+    if env:
+        ctx.env.update(env)
     _collect_definitions(doc.children, ctx)
     expanded = _expand_top_level(doc.children, ctx)
     # Filter to MacroCall nodes — Text/Escape from conditionals are whitespace
@@ -119,6 +126,8 @@ def _collect_definitions(
                 "",
             )
         ctx.definitions[def_name] = child
+        if def_name.startswith("env."):
+            ctx.env[def_name[4:]] = _extract_def_text(child)
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +165,12 @@ def _expand_macro(
     ctx: EvalContext,
 ) -> list[MacroCall | Text | Escape]:
     name = resolve_name(node.name)
+
+    if name.startswith("env."):
+        env_key = name[4:]
+        if env_key in ctx.env:
+            return [Text(ctx.env[env_key], node.span)]
+        return []
 
     if name == "comment":
         return []
@@ -263,6 +278,7 @@ def _expand_user_macro(
                     f"missing required argument: {param_name}",
                     node.span,
                     "",
+                    call_stack=list(ctx.call_stack),
                 )
             if default is not None:
                 bindings[param_name] = _value_to_body_children(default, node.span)
@@ -275,6 +291,7 @@ def _expand_user_macro(
             f"macro call depth limit ({ctx.max_call_depth}) exceeded",
             node.span,
             "",
+            call_stack=list(ctx.call_stack),
         )
 
     ctx.call_stack.append(name)
@@ -288,6 +305,13 @@ def _expand_user_macro(
         saved: dict[str, MacroCall] = {}
         shadowed_names: list[str] = []
         for param_name, value in resolved_bindings.items():
+            if param_name.startswith("env."):
+                raise EvalError(
+                    f"cannot shadow environment variable: {param_name}",
+                    node.span,
+                    "",
+                    call_stack=list(ctx.call_stack),
+                )
             if param_name in ctx.definitions:
                 saved[param_name] = ctx.definitions[param_name]
             body = Body(tuple(value), node.span)
@@ -392,6 +416,11 @@ def _resolve_macro_args(
     for arg in args:
         if isinstance(arg.value, MacroCall):
             ref = resolve_name(arg.value.name)
+            if ref.startswith("env."):
+                text = ctx.env.get(ref[4:], "")
+                new_value = Text(text, arg.value.span)
+                new_args.append(NamedArg(arg.name, new_value, arg.name_span, arg.span))
+                continue
             if ref in ctx.definitions:
                 text = _extract_def_text(ctx.definitions[ref])
                 new_value = Text(text, arg.value.span)
@@ -426,11 +455,15 @@ def _resolve_value(
                         parts.append(child.value)
                     elif isinstance(child, MacroCall):
                         ref = resolve_name(child.name)
-                        if ref in ctx.definitions:
+                        if ref.startswith("env."):
+                            parts.append(ctx.env.get(ref[4:], ""))
+                        elif ref in ctx.definitions:
                             parts.append(_extract_def_text(ctx.definitions[ref]))
         return "".join(parts)
     if isinstance(value, MacroCall):
         ref = resolve_name(value.name)
+        if ref.startswith("env."):
+            return ctx.env.get(ref[4:], "")
         if ref in ctx.definitions:
             return _extract_def_text(ctx.definitions[ref])
         return ""
@@ -471,6 +504,8 @@ def _expand_set(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text | Es
         return []
     name = _resolve_value(name_val, ctx)
     ctx.definitions[name] = node
+    if name.startswith("env."):
+        ctx.env[name[4:]] = _extract_def_text(node)
     return []
 
 
@@ -503,6 +538,10 @@ def _expand_ifset(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text | 
     if name_val is None:
         return []
     name = _resolve_value(name_val, ctx)
+    if name.startswith("env."):
+        if name[4:] in ctx.env:
+            return _get_condition_body(node, ctx)
+        return []
     if name in ctx.definitions:
         return _get_condition_body(node, ctx)
     return []

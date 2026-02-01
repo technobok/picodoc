@@ -92,10 +92,17 @@ class ParseError(Exception):
 class EvalError(Exception):
     """Raised on evaluation errors, with span and source context."""
 
-    def __init__(self, message: str, span: Span, source: str) -> None:
+    def __init__(
+        self,
+        message: str,
+        span: Span,
+        source: str,
+        call_stack: list[str] | None = None,
+    ) -> None:
         self.message = message
         self.span = span
         self.source = source
+        self.call_stack = call_stack or []
         super().__init__(self.format())
 
     def format(self, filename: str = "input.pdoc") -> str:
@@ -122,10 +129,14 @@ class EvalError(Exception):
         blank_gutter = " " * gutter_width + "|"
         line_gutter = f"{line_num:>{gutter_width - 1}} |"
 
-        return (
+        result = (
             f"error: {self.message}\n"
             f"{' ' * gutter_width}--> {filename}:{self.span.start.line}:{col}\n"
             f"{blank_gutter}\n"
             f"{line_gutter} {source_line}\n"
             f"{blank_gutter} {pad}{carets}"
         )
+        if self.call_stack:
+            chain = " -> ".join(f"#{name}" for name in self.call_stack)
+            result += f"\n  in expansion chain: {chain}"
+        return result
