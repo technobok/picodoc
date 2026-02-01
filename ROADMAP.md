@@ -161,7 +161,7 @@ the AST.
 - [x] Implement `env.*` global environment
 - [x] Handle expansion errors (undefined macro, call stack limit exceeded,
       with context: which macro, expansion chain)
-- [ ] Implement `--debug` flag to dump AST state after each expansion pass
+- [x] Implement `--debug` flag to dump AST state after each expansion pass
       (deferred to Phase 6 CLI)
 - [x] Test suite: expansion of nested calls, scope isolation, env inheritance,
       call stack limits, convergence, mutual recursion detection
@@ -173,18 +173,18 @@ collected definitions -> resolved defaults -> expanded AST -> HTML.
 
 Build the command-line interface for the converter.
 
-- [ ] Implement CLI with argument parsing (input file, output file, stdout)
-- [ ] Accept environment variables as macro definitions (`-e name=value`)
-- [ ] Accept config file for default settings
-- [ ] Support specifying CSS/JS files to include in output
-- [ ] Support adding meta tags from CLI
-- [ ] Implement external filter protocol
-  - [ ] Filter discovery (PATH, config, local directory)
-  - [ ] Filter invocation (JSON on stdin, text on stdout)
-  - [ ] Filter timeout and error handling
-- [ ] Watch mode for development (recompile on file change)
-- [ ] Exit code conventions (0 success, 1 syntax error, 2 runtime error)
-- [ ] Test suite: CLI argument parsing, filter invocation, end-to-end
+- [x] Implement CLI with argument parsing (input file, output file, stdout)
+- [x] Accept environment variables as macro definitions (`-e name=value`)
+- [x] Accept config file for default settings
+- [x] Support specifying CSS/JS files to include in output
+- [x] Support adding meta tags from CLI
+- [x] Implement external filter protocol
+  - [x] Filter discovery (PATH, config, local directory)
+  - [x] Filter invocation (JSON on stdin, text on stdout)
+  - [x] Filter timeout and error handling
+- [x] Watch mode for development (recompile on file change)
+- [x] Exit code conventions (0 success, 1 syntax error, 2 runtime error)
+- [x] Test suite: CLI argument parsing, filter invocation, end-to-end
 
 **Exit criteria:** Usable command-line tool that can convert documents and
 invoke external filters.

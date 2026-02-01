@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from picodoc.ast import (
     Body,
@@ -22,6 +23,9 @@ from picodoc.builtins import BUILTINS, resolve_name
 from picodoc.errors import EvalError
 from picodoc.tokens import Span
 
+if TYPE_CHECKING:
+    from picodoc.filters import FilterRegistry
+
 
 @dataclass
 class EvalContext:
@@ -35,12 +39,14 @@ class EvalContext:
     call_stack: list[str] = field(default_factory=list)
     max_call_depth: int = 64
     env: dict[str, str] = field(default_factory=dict)
+    filters: FilterRegistry | None = None
 
 
 def evaluate(
     doc: Document,
     filename: str = "input.pdoc",
     env: dict[str, str] | None = None,
+    filters: FilterRegistry | None = None,
 ) -> Document:
     """Expand expansion-time builtins, collect #set, wrap paragraphs."""
     source_dir = Path(filename).parent
@@ -50,6 +56,7 @@ def evaluate(
         filename=filename,
         source_dir=source_dir,
         include_stack=[str(Path(filename).resolve())],
+        filters=filters,
     )
     if env:
         ctx.env.update(env)
@@ -202,6 +209,12 @@ def _expand_macro(
         expanded = _expand_user_macro(node, name[:-1], ctx)
         expanded.append(Text(".", node.span))
         return expanded
+
+    # External filter dispatch
+    if ctx.filters is not None:
+        filter_path = ctx.filters.find_filter(name)
+        if filter_path is not None:
+            return _expand_filter(node, name, filter_path, ctx)
 
     # Render-time macro: resolve args and recurse into body
     new_args = _resolve_macro_args(node.args, ctx)
@@ -598,6 +611,39 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
         ctx.include_stack.pop()
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# External filter expansion
+# ---------------------------------------------------------------------------
+
+
+def _expand_filter(
+    node: MacroCall,
+    name: str,
+    filter_path: Path,
+    ctx: EvalContext,
+) -> list[MacroCall | Text | Escape]:
+    """Run an external filter and re-expand its output."""
+    args_dict = {arg.name: _resolve_value(arg.value, ctx) for arg in node.args}
+    body_text = _extract_body_text(node.body) if node.body else None
+    assert ctx.filters is not None
+    markup = ctx.filters.invoke_filter(name, filter_path, args_dict, body_text, ctx.env, node.span)
+    from picodoc.parser import parse
+
+    filter_doc = parse(markup, f"<filter:{name}>")
+    return _expand_top_level(filter_doc.children, ctx)
+
+
+def _extract_body_text(body: Body | InterpString | RawString) -> str:
+    """Extract plain text from a macro body (for filter payloads)."""
+    if isinstance(body, Body):
+        return "".join(c.value for c in body.children if isinstance(c, (Text, Escape)))
+    if isinstance(body, InterpString):
+        return "".join(p.value for p in body.parts if isinstance(p, Text))
+    if isinstance(body, RawString):
+        return body.value
+    return ""
 
 
 # ---------------------------------------------------------------------------
