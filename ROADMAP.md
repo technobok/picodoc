@@ -194,10 +194,10 @@ invoke external filters.
 Provide syntax highlighting and editor integration.
 
 - [ ] Write a tree-sitter grammar for the language
-- [ ] Neovim syntax highlighting via tree-sitter
+- [x] Neovim syntax highlighting (Vim regex-based)
 - [ ] VS Code extension with TextMate grammar (simpler, broader reach)
-- [ ] Basic LSP server
-  - [ ] Diagnostics (syntax errors as you type)
+- [x] Basic LSP server (diagnostics only, via pygls)
+  - [x] Diagnostics (syntax errors as you type)
   - [ ] Go-to-definition for user-defined macros
   - [ ] Hover documentation for built-in macros
   - [ ] Completion for macro names and argument names

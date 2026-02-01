@@ -10,9 +10,13 @@ requires-python = ">=3.14"
 
 [project.scripts]
 picodoc = "picodoc.cli:main"
+picodoc-lsp = "picodoc.lsp:main"
+
+[project.optional-dependencies]
+lsp = ["pygls>=2.0"]
 
 [dependency-groups]
-dev = ["pytest", "pytest-cov", "ruff"]
+dev = ["pytest", "pytest-cov", "ruff", "picodoc[lsp]"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/picodoc"]
