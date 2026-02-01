@@ -35,8 +35,9 @@
   during the resolution pass after all definitions are collected) or a question
   mark ('?') for a required argument
 - in a macro call, the 'value' of the argument is one of: a bareword, a string
-  literal or another macro call (which would usually be in square brackets to
-  delineate its arguments from those of the outer call)
+  literal, an unbracketed macro reference (#identifier, for zero-argument
+  macros / variables), or a bracketed macro call ([#identifier ...] for macros
+  with arguments or to force precedence)
 - the return values of all macros are strings/text
 - all arguments to macros are strings/text. Since macro calls return text,
   calls can also be used as argument values in other calls
@@ -52,14 +53,21 @@
   arguments and body. External filter macros receive arguments on stdin.
   Only builtins can query internal state (eg #ifset checking if a macro is
   defined, #include reading files from disk)
-- backslash can be used to escape characters to use their literal values.
-  Backslash can only be used in the following cases and all other uses will be
-  a syntax error; capital H is used to represent a single hex digit which must
-  be specified: \# \[ \] \: \= \xHH \UHHHHHHHH
-- \xHH is used to specify a Unicode codepoint by the hex value of HH
-  (codepoints U+0000 to U+00FF)
-- \UHHHHHHHH is used to specify any Unicode codepoint by the hex value of
-  HHHHHHHH (8 fixed hex digits, codepoints U+00000000 to U+0010FFFF)
+- backslash is the escape prefix. The escape character itself must always be
+  escaped (\\) to produce a literal backslash. Backslash followed by any
+  character not on the valid list for the current context is a syntax error.
+  There are two escape contexts with different valid sets:
+- in prose/body text, the valid escapes are:
+  \\ \# \[ \] \: \= \xHH \UHHHHHHHH
+- in interpreted string literals, the valid escapes are:
+  \\ \" \[ \n \t \xHH \UHHHHHHHH
+  Note: \[ inside interpreted strings enters code mode (macro expansion),
+  not a literal '['. See the string literals section for details
+- \xHH specifies a Unicode codepoint by the hex value of HH (codepoints
+  U+0000 to U+00FF). H represents a single hex digit
+- \UHHHHHHHH specifies any Unicode codepoint by the hex value of HHHHHHHH
+  (8 fixed hex digits, codepoints U+00000000 to U+0010FFFF)
+- raw string literals do not process any escapes
 - the question mark ('?') has special meaning only within a macro definition
   ('set'), outside of that it is standard document text. It can not be escaped.
 - users can define new macros externally as command line filters. See the

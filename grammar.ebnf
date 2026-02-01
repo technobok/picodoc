@@ -1,0 +1,320 @@
+(* ================================================================== *)
+(* PicoDoc Formal Grammar                                             *)
+(* EBNF notation following ISO 14977 with extensions noted below.     *)
+(*                                                                    *)
+(* Extensions:                                                        *)
+(*   'a'..'z'      character range                                    *)
+(*   ? ... ?        prose description of a rule                       *)
+(*   (* ... *)      comments                                          *)
+(*                                                                    *)
+(* This grammar describes the PARSE phase only. Semantic validation   *)
+(* (unknown arguments, nesting rules, duplicate definitions) happens  *)
+(* during evaluation and is not expressed here.                       *)
+(* ================================================================== *)
+
+
+(* ------------------------------------------------------------------ *)
+(* Character Classes                                                   *)
+(* ------------------------------------------------------------------ *)
+
+letter          = 'a'..'z' | 'A'..'Z' ;
+
+digit           = '0'..'9' ;
+
+hex_digit       = digit | 'a'..'f' | 'A'..'F' ;
+
+ident_special   = '!' | '$' | '%' | '&' | '*' | '+' | '-'
+               | '/' | '@' | '^' | '_' | '~' ;
+
+ident_char      = letter | digit | '.' | ident_special ;
+
+ws              = ( ' ' | '\t' )+ ;          (* horizontal whitespace *)
+
+newline         = '\n' | '\r\n' ;
+
+blank_line      = [ ws ] , newline ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Identifiers                                                         *)
+(* ------------------------------------------------------------------ *)
+(* One or more identifier characters. The identifier ends at the       *)
+(* first character that is NOT an ident_char (whitespace, ':', '"',    *)
+(* '[', ']', '=', '#', '\', etc).                                     *)
+
+identifier      = ident_char , { ident_char } ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Escape Sequences                                                    *)
+(* ------------------------------------------------------------------ *)
+(* There are two escape contexts with different valid sets. Backslash  *)
+(* followed by any character not on the valid list for the current     *)
+(* context is a syntax error. '\\' is always valid (literal '\').      *)
+(* Raw strings do not process escapes at all.                          *)
+
+(* --- Prose escapes ---                                               *)
+(* Valid in body text, barewords, and anywhere outside string literals. *)
+
+prose_escape    = '\\'
+               | '\#'
+               | '\['
+               | '\]'
+               | '\:'
+               | '\='
+               | '\x' , hex_digit , hex_digit
+               | '\U' , hex_digit , hex_digit , hex_digit , hex_digit ,
+                         hex_digit , hex_digit , hex_digit , hex_digit ;
+
+(* --- String escapes ---                                              *)
+(* Valid inside interpreted string literals only.                       *)
+(* '\[' enters code mode (macro expansion), not a literal '['.         *)
+
+string_escape   = '\\'
+               | '\"'
+               | '\['                         (* enters code mode *)
+               | '\n'                         (* newline *)
+               | '\t'                         (* tab *)
+               | '\x' , hex_digit , hex_digit
+               | '\U' , hex_digit , hex_digit , hex_digit , hex_digit ,
+                         hex_digit , hex_digit , hex_digit , hex_digit ;
+
+
+(* ------------------------------------------------------------------ *)
+(* String Literals                                                     *)
+(* ------------------------------------------------------------------ *)
+
+string_literal  = interp_string | raw_string ;
+
+(* --- Interpreted strings ---                                         *)
+(* Delimited by a single '"' on each end. Escape sequences are         *)
+(* processed. Macro calls are NOT scanned automatically; use \[...]    *)
+(* (code mode) to embed them explicitly.                               *)
+
+interp_string   = '"' , { interp_content } , '"' ;
+
+interp_content  = code_mode
+               | string_escape
+               | ? any character except '"' and '\' ? ;
+
+(* Code mode: entered by '\[' inside an interpreted string.            *)
+(* Normal bracketed macro call syntax applies inside. May span         *)
+(* multiple lines. Ends at the matching ']'.                           *)
+
+code_mode       = '\[' , bracket_body , ']' ;
+
+(* --- Raw strings ---                                                 *)
+(* Delimited by 3 or more '"' characters. The closing delimiter must   *)
+(* have exactly the same number of quotes as the opening delimiter.    *)
+(* Contents are completely opaque: no escapes, no macro processing.    *)
+(*                                                                     *)
+(* The empty string is always '""' (interpreted). An empty raw string  *)
+(* is not possible because the opening quotes run into the closing.    *)
+(*                                                                     *)
+(* A raw string cannot begin or end with a '"' immediately inside the  *)
+(* delimiters (the quote count would be ambiguous).                    *)
+
+raw_string      = raw_delim , raw_content , raw_delim ;
+
+raw_delim       = '"' , '"' , '"' , { '"' } ;  (* 3 or more quotes *)
+
+raw_content     = ? any text that does not contain a sequence of '"'
+                    characters equal in length to raw_delim ? ;
+
+(* --- String whitespace stripping (post-processing) ---               *)
+(* Applied identically to both interpreted and raw strings:            *)
+(*  1. If the remainder of the opening delimiter's line is blank       *)
+(*     (whitespace only), discard it.                                  *)
+(*  2. If the beginning of the closing delimiter's line is blank       *)
+(*     (whitespace only), discard that whitespace.                     *)
+(*  3. If the closing delimiter's leading whitespace appears           *)
+(*     identically on ALL other lines of the string, strip that        *)
+(*     common prefix from every line (indentation stripping).          *)
+
+
+(* ------------------------------------------------------------------ *)
+(* Argument Values                                                     *)
+(* ------------------------------------------------------------------ *)
+
+arg_value       = string_literal
+               | bracket_call
+               | macro_ref
+               | bareword ;
+
+(* A macro reference as an argument value: #identifier with no         *)
+(* arguments. Used for zero-argument macros (variables/constants).     *)
+(* The identifier terminates at whitespace, ']', or any non-ident     *)
+(* character, so there is no ambiguity.                                *)
+
+macro_ref       = '#' , identifier ;
+
+(* A bareword is one or more characters that do not include            *)
+(* whitespace, '=', ':', '"', '[', ']', '#', or '\'.                   *)
+(* In other words: characters that have no syntactic meaning.          *)
+
+bareword        = bareword_char , { bareword_char } ;
+
+bareword_char   = ? any character except whitespace, '=', ':', '"',
+                    '[', ']', '#', '\' ? ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Named Arguments                                                     *)
+(* ------------------------------------------------------------------ *)
+(* No whitespace before '='. This is what enables one-token lookahead: *)
+(* the parser distinguishes 'name=value' from a prose word by the      *)
+(* presence of '=' immediately after the identifier.                   *)
+(* Whitespace after '=' is permitted.                                  *)
+
+named_arg       = identifier , '=' , [ ws ] , arg_value ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Body Content                                                        *)
+(* ------------------------------------------------------------------ *)
+
+(* String literal used directly as body (no colon required).           *)
+(* A colon before a string literal body is permitted but optional.     *)
+
+string_body     = [ ws ] , [ ':' , [ ws ] ] , string_literal ;
+
+(* Body content varies by call form:                                   *)
+(*  - Unbracketed: text to end of line. If line is empty after colon,  *)
+(*    the following paragraph is body.                                 *)
+(*  - Bracketed: text to matching ']', may span multiple lines.        *)
+
+(* Unbracketed body content: one or more inline elements to EOL.       *)
+
+unbr_body_text  = inline_element , { inline_element } ;   (* to end of line *)
+
+(* Bracketed body content: everything to the matching ']'.             *)
+
+bracket_body    = { inline_element | newline | blank_line } ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Macro Calls                                                         *)
+(* ------------------------------------------------------------------ *)
+
+macro_call      = unbracketed_call | bracket_call ;
+
+(* --- Unbracketed form ---                                            *)
+(* '#' identifier [arguments] [body]                                   *)
+(*                                                                     *)
+(* After the identifier, the parser examines the next token:           *)
+(*  1. identifier '=' (no space before '=') -> argument mode           *)
+(*  2. ':'  -> body mode (plain text or string literal)                *)
+(*  3. '"'  -> body mode (string literal, no colon)                    *)
+(*  4. else -> call is complete (no args, no body), rest is prose      *)
+(*                                                                     *)
+(* In argument mode, consume name=value pairs until:                   *)
+(*  - ':' -> body mode                                                 *)
+(*  - '"' -> string literal body mode                                  *)
+(*  - EOL -> call complete, no body                                    *)
+
+unbracketed_call = '#' , identifier , [ ws , unbracketed_tail ] ;
+
+unbracketed_tail = named_args , [ ws , ( colon_unbr_body
+                                       | string_body ) ]
+                | colon_unbr_body
+                | string_body ;
+
+named_args      = named_arg , { ws , named_arg } ;
+
+(* Colon body in unbracketed form. Two cases:                          *)
+(*  1. Inline body: content follows the colon on the same line (to     *)
+(*     end of line).                                                   *)
+(*  2. Paragraph body: nothing but optional whitespace follows the     *)
+(*     colon; the next paragraph (contiguous non-blank lines) becomes  *)
+(*     the body. Terminated by a blank line or EOF.                    *)
+
+colon_unbr_body = [ ws ] , ':' , [ ws ] , unbr_body_text
+               | [ ws ] , ':' , [ ws ] , newline ,
+                 body_paragraph ;
+
+body_paragraph  = body_para_line , { body_para_line } ;
+
+body_para_line  = inline_element , { inline_element } , newline ;
+
+
+(* --- Bracketed form ---                                              *)
+(* '[' '#' identifier [arguments] [body] ']'                           *)
+(*                                                                     *)
+(* Same token-dispatch as unbracketed but body extends to matching ']' *)
+(* instead of EOL. Bare text inside brackets that is not name=value    *)
+(* and not after ':' or a string literal is a syntax error.            *)
+
+bracket_call    = '[' , '#' , identifier ,
+                  [ ws , bracket_tail ] ,
+                  ']' ;
+
+bracket_tail    = named_args , [ ws , ( colon_bracket_body
+                                      | string_body ) ]
+               | colon_bracket_body
+               | string_body ;
+
+(* Colon body in bracketed form: everything to the matching ']'.       *)
+(* May span multiple lines and include multiple paragraphs.            *)
+
+colon_bracket_body = [ ws ] , ':' , [ ws ] , bracket_body ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Inline Content                                                      *)
+(* ------------------------------------------------------------------ *)
+(* Text interspersed with inline macro calls and escapes.              *)
+
+inline_element  = prose_escape
+               | macro_call
+               | text_char ;
+
+text_char       = ? any character except '#', '[', ']', '\' and newline ? ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Document Structure                                                  *)
+(* ------------------------------------------------------------------ *)
+(* A document is a sequence of blocks. A block is a blank line, a      *)
+(* top-level macro call, or a bare paragraph (implicitly wrapped in    *)
+(* #p). Blocks are separated by blank lines.                           *)
+
+document        = { block } ;
+
+block           = blank_line
+               | macro_block
+               | paragraph ;
+
+(* A macro block starts with '#' at the beginning of a line.           *)
+
+macro_block     = unbracketed_call , newline
+               | bracket_call , newline ;
+
+(* A paragraph is one or more contiguous non-blank lines that do not   *)
+(* begin with '#' at the block level. Implicitly wrapped in #p.        *)
+
+paragraph       = para_line , { para_line } ;
+
+para_line       = ? a line that does not start with '#' or '[#'
+                    at the block level ? , inline_element* , newline ;
+
+
+(* ------------------------------------------------------------------ *)
+(* Macro Definition (#set)                                             *)
+(* ------------------------------------------------------------------ *)
+(* #set is always in bracketed form. The 'name' argument is required.  *)
+(* Additional arguments define the macro's parameters. 'body' if       *)
+(* present must be the last parameter.                                 *)
+(*                                                                     *)
+(* Parameter values in definitions:                                    *)
+(*   '?' = required (no default)                                       *)
+(*   other = default value (bareword, string literal, or macro call)   *)
+(*                                                                     *)
+(* #set is restricted to top-level only.                               *)
+
+set_call        = '[' , '#set' , ws , set_args ,
+                  [ ws , ( colon_bracket_body | string_body ) ] , ']' ;
+
+set_args        = 'name=' , [ ws ] , arg_value ,
+                  { ws , param_def } ;
+
+param_def       = identifier , '=' , [ ws ] , ( '?' | arg_value ) ;

@@ -17,9 +17,10 @@ code. Changing the grammar after implementation begins is expensive.
 - [x] Argument syntax: `=` for named arguments, `:` for body separator
 - [x] Two-form call model: colon always required before body in both forms.
       `name=value` requires no whitespace before `=` (one-token lookahead)
-- [x] `\=` added to valid escape sequences
-- [x] Define escape sequences: `\xHH` (codepoint U+0000-U+00FF),
-      `\UHHHHHHHH` (8 fixed hex digits, full Unicode range)
+- [x] Two escape contexts with separate valid sets:
+      Prose: `\\ \# \[ \] \: \= \xHH \UHHHHHHHH`
+      Strings: `\\ \" \[ \n \t \xHH \UHHHHHHHH`
+      (`\[` enters code mode in strings, literal `[` in prose)
 - [x] Define macro expansion order: recursive multi-pass AST walking with
       global max depth (configurable, default ~64) and per-macro `depth:`
       parameter on `#set` (`depth=N`)
@@ -43,7 +44,7 @@ code. Changing the grammar after implementation begins is expensive.
 - [x] `env.*` global environment: defined via CLI, config, or document `#set`.
       Immutable once set. Inherited through nested calls. Passed to external
       filters in JSON payload
-- [ ] Write formal grammar (EBNF or PEG notation)
+- [x] Write formal grammar (EBNF notation): `grammar.ebnf`
 - [ ] Create a comprehensive set of example documents that exercise all features
 - [x] Fix typos and inconsistencies in the spec (spelling, `=p` examples)
 
@@ -63,8 +64,8 @@ Build the tokenizer that converts source text into a token stream.
       mode via `\[...]` for macro expansion, no implicit macro scanning)
 - [ ] Implement raw string literal lexing (fully opaque, quote counting)
 - [ ] Implement whitespace stripping rules for multiline string literals
-- [ ] Implement escape sequence processing (`\#`, `\[`, `\]`, `\:`, `\=`,
-      `\xHH`, `\UHHHHHHHH`)
+- [ ] Implement context-aware escape processing (prose escapes vs string
+      escapes per grammar.ebnf)
 - [ ] Error reporting with line/column and context snippet
 - [ ] Test suite: valid token sequences, invalid sequences with expected errors
 

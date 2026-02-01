@@ -137,9 +137,9 @@ aims for the same expressive power with a more regular grammar.
 5. **External filter extensibility.** Language-agnostic extension via CLI
    filters is a good design. Users can write filters in any language.
 
-6. **Escape rules are minimal and explicit.** Only a defined set of escape
-   sequences is allowed; anything else is a syntax error. This prevents subtle
-   bugs from unintentional escapes.
+6. **Escape rules are minimal and context-aware.** Two escape contexts (prose
+   and interpreted strings) each have their own valid set. Backslash followed
+   by anything not on the list for the current context is a syntax error.
 
 ### Design Decisions (Resolved)
 
