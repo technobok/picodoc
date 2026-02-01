@@ -120,7 +120,7 @@ Render-time built-ins (survive expansion as structured AST nodes):
 HTML Renderer:
 - [x] Implement renderer that walks expanded AST (text + render-time nodes)
 - [x] Map each render-time built-in to its HTML element(s)
-- [ ] Validate nesting (eg `#td` only inside `#tr` inside `#table`)
+- [x] Validate nesting (eg `#td` only inside `#tr` inside `#table`)
 - [x] Handle HTML escaping of text content (prevent XSS from document text)
 - [x] Implement full HTML document output (doctype, head, body wrapping)
 - [x] Test suite: `.pdoc` input -> expected `.html` output pairs

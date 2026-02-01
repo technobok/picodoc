@@ -50,7 +50,46 @@ def evaluate(doc: Document, filename: str = "input.pdoc") -> Document:
     expanded = _expand_top_level(doc.children, ctx)
     # Filter to MacroCall nodes — Text/Escape from conditionals are whitespace
     children = tuple(c for c in expanded if isinstance(c, MacroCall))
-    return Document(children, doc.span)
+    result = Document(children, doc.span)
+    _validate_nesting(result)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Post-expansion nesting validation
+# ---------------------------------------------------------------------------
+
+# child (resolved name) → set of allowed parent names
+_NESTING_RULES: dict[str, set[str]] = {
+    "tr": {"table"},
+    "td": {"tr"},
+    "th": {"tr"},
+    "*": {"ul", "ol"},
+}
+
+
+def _validate_nesting(doc: Document) -> None:
+    """Validate that macro nesting is structurally correct after expansion."""
+    for child in doc.children:
+        if isinstance(child, MacroCall):
+            _validate_node(child, parent_name=None)
+
+
+def _validate_node(node: MacroCall, parent_name: str | None) -> None:
+    name = resolve_name(node.name)
+    if name in _NESTING_RULES:
+        allowed = _NESTING_RULES[name]
+        if parent_name not in allowed:
+            allowed_str = " or ".join(f"#{p}" for p in sorted(allowed))
+            raise EvalError(
+                f"#{node.name} must appear inside {allowed_str}",
+                node.span,
+                "",
+            )
+    if isinstance(node.body, Body):
+        for child in node.body.children:
+            if isinstance(child, MacroCall):
+                _validate_node(child, parent_name=name)
 
 
 # ---------------------------------------------------------------------------

@@ -552,3 +552,60 @@ class TestUserMacro:
         doc = _doc(defn, _call("p", body=_body(call)))
         with pytest.raises(EvalError, match="missing required argument: target"):
             evaluate(doc)
+
+
+class TestNestingValidation:
+    def test_td_outside_tr(self) -> None:
+        doc = _doc(_call("td", body=_body(_text("cell"))))
+        with pytest.raises(EvalError, match=r"#td must appear inside #tr"):
+            evaluate(doc)
+
+    def test_tr_outside_table(self) -> None:
+        doc = _doc(_call("tr", body=_body(_call("td", body=_body(_text("cell"))))))
+        with pytest.raises(EvalError, match=r"#tr must appear inside #table"):
+            evaluate(doc)
+
+    def test_th_outside_tr(self) -> None:
+        doc = _doc(_call("th", body=_body(_text("header"))))
+        with pytest.raises(EvalError, match=r"#th must appear inside #tr"):
+            evaluate(doc)
+
+    def test_li_outside_list(self) -> None:
+        doc = _doc(_call("*", body=_body(_text("item"))))
+        with pytest.raises(EvalError, match=r"#\* must appear inside #ol or #ul"):
+            evaluate(doc)
+
+    def test_td_in_table_not_tr(self) -> None:
+        doc = _doc(_call("table", body=_body(_call("td", body=_body(_text("cell"))))))
+        with pytest.raises(EvalError, match=r"#td must appear inside #tr"):
+            evaluate(doc)
+
+    def test_valid_table_nesting(self) -> None:
+        doc = _doc(
+            _call(
+                "table",
+                body=_body(
+                    _call("tr", body=_body(_call("td", body=_body(_text("cell"))))),
+                ),
+            )
+        )
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_valid_list_nesting(self) -> None:
+        doc = _doc(_call("ul", body=_body(_call("*", body=_body(_text("item"))))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_li_alias(self) -> None:
+        doc = _doc(_call("ol", body=_body(_call("li", body=_body(_text("item"))))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_pipe_table_valid(self) -> None:
+        source = "#table:\n  Name | Age\n  Alice | 30\n"
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        table = result.children[0]
+        assert isinstance(table, MacroCall) and table.name == "table"
