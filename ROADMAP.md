@@ -55,19 +55,19 @@ example documents with expected HTML output.
 
 Build the tokenizer that converts source text into a token stream.
 
-- [ ] Set up Python project structure (pyproject.toml, uv, ruff, ty)
-- [ ] Define token types (hash, identifier, equals, colon, string literal,
+- [x] Set up Python project structure (pyproject.toml, uv, ruff, ty)
+- [x] Define token types (hash, identifier, equals, colon, string literal,
       raw string literal, square brackets, bareword, whitespace, newline,
       escape sequence, EOF)
-- [ ] Implement core lexer with position tracking (line, column) for errors
-- [ ] Implement interpreted string literal lexing (escape processing, code
+- [x] Implement core lexer with position tracking (line, column) for errors
+- [x] Implement interpreted string literal lexing (escape processing, code
       mode via `\[...]` for macro expansion, no implicit macro scanning)
-- [ ] Implement raw string literal lexing (fully opaque, quote counting)
-- [ ] Implement whitespace stripping rules for multiline string literals
-- [ ] Implement context-aware escape processing (prose escapes vs string
+- [x] Implement raw string literal lexing (fully opaque, quote counting)
+- [x] Implement whitespace stripping rules for multiline string literals
+- [x] Implement context-aware escape processing (prose escapes vs string
       escapes per grammar.ebnf)
-- [ ] Error reporting with line/column and context snippet
-- [ ] Test suite: valid token sequences, invalid sequences with expected errors
+- [x] Error reporting with line/column and context snippet
+- [x] Test suite: valid token sequences, invalid sequences with expected errors
 
 **Exit criteria:** Lexer correctly tokenizes all example documents and rejects
 all known invalid inputs with clear error messages.
