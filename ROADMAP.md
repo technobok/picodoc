@@ -193,9 +193,7 @@ invoke external filters.
 
 Provide syntax highlighting and editor integration.
 
-- [ ] Write a tree-sitter grammar for the language
 - [x] Neovim syntax highlighting (Vim regex-based)
-- [ ] VS Code extension with TextMate grammar (simpler, broader reach)
 - [x] Basic LSP server (diagnostics only, via pygls)
   - [x] Diagnostics (syntax errors as you type)
   - [ ] Go-to-definition for user-defined macros
@@ -213,6 +211,11 @@ provides diagnostics and completion.
 - [ ] A standard library of useful macros (admonitions, figures, TOC, etc.)
 - [ ] Package/distribution (PyPI)
 - [ ] Consider Rust port for performance and WASM compilation
+
+## Future Directions
+
+- [ ] Tree-sitter grammar for the language
+- [ ] VS Code extension with TextMate grammar
 
 ## Dependencies Between Phases
 
