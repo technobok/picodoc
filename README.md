@@ -268,15 +268,10 @@ ended and body began). The new design:
 - **`body` remains the parameter name** in `#set` definitions (`body=?` for
   required, `body=default` for optional). The `:` syntax is call-site sugar.
 
-### Open Questions
+### Resolved: `#set` restricted to top-level
 
-These are acknowledged in the spec and need answers:
-
-1. **External filter protocol** -- JSON on stdin is reasonable. Consider a
-   simple line protocol as an alternative for filters that only need the body.
-2. **Global environment** -- the `env.*` convention needs formal definition.
-   Should env values be inherited through nested macro calls? Can they be
-   overridden locally?
+`#set` cannot appear inside macro bodies. Consistent with the flat namespace
+design and avoids scoping complexity. May be relaxed in a future version.
 
 ## Implementation Approach
 
@@ -302,9 +297,13 @@ Source Text
     |
     v
   Expander ----> Expanded AST (multi-pass walking until stable)
-    |
+    |             - expansion-time builtins resolved and removed
+    |             - only text nodes + render-time builtin nodes remain
     v
   Renderer ----> HTML Output
+                  - maps render-time nodes to HTML elements
+                  - validates nesting, handles escaping
+                  - wraps in document structure (doctype, head, body)
 ```
 
 **Key recommendations:**

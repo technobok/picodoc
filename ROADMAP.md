@@ -37,8 +37,12 @@ code. Changing the grammar after implementation begins is expensive.
 - [x] Include: `#include file="..."` (privileged builtin, reads from disk)
 - [x] Builtin macros have privileged access to evaluator internals; user
       macros and external filters do not
-- [ ] Define external filter protocol (JSON on stdin, text on stdout)
-- [ ] Define `env.*` global environment semantics
+- [x] External filter protocol: JSON on stdin (args + env), PicoDoc markup
+      on stdout (re-expanded by evaluator). Filters return markup by default;
+      use `#literal` or `depth=0` for final output
+- [x] `env.*` global environment: defined via CLI, config, or document `#set`.
+      Immutable once set. Inherited through nested calls. Passed to external
+      filters in JSON payload
 - [ ] Write formal grammar (EBNF or PEG notation)
 - [ ] Create a comprehensive set of example documents that exercise all features
 - [x] Fix typos and inconsistencies in the spec (spelling, `=p` examples)
@@ -88,24 +92,34 @@ rejects malformed input with helpful messages.
 
 ## Phase 3: Built-in Macros and HTML Renderer
 
-Implement the core built-in macros and the HTML output renderer.
+Implement the core built-in macros and the HTML output renderer. Built-in
+macros are split into two categories: expansion-time (resolved during
+evaluation, removed from AST) and render-time (survive as structured nodes,
+mapped to HTML by the renderer).
 
-- [ ] Define built-in macro registry with parameter declarations
-- [ ] Implement structural macros: `#title`/`#h1`/`#-`, `#h2`/`#--`,
-      `#h3`/`#---`, `#h4`, `#h5`, `#h6`, `#p`, `#hr`
-- [ ] Implement inline macros: `#b`/`#**`, `#i`/`#__`, `#url`
-- [ ] Implement `#code` (with language attribute for syntax class)
-- [ ] Implement `#literal` (pass-through, no processing)
-- [ ] Implement `#comment` (excluded from output)
-- [ ] Implement HTML document macros: `#meta`, `#link`, `#script`, `#lang`
-- [ ] Implement list macros: `#ul`, `#ol`, `#*`/`#li`
-- [ ] Implement table macros: `#table` (with pipe-delimited body parsing),
-      `#tr`, `#td`, `#th` (for explicit form)
+Expansion-time built-ins:
+- [ ] Implement `#set` collection and removal from AST
+- [ ] Implement `#table` pipe-delimited body parsing (emits `#tr`/`#th`/`#td`)
 - [ ] Validate that `#table` output re-expansion works via multi-pass evaluator
-- [ ] Implement `#include` (privileged: file reading)
 - [ ] Implement `#ifeq`, `#ifne` (string comparison, return body or empty)
 - [ ] Implement `#ifset` (privileged: queries definition registry)
-- [ ] Implement HTML renderer (AST -> HTML string)
+- [ ] Implement `#include` (privileged: file reading, inserts content)
+- [ ] Implement `#comment` (removed from AST)
+
+Render-time built-ins (survive expansion as structured AST nodes):
+- [ ] Define built-in macro registry with parameter declarations
+- [ ] Implement structural: `#title`/`#h1`/`#-`, `#h2`/`#--`,
+      `#h3`/`#---`, `#h4`, `#h5`, `#h6`, `#p`, `#hr`
+- [ ] Implement inline: `#b`/`#**`, `#i`/`#__`, `#url`
+- [ ] Implement code/literal: `#code` (with language attribute), `#literal`
+- [ ] Implement lists: `#ul`, `#ol`, `#*`/`#li`
+- [ ] Implement tables: `#tr`, `#td`, `#th`
+- [ ] Implement document: `#meta`, `#link`, `#script`, `#lang`
+
+HTML Renderer:
+- [ ] Implement renderer that walks expanded AST (text + render-time nodes)
+- [ ] Map each render-time built-in to its HTML element(s)
+- [ ] Validate nesting (eg `#td` only inside `#tr` inside `#table`)
 - [ ] Handle HTML escaping of text content (prevent XSS from document text)
 - [ ] Implement full HTML document output (doctype, head, body wrapping)
 - [ ] Test suite: `.pdoc` input -> expected `.html` output pairs

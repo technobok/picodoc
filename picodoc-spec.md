@@ -62,13 +62,10 @@
   HHHHHHHH (8 fixed hex digits, codepoints U+00000000 to U+0010FFFF)
 - the question mark ('?') has special meaning only within a macro definition
   ('set'), outside of that it is standard document text. It can not be escaped.
-- users can define new macros externally as command line filters that take
-  arguments on stdin (json to pass multiple arguments? alternatives?) and
-  return the rendered text
-- need a way to define 'global' arguments at the top of the document that are
-  passed to all macros, perhaps as an environment (simply name them env.xxx?,
-  internal macros would automatically have access to these, for external
-  filters, all 'env.*' macros would be passed as an argument)
+- users can define new macros externally as command line filters. See the
+  "External filters" section for the protocol
+- global values are defined via the env.* namespace. See the "Global
+  environment" section for semantics
 - users could also define simple macros inline within the document with set
 - a macro with no arguments is essentially a variable/constant
 - the namespace for macros is flat. But dots (".") can be used in macro names
@@ -263,11 +260,9 @@
   are defined in the document. The compiler collects all #set definitions in a
   first pass before resolving and expanding
 - duplicate macro definitions at the same scope are an immediate error
-- whether #set inside macro bodies should be allowed is under discussion. If
-  allowed, such definitions would be scoped to that expansion and lower scopes,
-  and out-of-order definitions within the body would also need to be supported
-  for consistency. Alternatively, #set could be restricted to top-level only,
-  consistent with the flat namespace design
+- #set is restricted to top-level only. It cannot appear inside macro bodies.
+  This is consistent with the flat namespace design and avoids scoping
+  complexity. This restriction may be relaxed in the future if needed
 
 ## Other syntax sugar
 
@@ -278,14 +273,40 @@
 
 - design a treesitter grammar for this markup language, or an LSP?
 - implementation of a converter for the markup language is: lexer (source to
-  token stream), parser (tokens to AST), evaluator (multi-pass AST walking to
-  expand all macros), then renderer (expanded AST to HTML).
-- There will be macros for specifying meta, link, script, lang (argument to
+  token stream), parser (tokens to AST), evaluator (multi-pass AST walking),
+  then renderer (expanded AST to HTML)
+- there will be macros for specifying meta, link, script, lang (argument to
   html tag) etc
 - the converter app would need to be able to accept, envvars, config or command
   line arguments that can be used to specify externally some macros, can add
   some meta tags, can define some css and js files and inlines that may be
-  required in the resulting document.
+  required in the resulting document
+
+## Built-in macro categories
+
+- built-in macros fall into two categories: expansion-time and render-time
+- expansion-time macros are fully resolved during the evaluation phase. They
+  transform, produce markup, or disappear from the AST entirely:
+  - #set (definition, removed from AST after collection)
+  - #table (pipe-delimited form: parses body, emits #tr/#th/#td calls)
+  - #ifeq, #ifne, #ifset (return body or empty string)
+  - #include (replaced by included file contents)
+  - #comment (removed from AST)
+- render-time macros survive expansion as structured nodes in the AST. The
+  renderer maps them to HTML elements:
+  - structural: #title/#h1/#-, #h2/#--, #h3/#---, #h4, #h5, #h6, #p, #hr
+  - inline: #b/#**, #i/#__, #url
+  - code: #code, #literal
+  - lists: #ul, #ol, #*/#li
+  - tables: #tr, #td, #th (from explicit form or emitted by #table)
+  - document: #meta, #link, #script, #lang
+- after expansion completes, the AST contains only text nodes and render-time
+  built-in nodes with fully resolved arguments and body
+- the renderer walks this structured tree, validates nesting (eg #td only
+  inside #tr inside #table), handles HTML escaping, and produces the final
+  HTML document with proper structure (doctype, head, body)
+- this separation allows alternative renderers for other output formats
+  against the same expanded AST
 
 ## Lists
 
@@ -387,6 +408,50 @@ Examples:
 [#ifne lhs=[#env.mode] rhs=production : Not yet published.]
 
 [#ifset name=env.author : Written by [#env.author].]
+
+## External filters
+
+- external filters allow users to define macros as command line programs in
+  any language
+- the filter receives a JSON object on stdin containing all named arguments
+  (including 'body' if present) and all env.* values:
+  {"arg1": "value1", "body": "the body text", "env": {"mode": "draft"}}
+- the filter returns PicoDoc markup on stdout. The multi-pass evaluator
+  expands any macro calls in the output on subsequent passes. This is
+  consistent with how #set and #table work
+- a filter that wants to return final HTML can wrap its output in #literal
+  to prevent further expansion. A filter returning plain text with no macro
+  calls passes through unchanged
+- the depth parameter on the filter's macro registration applies: depth=0
+  means the output is treated as final text regardless
+- filter discovery: the converter checks a filters/ directory alongside the
+  document, then a configured filter path, then $PATH. The executable name
+  maps to the macro name (or is configured via a registry/config file)
+- filter timeout and error handling: a configurable timeout (default eg 5s)
+  kills long-running filters. Non-zero exit codes from filters are treated
+  as expansion errors with the filter's stderr included in the error message
+
+## Global environment
+
+- the env.* namespace provides global values accessible to all macros
+- env values can be defined via:
+  - CLI arguments: picodoc -e mode=draft -e author="Alice" input.pdoc
+  - config file: key=value pairs under an [env] section
+  - document-level #set: [#set name=env.mode : draft]
+  - CLI and config values are set before document processing. Document-level
+    #set definitions for env.* follow normal #set rules (collected first pass,
+    duplicates are errors)
+- env values are accessed as zero-argument macros: #env.mode or [#env.mode]
+- env values are inherited through nested macro calls. A macro body can
+  reference #env.mode and it will resolve from the global environment
+- env values cannot be overridden locally within macro bodies. They are
+  global and immutable once set. This prevents confusing action-at-a-distance
+  where a macro silently changes global state
+- for external filters, all env.* values are passed in the JSON payload
+  under the "env" key
+- CLI-provided env values take precedence over config file values.
+  Document-level #set for env.* takes precedence over both (the document
+  author has final say)
 
 ## Examples
 
