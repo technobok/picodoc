@@ -1,18 +1,30 @@
-"""Tests for the LSP server — diagnostic generation."""
+"""Tests for the LSP server — diagnostics, go-to-definition, hover, completion."""
 
 from __future__ import annotations
 
 import pytest
 from lsprotocol.types import (
+    CompletionItemKind,
     DiagnosticSeverity,
+    MarkupKind,
+    Position,
     PublishDiagnosticsParams,
+    TextDocumentIdentifier,
     TextDocumentItem,
+    TextDocumentPositionParams,
     TextDocumentSyncKind,
 )
 from pygls.lsp.server import LanguageServer
 from pygls.workspace import Workspace
 
-from picodoc.lsp import _validate
+from picodoc.lsp import (
+    _analyze,
+    _find_macro_at_position,
+    _validate,
+    completion,
+    goto_definition,
+    hover,
+)
 
 
 @pytest.fixture
@@ -129,3 +141,256 @@ class TestPositionConversion:
         # Error is on line 2 (1-based) → LSP line 1 (0-based)
         assert d.range.start.line == 1
         assert d.range.start.character == 0
+
+
+# ---------------------------------------------------------------------------
+# Shared analysis helpers
+# ---------------------------------------------------------------------------
+
+
+URI = "file:///test.pdoc"
+
+
+def _make_params(line: int, character: int) -> TextDocumentPositionParams:
+    return TextDocumentPositionParams(
+        text_document=TextDocumentIdentifier(uri=URI),
+        position=Position(line=line, character=character),
+    )
+
+
+class TestAnalyze:
+    def test_collects_set_definitions(self) -> None:
+        source = '#set name=greeting: Hello\n#title: #greeting'
+        ast, defs = _analyze(source, "test.pdoc")
+        assert ast is not None
+        assert "greeting" in defs
+
+    def test_handles_lex_error(self) -> None:
+        source = r"Hello \z world"
+        ast, defs = _analyze(source, "test.pdoc")
+        assert ast is None
+        assert defs == {}
+
+    def test_handles_parse_error(self) -> None:
+        source = "[#b: hello"
+        ast, defs = _analyze(source, "test.pdoc")
+        assert ast is None
+        assert defs == {}
+
+
+class TestFindMacroAtPosition:
+    def test_finds_macro_on_hash(self) -> None:
+        source = "#title: Hello"
+        ast, _ = _analyze(source, "test.pdoc")
+        assert ast is not None
+        # cursor on #  (line 0, col 0 in 0-based)
+        name = _find_macro_at_position(source, ast, 0, 0)
+        assert name == "title"
+
+    def test_finds_macro_on_name(self) -> None:
+        source = "#title: Hello"
+        ast, _ = _analyze(source, "test.pdoc")
+        assert ast is not None
+        # cursor on 'i' of title (col 3 in 0-based)
+        name = _find_macro_at_position(source, ast, 0, 3)
+        assert name == "title"
+
+    def test_returns_none_off_macro(self) -> None:
+        source = "#title: Hello"
+        ast, _ = _analyze(source, "test.pdoc")
+        assert ast is not None
+        # cursor on 'H' in body (col 8 in 0-based)
+        name = _find_macro_at_position(source, ast, 0, 8)
+        assert name is None
+
+    def test_finds_bracketed_macro(self) -> None:
+        source = "#p: [#b: bold text]"
+        ast, _ = _analyze(source, "test.pdoc")
+        assert ast is not None
+        # [#b is at cols 4,5,6 (0-based). # is at col 5, b at col 6
+        name = _find_macro_at_position(source, ast, 0, 5)
+        assert name == "b"
+
+
+# ---------------------------------------------------------------------------
+# Go-to-definition
+# ---------------------------------------------------------------------------
+
+
+class TestGotoDefinition:
+    def test_jumps_to_set_definition(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        source = '#set name=greeting: Hello\n#title: [#greeting]'
+        put(source)
+
+        # cursor on "greeting" in the second line's [#greeting]
+        # line 1, col 10 (0-based) → on the 'g' of greeting
+        params = _make_params(1, 9)
+        result = goto_definition(ls, params)
+
+        assert result is not None
+        # Should point to the #set on line 0
+        assert result.range.start.line == 0
+        assert result.uri == URI
+
+    def test_returns_none_for_builtin(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#title: Hello")
+        params = _make_params(0, 0)
+        result = goto_definition(ls, params)
+        assert result is None
+
+    def test_returns_none_for_no_macro(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#title: Hello")
+        # cursor on body text
+        params = _make_params(0, 10)
+        result = goto_definition(ls, params)
+        assert result is None
+
+    def test_returns_none_for_broken_document(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("[#b: unclosed")
+        params = _make_params(0, 1)
+        result = goto_definition(ls, params)
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Hover
+# ---------------------------------------------------------------------------
+
+
+class TestHover:
+    def test_hover_builtin(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#title: Hello")
+        params = _make_params(0, 1)
+        result = hover(ls, params)
+
+        assert result is not None
+        assert result.contents.kind == MarkupKind.Markdown
+        assert "#title" in result.contents.value
+        assert "builtin" in result.contents.value
+
+    def test_hover_builtin_with_params(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put('#url link=https://example.com: click')
+        params = _make_params(0, 1)
+        result = hover(ls, params)
+
+        assert result is not None
+        assert "link" in result.contents.value
+        assert "required" in result.contents.value
+
+    def test_hover_alias(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        # #- is alias for #title
+        put("#-: Hello")
+        params = _make_params(0, 0)
+        result = hover(ls, params)
+
+        assert result is not None
+        assert "#title" in result.contents.value
+        assert "builtin" in result.contents.value
+
+    def test_hover_user_macro(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        source = '#set name=greeting: Hello\n#title: [#greeting]'
+        put(source)
+        # cursor on #greeting, line 1
+        params = _make_params(1, 9)
+        result = hover(ls, params)
+
+        assert result is not None
+        assert "greeting" in result.contents.value
+        assert "user-defined" in result.contents.value
+
+    def test_hover_returns_none_off_macro(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#title: Hello")
+        params = _make_params(0, 10)
+        result = hover(ls, params)
+        assert result is None
+
+    def test_hover_returns_none_broken_doc(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("[#b: unclosed")
+        params = _make_params(0, 1)
+        result = hover(ls, params)
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Completion
+# ---------------------------------------------------------------------------
+
+
+class TestCompletion:
+    def test_includes_builtins(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#")
+        params = _make_params(0, 1)
+        result = completion(ls, params)
+
+        labels = [item.label for item in result.items]
+        assert "#title" in labels
+        assert "#b" in labels
+        assert "#set" in labels
+
+    def test_includes_aliases(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#")
+        params = _make_params(0, 1)
+        result = completion(ls, params)
+
+        labels = [item.label for item in result.items]
+        assert "#-" in labels  # alias for title
+        assert "#**" in labels  # alias for b
+
+        # Check alias detail
+        alias_items = [i for i in result.items if i.label == "#-"]
+        assert len(alias_items) == 1
+        assert "alias for #title" in alias_items[0].detail
+
+    def test_includes_user_macros(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put('#set name=greeting: Hello\n#title: world')
+        params = _make_params(1, 1)
+        result = completion(ls, params)
+
+        labels = [item.label for item in result.items]
+        assert "#greeting" in labels
+
+        user_items = [i for i in result.items if i.label == "#greeting"]
+        assert len(user_items) == 1
+        assert user_items[0].kind == CompletionItemKind.Variable
+
+    def test_builtin_detail_shows_params(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#")
+        params = _make_params(0, 1)
+        result = completion(ls, params)
+
+        url_items = [i for i in result.items if i.label == "#url"]
+        assert len(url_items) == 1
+        assert "link" in url_items[0].detail
+        assert "builtin" in url_items[0].detail
+
+    def test_completion_not_incomplete(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put("#")
+        params = _make_params(0, 1)
+        result = completion(ls, params)
+        assert result.is_incomplete is False
+
+    def test_user_macro_with_params(self, lsp_env) -> None:
+        ls, _, put = lsp_env
+        put('#set name=greet who=?: Hello [#who]!\n#title: hi')
+        params = _make_params(1, 1)
+        result = completion(ls, params)
+
+        greet_items = [i for i in result.items if i.label == "#greet"]
+        assert len(greet_items) == 1
+        assert "who" in greet_items[0].detail
+        assert "user" in greet_items[0].detail
