@@ -111,9 +111,11 @@ After the identifier, the parser examines the next token\:
     #p"Explicit paragraph."
     """
 
-In argument mode, the parser continues consuming name\=value pairs until it
-encounters a colon (body), a string literal (body), or end of line (call
-complete).
+In argument mode, the parser consumes name\=value pairs. If the next token is
+not a name\=value pair, a colon, or a string literal, the call is complete and
+the remaining text on the line is prose. After a colon body (to end of line) or
+a string literal body, the call is also complete and any remaining text is
+prose.
 
 #code: """
     #code language=python : print("hello")
