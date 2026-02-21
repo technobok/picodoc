@@ -86,6 +86,13 @@ string_escape   = '\\'
 
 string_literal  = interp_string | raw_string ;
 
+(* --- Adjacent string restriction ---                                 *)
+(* After any string literal closes (interpreted, empty, or raw), the   *)
+(* immediately following character must NOT be '"'. At least one        *)
+(* non-quote character must separate consecutive string literals.       *)
+(* This is a lexer-level constraint, not expressed in the grammar      *)
+(* productions below, but enforced during tokenization.                *)
+
 (* --- Interpreted strings ---                                         *)
 (* Delimited by a single '"' on each end. Escape sequences are         *)
 (* processed. Macro calls are NOT scanned automatically; use \[...]    *)

@@ -164,6 +164,12 @@
 - for the same reason, a raw string literal cannot have a double quote
   character within it that is immediately after the opening delimiter or
   immediately before the closing delimiter.
+- adjacent string literals are not allowed. After a string literal closes
+  (whether interpreted, empty, or raw), the next character must not be a
+  double quote. At least one non-quote character (whitespace, bracket, etc.)
+  must separate consecutive string literals. This prevents a mismatched or
+  escaped quote from silently cascading through the file by pairing with the
+  opening quote of a subsequent string
 - there are special whitespace handling rules within string literals that are
   handled the same way for both interpreted and raw strings
 - if the remainder of the line after the opening delimiter is blank (contains
