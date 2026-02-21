@@ -76,6 +76,18 @@ class TestRawStringWhitespaceStripping:
         assert tokens[0].value == "hello"
 
 
+class TestRawStringAdjacentStrings:
+    def test_raw_string_space_then_interp_ok(self, lex):
+        tokens = lex('"""raw""" "next"')
+        assert tokens[0].type == TokenType.RAW_STRING
+        assert tokens[0].value == "raw"
+
+    def test_raw_string_newline_then_interp_ok(self, lex):
+        tokens = lex('"""raw"""\n"next"')
+        assert tokens[0].type == TokenType.RAW_STRING
+        assert tokens[0].value == "raw"
+
+
 class TestRawStringErrors:
     def test_unterminated(self, lex):
         with pytest.raises(LexError, match="unterminated raw string"):

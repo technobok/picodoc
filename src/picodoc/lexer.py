@@ -89,6 +89,12 @@ class Lexer:
             pos = self._current_pos()
         return LexError(message, pos, self._source)
 
+    def _check_adjacent_string(self) -> None:
+        """Raise an error if the next character is a quote (adjacent strings)."""
+        if self._pos < len(self._source) and self._peek() == '"':
+            raise self._error("adjacent strings are not allowed — "
+                              "insert whitespace between string literals")
+
     # ------------------------------------------------------------------
     # State management
     # ------------------------------------------------------------------
@@ -280,10 +286,12 @@ class Lexer:
             # Empty string: "" → STRING_START + STRING_END
             self._emit(TokenType.STRING_START, '"', '"', start)
             self._emit(TokenType.STRING_END, '"', '"', start)
+            self._check_adjacent_string()
             return
 
         # 3+ quotes → raw string
         self._lex_raw_string(quote_count, start)
+        self._check_adjacent_string()
 
     # ------------------------------------------------------------------
     # Interpreted string mode
@@ -299,6 +307,7 @@ class Lexer:
             self._advance()
             self._emit(TokenType.STRING_END, '"', '"', s)
             self._pop_state()
+            self._check_adjacent_string()
             return
 
         if ch == "\\":

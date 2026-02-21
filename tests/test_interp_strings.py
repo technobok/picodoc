@@ -117,6 +117,29 @@ class TestCodeMode:
         assert tokens[6].value == "!"
 
 
+class TestAdjacentStrings:
+    def test_adjacent_interp_strings(self, lex):
+        with pytest.raises(LexError, match="adjacent strings"):
+            lex('"foo""bar"')
+
+    def test_adjacent_after_interp_string(self, lex):
+        with pytest.raises(LexError, match="adjacent strings"):
+            lex('"a""b"')
+
+    def test_separated_strings_ok(self, lex):
+        tokens = lex('"foo" "bar"')
+        assert_types(tokens, [
+            TokenType.STRING_START, TokenType.STRING_TEXT, TokenType.STRING_END,
+            TokenType.WS,
+            TokenType.STRING_START, TokenType.STRING_TEXT, TokenType.STRING_END,
+        ])
+
+    def test_newline_separated_strings_ok(self, lex):
+        tokens = lex('"foo"\n"bar"')
+        text_tokens = find_tokens(tokens, TokenType.STRING_TEXT)
+        assert [t.value for t in text_tokens] == ["foo", "bar"]
+
+
 class TestUnterminatedString:
     def test_unterminated(self, lex):
         with pytest.raises(LexError, match="unterminated"):
