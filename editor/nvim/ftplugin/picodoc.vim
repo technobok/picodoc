@@ -8,6 +8,6 @@ setlocal commentstring=#comment:\ %s
 setlocal shiftwidth=2
 setlocal expandtab
 setlocal softtabstop=2
-setlocal iskeyword+=.,-,*,!,$,%,&,+,/,@-@,^,~
+setlocal iskeyword+=.,45,*,!,$,%,&,+,/,@-@,^,~
 
 let b:undo_ftplugin = 'setlocal commentstring< shiftwidth< expandtab< softtabstop< iskeyword<'
