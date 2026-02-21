@@ -233,8 +233,8 @@ have exactly the same number of quotes as the opening. Contents are completely
 opaque (no escapes, no macro processing).
 
 #code: """""
-    \"""This is raw: \n is literal and #name is not expanded.\"""
-    \""""Contains \""" three quotes inside.\""""
+    """This is raw: \n is literal and #name is not expanded."""
+    """"Contains """ three quotes inside.""""
     """""
 
 #h3: Empty String
