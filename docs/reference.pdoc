@@ -277,7 +277,7 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #h2: Builtin Macros
 
-PicoDoc has 26 builtin macros in 7 categories, plus 7 aliases.
+PicoDoc has 26 builtin macros in 7 categories, plus 10 aliases.
 
 #h3: Structural Macros
 
@@ -301,10 +301,20 @@ parameters.
 Alias\: \#---. Subsection heading. Renders as [#code"<h3>"]. Takes body, no
 parameters.
 
-#h4: \#h4, \#h5, \#h6
+#h4: \#h4
 
-Lower-level headings. Render as [#code"<h4>"] through [#code"<h6>"]. Take
-body, no parameters. No aliases.
+Alias\: \#----. Lower-level heading. Renders as [#code"<h4>"]. Takes body, no
+parameters.
+
+#h4: \#h5
+
+Alias\: \#-----. Lower-level heading. Renders as [#code"<h5>"]. Takes body, no
+parameters.
+
+#h4: \#h6
+
+Alias\: \#------. Lower-level heading. Renders as [#code"<h6>"]. Takes body, no
+parameters.
 
 #h4: \#p
 
@@ -597,7 +607,7 @@ No body.
 
 #h3: Alias Table
 
-All 7 aliases mapped to their canonical names\:
+All 10 aliases mapped to their canonical names\:
 
 #table:
   Alias | Canonical
@@ -605,6 +615,9 @@ All 7 aliases mapped to their canonical names\:
   \#h1 | \#title
   \#-- | \#h2
   \#--- | \#h3
+  \#---- | \#h4
+  \#----- | \#h5
+  \#------ | \#h6
   \#** | \#b
   \#__ | \#i
   \#li | \#*

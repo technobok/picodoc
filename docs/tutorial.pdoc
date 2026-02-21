@@ -62,12 +62,15 @@ PicoDoc supports six levels of headings\:
     #h6: Level 6
     """
 
-The first three have dash aliases that are shorter to type\:
+All six levels have dash aliases that are shorter to type\:
 
 #code: """
     #-: Level 1 (same as #title)
     #--: Level 2 (same as #h2)
     #---: Level 3 (same as #h3)
+    #----: Level 4 (same as #h4)
+    #-----: Level 5 (same as #h5)
+    #------: Level 6 (same as #h6)
     """
 
 Use [#code"#hr"] for a horizontal rule and [#code"#comment"] for text that

@@ -18,7 +18,7 @@ class TestUnbracketedNoBody:
         assert_call(doc.children[0], "hr", bracketed=False)
 
     def test_heading_aliases(self, parse_source):
-        for name in ("-", "--", "---"):
+        for name in ("-", "--", "---", "----", "-----", "------"):
             doc = parse_source(f"#{name}: Title\n")
             assert_call(doc.children[0], name, has_body=True, bracketed=False)
 
