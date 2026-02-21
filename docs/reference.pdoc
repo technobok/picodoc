@@ -156,7 +156,7 @@ Argument values can be\:
   [#* : [#b : Macro reference] (a zero-argument macro)\:
     [#code"link=#site-url"]]
   [#* : [#b : Bracketed call] (a macro call in brackets)\:
-    [#code"style=\\[#get-style\\]"]]
+    [#code"style=[#get-style]"]]
 ]
 
 #h3: The Body Argument
