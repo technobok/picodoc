@@ -196,9 +196,9 @@ Provide syntax highlighting and editor integration.
 - [x] Neovim syntax highlighting (Vim regex-based)
 - [x] Basic LSP server (diagnostics only, via pygls)
   - [x] Diagnostics (syntax errors as you type)
-  - [ ] Go-to-definition for user-defined macros
-  - [ ] Hover documentation for built-in macros
-  - [ ] Completion for macro names and argument names
+  - [x] Go-to-definition for user-defined macros
+  - [x] Hover documentation for built-in macros
+  - [x] Completion for macro names and argument names
 
 **Exit criteria:** Syntax highlighting works in at least one editor. LSP
 provides diagnostics and completion.
