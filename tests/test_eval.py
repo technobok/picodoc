@@ -248,8 +248,43 @@ class TestInclude:
         p = result.children[0]
         assert isinstance(p, MacroCall) and p.name == "p"
         assert isinstance(p.body, Body)
-        text = "".join(c.value for c in p.body.children if isinstance(c, (Text, Escape)))
+        # Literal include wraps content in a #literal MacroCall
+        lit = p.body.children[0]
+        assert isinstance(lit, MacroCall) and lit.name == "literal"
+        assert isinstance(lit.body, Body)
+        text = "".join(c.value for c in lit.body.children if isinstance(c, (Text, Escape)))
         assert 'console.log("hello");' in text
+
+    def test_literal_include_top_level(self, tmp_path: Path) -> None:
+        html_file = tmp_path / "nav.html"
+        html_file.write_text('<nav>hello</nav>\n')
+
+        main = tmp_path / "main.pdoc"
+        main.write_text("#include literal=true: nav.html\n")
+
+        source = main.read_text()
+        doc = parse(source, str(main))
+        result = evaluate(doc, str(main))
+
+        # Top-level literal include must survive as a MacroCall, not be filtered out
+        assert len(result.children) == 1
+        lit = result.children[0]
+        assert isinstance(lit, MacroCall) and lit.name == "literal"
+
+    def test_literal_include_renders_unescaped(self, tmp_path: Path) -> None:
+        html_file = tmp_path / "nav.html"
+        html_file.write_text('<nav>hello</nav>\n')
+
+        main = tmp_path / "main.pdoc"
+        main.write_text("#include literal=true: nav.html\n")
+
+        source = main.read_text()
+        doc = parse(source, str(main))
+        result = evaluate(doc, str(main))
+
+        from picodoc.render import render
+        html = render(result)
+        assert "<nav>hello</nav>" in html
 
 
 class TestTableExpansion:

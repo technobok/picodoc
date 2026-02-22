@@ -265,7 +265,7 @@ def _render_code(node: MacroCall) -> str:
 def _render_literal(node: MacroCall) -> str:
     if isinstance(node.body, RawString):
         return node.body.value
-    return _render_body(node.body)
+    return _body_text(node.body)
 
 
 def _render_list(node: MacroCall, tag: str) -> str:

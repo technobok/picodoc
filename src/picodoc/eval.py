@@ -610,7 +610,13 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
     )
 
     if literal:
-        return [Text(content, node.span)]
+        return [MacroCall(
+            "literal",
+            (),
+            Body((Text(content, node.span),), node.span),
+            False,
+            node.span,
+        )]
 
     from picodoc.parser import parse
 
