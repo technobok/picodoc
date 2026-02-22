@@ -60,6 +60,7 @@
         // Add a new container for the tocify toc into the existing toc so we can re-use its
         // styling
         console.debug("ready");
+/*
         var t = document.getElementById("toc");
         t.insertAdjacentHTML("beforeend", "<div id='generated-toc'></div>");
         tocbot.init({
@@ -101,7 +102,7 @@
             localStorage.setItem('theme', 'light');
           }
         });
-
+*/
         window.addEventListener('load', () => {
           if (localStorage.getItem('theme') === 'dark') {
             toggleCheckbox.checked = true;

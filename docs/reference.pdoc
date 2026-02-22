@@ -5,7 +5,9 @@
 
 #doc.title: PicoDoc Language Reference
 #doc.link rel=stylesheet href=style/picodoc.css 
-#doc.script type=text/javascript: [#include: style/init.js]
+#doc.script type=text/javascript src=style/tocbot.min.js
+#//: #doc.script type=text/javascript: [#include literal=true: style/init.js]
+#doc.script type=text/javascript: src=style/init.js
 
 #include literal=true: style/nav.html
 
