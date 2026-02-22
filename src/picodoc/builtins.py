@@ -86,7 +86,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
         ParamDecl("type", False),
         ParamDecl("sizes", False),
     ))
-    d("doc.script", (ParamDecl("src", False),), has_body=True)
+    d("doc.script", (ParamDecl("src", False), ParamDecl("type", False)), has_body=True)
     d("doc.title", has_body=True)
     d("doc.lang", has_body=True)
     d("doc.author", has_body=True)

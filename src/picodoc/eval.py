@@ -167,11 +167,30 @@ def _expand_top_node(
 # ---------------------------------------------------------------------------
 
 
+def _validate_builtin_args(node: MacroCall, name: str) -> None:
+    """Raise EvalError if a builtin macro receives unknown arguments."""
+    if name == "set":
+        return  # #set accepts arbitrary args as macro parameter declarations
+    builtin = BUILTINS.get(name)
+    if builtin is None or not node.args:
+        return
+    known = {p.name for p in builtin.params}
+    for arg in node.args:
+        if arg.name not in known:
+            raise EvalError(
+                f"unknown argument '{arg.name}' for #{name}",
+                arg.name_span,
+                "",
+            )
+
+
 def _expand_macro(
     node: MacroCall,
     ctx: EvalContext,
 ) -> list[MacroCall | Text | Escape]:
     name = resolve_name(node.name)
+
+    _validate_builtin_args(node, name)
 
     if name.startswith("env."):
         env_key = name[4:]

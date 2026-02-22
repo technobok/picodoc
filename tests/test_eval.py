@@ -801,6 +801,26 @@ class TestErrorChain:
         assert "outer" in err.call_stack
 
 
+class TestUnknownArgValidation:
+    def test_unknown_arg_raises(self) -> None:
+        doc = _doc(_call("p", (_arg("bogus", "val"),), _body(_text("hi"))))
+        with pytest.raises(EvalError, match=r"unknown argument 'bogus' for #p"):
+            evaluate(doc)
+
+    def test_known_arg_accepted(self) -> None:
+        doc = _doc(_call("link", (_arg("to", "https://x.com"),), _body(_text("click"))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_set_allows_extra_args(self) -> None:
+        doc = _doc(
+            _call("set", (_arg("name", "g"), _narg("who", _req())), _body(_text("hi"))),
+            _call("p", body=_body(_call("g", (_arg("who", "World"),)))),
+        )
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+
 class TestNestingValidation:
     def test_td_outside_tr(self) -> None:
         doc = _doc(_call("td", body=_body(_text("cell"))))

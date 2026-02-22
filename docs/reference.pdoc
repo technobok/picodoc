@@ -583,12 +583,14 @@ Adds a [#code"<script>"] element. Parameters\:
 #table:
   Parameter | Required | Description
   src | No | URL of external script
+  type | No | Script type (e.g. text/javascript)
 
 Takes optional body (inline script content). Use either the src parameter or
 body, not both.
 
 #code: """
     #doc.script src="app.js"
+    #doc.script type=text/javascript src="app.js"
     [#doc.script : """
         console.log("Hello from PicoDoc");
         """]

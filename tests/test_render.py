@@ -282,6 +282,11 @@ class TestDocumentMeta:
         result = render(_doc(script))
         assert '<script src="app.js"></script>' in result
 
+    def test_script_src_with_type(self) -> None:
+        script = _call("doc.script", (_iarg("src", "app.js"), _arg("type", "text/javascript")))
+        result = render(_doc(script))
+        assert '<script type="text/javascript" src="app.js"></script>' in result
+
     def test_script_inline(self) -> None:
         script = _call("doc.script", body=RawString('console.log("hi");', S))
         result = render(_doc(script))

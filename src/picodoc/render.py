@@ -391,12 +391,17 @@ def _render_head_item(node: MacroCall) -> str:
 
     if name == "doc.script":
         src = _get_arg_text(node, "src")
+        type_val = _get_arg_text(node, "type")
+        attrs = ""
+        if type_val:
+            attrs += f' type="{_escape_attr(type_val)}"'
         if src:
-            return f'<script src="{_escape_attr(src)}"></script>'
+            attrs += f' src="{_escape_attr(src)}"'
+            return f"<script{attrs}></script>"
         if isinstance(node.body, RawString):
-            return f"<script>\n{node.body.value}\n</script>"
+            return f"<script{attrs}>\n{node.body.value}\n</script>"
         if node.body is not None:
-            return f"<script>\n{_render_body(node.body)}\n</script>"
-        return "<script></script>"
+            return f"<script{attrs}>\n{_render_body(node.body)}\n</script>"
+        return f"<script{attrs}></script>"
 
     return ""
