@@ -1,11 +1,18 @@
 #doc.lang: en
 
-#comment: PicoDoc Language Reference
-#comment: Authoritative documentation of every language feature.
+#//: PicoDoc Language Reference
+#//: Authoritative documentation of every language feature.
 
 #doc.title: PicoDoc Language Reference
+#doc.link rel=stylesheet href=style/picodoc.css 
 
-#h2: Overview
+Include nav....
+
+#include literal=true: style/nav.html
+
+#-: PicoDoc Language Reference
+
+#--: Overview
 
 PicoDoc is a macro-based markup language that compiles to HTML. Every construct
 in the language (headings, bold text, links, user-defined templates) is a macro
@@ -25,9 +32,9 @@ Design principles\:
 
 The file extension is [#code : .pdoc].
 
-#h2: Lexical Structure
+#--: Lexical Structure
 
-#h3: Identifiers
+#---: Identifiers
 
 An identifier consists of one or more letters, digits, dots, or special
 characters\:
@@ -40,7 +47,7 @@ Dots allow namespacing (e.g. [#code : env.mode], [#code : doc.lang]). The
 identifier terminates at the first character that is not in the set above, such
 as whitespace, colons, quotes, brackets, equals signs, hash, or backslash.
 
-#h3: Escape Sequences
+#---: Escape Sequences
 
 Backslash is the escape prefix. Backslash followed by any character not on the
 valid list for the current context is a syntax error.
@@ -73,7 +80,7 @@ valid list for the current context is a syntax error.
 Note that [#code"\\["] has different meaning in the two contexts\: in prose it
 produces a literal \[, while in strings it enters code mode.
 
-#h3: Comments
+#---: Comments
 
 The \#comment macro (alias \#//) removes its body from the output entirely.
 Three forms are available\:
@@ -95,12 +102,12 @@ Three forms are available\:
     is a comment.
     """
 
-#h2: Macro Calls
+#--: Macro Calls
 
 There are two forms of macro call\: unbracketed and bracketed. The parser does
 not need to consult macro definitions to parse either form.
 
-#h3: Unbracketed Form
+#---: Unbracketed Form
 
 A macro call begins with \# followed immediately by the macro identifier.
 After the identifier, the parser examines the next token\:
@@ -133,7 +140,7 @@ prose.
     #doc.meta name=viewport content="width=device-width"
     """
 
-#h3: Bracketed Form
+#---: Bracketed Form
 
 A macro call enclosed in square brackets\: \[#identifier ...\]. Named
 arguments may appear as name\=value pairs separated by whitespace. A colon or
@@ -152,7 +159,7 @@ bracket is body, which may span multiple lines and paragraphs.
 Bare text inside brackets that is not a name\=value pair and not preceded by
 a colon or string literal is a syntax error.
 
-#h3: Named Arguments
+#---: Named Arguments
 
 Named arguments use the syntax [#code"name=value"] with no whitespace before
 the equals sign. Whitespace after the equals sign is permitted.
@@ -170,7 +177,7 @@ Argument values can be\:
     [#code"style=[#get-style]"]]
 ]
 
-#h3: The Body Argument
+#---: The Body Argument
 
 Body content is introduced by a colon or by a string literal\:
 
@@ -214,9 +221,9 @@ bracket and may span multiple lines and paragraphs.
 
 If no colon and no string literal is present, the macro call has no body.
 
-#h2: String Literals
+#--: String Literals
 
-#h3: Interpreted Strings
+#---: Interpreted Strings
 
 Delimited by a single double quote on each end. Escape sequences are processed
 but macro calls are NOT automatically scanned for.
@@ -237,7 +244,7 @@ call syntax applies inside [#code"\\[...\\]"].
     "Dear \[#target], welcome to \[#place]."
     """
 
-#h3: Raw Strings
+#---: Raw Strings
 
 Delimited by three or more double quote characters. The closing delimiter must
 have exactly the same number of quotes as the opening. Contents are completely
@@ -248,12 +255,12 @@ opaque (no escapes, no macro processing).
     """"Contains """ three quotes inside.""""
     """""
 
-#h3: Empty String
+#---: Empty String
 
 The empty string is always [#code"\"\""] (two double quotes). An empty raw
 string is not possible because the opening quotes run into the closing.
 
-#h3: Whitespace Stripping
+#---: Whitespace Stripping
 
 Both interpreted and raw strings apply the same whitespace rules\:
 
@@ -280,19 +287,19 @@ affecting the result\:
 The four spaces before [#code"def"] and [#code"print"] are stripped because
 they match the indentation of the closing delimiter.
 
-#h3: Adjacent String Restriction
+#---: Adjacent String Restriction
 
 After a string literal closes, the next character must not be a double quote.
 At least one non-quote character must separate consecutive string literals.
 This prevents a mismatched quote from silently cascading through the file.
 
-#h2: Builtin Macros
+#--: Builtin Macros
 
 PicoDoc has 28 builtin macros in 7 categories, plus 11 aliases.
 
-#h3: Structural Macros
+#---: Structural Macros
 
-#h4: \#h1
+#----: \#h1
 
 Alias\: \#-. Top-level heading. Renders as [#code"<h1>"] in the document body.
 Takes body, no parameters.
@@ -302,32 +309,32 @@ Takes body, no parameters.
     #-: Alias form
     """
 
-#h4: \#h2
+#----: \#h2
 
 Alias\: \#--. Section heading. Renders as [#code"<h2>"]. Takes body, no
 parameters.
 
-#h4: \#h3
+#----: \#h3
 
 Alias\: \#---. Subsection heading. Renders as [#code"<h3>"]. Takes body, no
 parameters.
 
-#h4: \#h4
+#----: \#h4
 
 Alias\: \#----. Lower-level heading. Renders as [#code"<h4>"]. Takes body, no
 parameters.
 
-#h4: \#h5
+#----: \#h5
 
 Alias\: \#-----. Lower-level heading. Renders as [#code"<h5>"]. Takes body, no
 parameters.
 
-#h4: \#h6
+#----: \#h6
 
 Alias\: \#------. Lower-level heading. Renders as [#code"<h6>"]. Takes body, no
 parameters.
 
-#h4: \#p
+#----: \#p
 
 Paragraph. Renders as [#code"<p>"]. Takes body, no parameters. Bare text
 paragraphs (not inside a macro call) are implicitly wrapped in \#p.
@@ -338,13 +345,13 @@ paragraphs (not inside a macro call) are implicitly wrapped in \#p.
     This bare text is also a paragraph.
     """
 
-#h4: \#hr
+#----: \#hr
 
 Horizontal rule. Renders as [#code"<hr>"]. No parameters, no body.
 
-#h3: Inline Macros
+#---: Inline Macros
 
-#h4: \#b
+#----: \#b
 
 Alias\: \#**. Bold text. Renders as [#code"<strong>"]. Takes body, no
 parameters.
@@ -354,7 +361,7 @@ parameters.
     This is [#b : also bold] text.
     """
 
-#h4: \#i
+#----: \#i
 
 Alias\: \#__. Italic text. Renders as [#code"<em>"]. Takes body, no
 parameters.
@@ -364,7 +371,7 @@ parameters.
     This is [#i : also italic] text.
     """
 
-#h4: \#link
+#----: \#link
 
 Alias\: \#>. Hyperlink. Renders as [#code"<a>"]. Parameters\:
 
@@ -385,9 +392,9 @@ and does not contain [#code"/"], it is treated as a fragment reference and
     [#link to=page/about : About page]
     """
 
-#h3: Code and Literal Macros
+#---: Code and Literal Macros
 
-#h4: \#code
+#----: \#code
 
 Code / monospace text. Renders as [#code"<code>"] (inline) or as
 a [#code"<pre><code>"] block. Parameters\:
@@ -407,7 +414,7 @@ Takes body.
         """]
     """
 
-#h4: \#literal
+#----: \#literal
 
 Prevents re-expansion of its body. Any macro calls or escapes within the body
 are passed through as literal text. Useful for documenting PicoDoc syntax or
@@ -420,19 +427,19 @@ for output from external filters. Takes body, no parameters.
     """
     """"
 
-#h3: List Macros
+#---: List Macros
 
-#h4: \#ul
+#----: \#ul
 
 Unordered list. Renders as [#code"<ul>"]. Takes body, no parameters. Body must
 contain only \#* (list item) elements.
 
-#h4: \#ol
+#----: \#ol
 
 Ordered list. Renders as [#code"<ol>"]. Takes body, no parameters. Body must
 contain only \#* (list item) elements.
 
-#h4: \#*
+#----: \#*
 
 Alias\: \#li. List item. Renders as [#code"<li>"]. Takes body, no parameters.
 Must appear inside \#ul or \#ol.
@@ -455,9 +462,9 @@ Must appear inside \#ul or \#ol.
     ]
     """
 
-#h3: Table Macros
+#---: Table Macros
 
-#h4: \#table
+#----: \#table
 
 Table container. Renders as [#code"<table>"]. Takes body, no parameters.
 Supports two forms\:
@@ -482,11 +489,11 @@ directly.
     ]
     """
 
-#h4: \#tr
+#----: \#tr
 
 Table row. Renders as [#code"<tr>"]. Takes body, no parameters.
 
-#h4: \#td
+#----: \#td
 
 Table data cell. Renders as [#code"<td>"]. Parameters\:
 
@@ -496,7 +503,7 @@ Table data cell. Renders as [#code"<td>"]. Parameters\:
 
 Takes body.
 
-#h4: \#th
+#----: \#th
 
 Table header cell. Renders as [#code"<th>"]. Same parameters as \#td. Takes
 body.
@@ -509,12 +516,12 @@ body.
     ]
     """
 
-#h3: Document Macros (doc.* Namespace)
+#---: Document Macros (doc.* Namespace)
 
 All document-level macros live under the [#code"doc.*"] namespace. They produce
 elements in the HTML [#code"<head>"] section, not in [#code"<body>"].
 
-#h4: \#doc.title
+#----: \#doc.title
 
 Sets the document [#code"<title>"] in the HTML [#code"<head>"] section. Does
 not produce any output in [#code"<body>"]. Takes body, no parameters.
@@ -523,7 +530,7 @@ not produce any output in [#code"<body>"]. Takes body, no parameters.
     #doc.title: My Document
     """
 
-#h4: \#doc.lang
+#----: \#doc.lang
 
 Sets the lang attribute on the HTML [#code"<html>"] element. Takes body (the
 language code), no parameters.
@@ -532,7 +539,7 @@ language code), no parameters.
     #doc.lang: en
     """
 
-#h4: \#doc.meta
+#----: \#doc.meta
 
 Adds a [#code"<meta>"] tag to the document head. Parameters\:
 
@@ -549,7 +556,7 @@ No body.
     #doc.meta property="og:title" content="PicoDoc Reference"
     """
 
-#h4: \#doc.link
+#----: \#doc.link
 
 Adds a [#code"<link>"] tag to the document head. Parameters\:
 
@@ -568,7 +575,7 @@ included in the output when non-empty.
     #doc.link rel=icon href="icon.png" type="image/png" sizes="32x32"
     """
 
-#h4: \#doc.script
+#----: \#doc.script
 
 Adds a [#code"<script>"] element. Parameters\:
 
@@ -586,7 +593,7 @@ body, not both.
         """]
     """
 
-#h4: \#doc.author
+#----: \#doc.author
 
 Convenience macro. Renders as [#code"<meta name=\"author\" content=\"...\">"].
 Takes body (the author name), no parameters.
@@ -595,7 +602,7 @@ Takes body (the author name), no parameters.
     #doc.author: Jane Doe
     """
 
-#h4: \#doc.version
+#----: \#doc.version
 
 Convenience macro. Renders as [#code"<meta name=\"version\" content=\"...\">"].
 Takes body (the version string), no parameters.
@@ -604,7 +611,7 @@ Takes body (the version string), no parameters.
     #doc.version: 2.0
     """
 
-#h4: \#doc.datecreated
+#----: \#doc.datecreated
 
 Convenience macro. Renders as [#code"<meta name=\"datecreated\" content=\"...\">"].
 Takes body (the date string), no parameters.
@@ -613,7 +620,7 @@ Takes body (the date string), no parameters.
     #doc.datecreated: 2025-01-01
     """
 
-#h4: \#doc.datemodified
+#----: \#doc.datemodified
 
 Convenience macro. Renders as [#code"<meta name=\"datemodified\" content=\"...\">"].
 Takes body (the date string), no parameters.
@@ -622,7 +629,7 @@ Takes body (the date string), no parameters.
     #doc.datemodified: 2025-06-15
     """
 
-#h3: Expansion-Time Macros
+#---: Expansion-Time Macros
 
 These macros are fully resolved during evaluation and do not appear in the
 final AST.
@@ -633,7 +640,7 @@ no parameters.
 The \#set macro defines a user macro. See the User-Defined Macros section
 below.
 
-#h4: \#ifeq
+#----: \#ifeq
 
 String equality test. Returns body if lhs equals rhs, empty string
 otherwise. Parameters\:
@@ -645,12 +652,12 @@ otherwise. Parameters\:
 
 Takes body.
 
-#h4: \#ifne
+#----: \#ifne
 
 String inequality test. Returns body if lhs does not equal rhs, empty
 string otherwise. Same parameters as \#ifeq. Takes body.
 
-#h4: \#ifset
+#----: \#ifset
 
 Tests whether a macro is defined. Returns body if the named macro exists,
 empty string otherwise. Parameters\:
@@ -661,7 +668,7 @@ empty string otherwise. Parameters\:
 
 Takes body.
 
-#h4: \#include
+#----: \#include
 
 Inserts the contents of another file. The filename is provided as the body of
 the macro call. The included file is parsed and expanded as if its contents
@@ -684,7 +691,7 @@ When [#code"literal=true"] is set, the file contents are included as raw text
 without parsing or macro expansion. This is useful for including source code
 or other non-PicoDoc content.
 
-#h3: Alias Table
+#---: Alias Table
 
 All 11 aliases mapped to their canonical names\:
 
@@ -702,9 +709,9 @@ All 11 aliases mapped to their canonical names\:
   \#__ | \#i
   \#li | \#*
 
-#h2: User-Defined Macros
+#--: User-Defined Macros
 
-#h3: Defining Macros with \#set
+#---: Defining Macros with \#set
 
 The \#set macro defines a new macro. It must always appear in bracketed form
 and at the top level (not inside macro bodies).
@@ -718,7 +725,7 @@ and at the top level (not inside macro bodies).
 The name argument is required and specifies the macro name. Additional
 arguments become the macro's parameters.
 
-#h3: Parameters
+#---: Parameters
 
 Parameters can be\:
 
@@ -736,7 +743,7 @@ Default values are evaluated during the resolution pass after all definitions
 are collected. A default value may be a macro call, which will be expanded
 during resolution.
 
-#h3: Calling User Macros
+#---: Calling User Macros
 
 User macros are called exactly like builtin macros\:
 
@@ -753,7 +760,7 @@ A macro with no arguments is essentially a variable\:
     The version is #version.
     """
 
-#h3: Out-of-Order Definitions
+#---: Out-of-Order Definitions
 
 Macros may be used before they are defined. The compiler collects all \#set
 definitions in a first pass before resolving and expanding\:
@@ -763,16 +770,16 @@ definitions in a first pass before resolving and expanding\:
     [#set name=project-name : PicoDoc]
     """
 
-#h3: Duplicate Detection
+#---: Duplicate Detection
 
 Duplicate macro definitions at the same scope are an immediate error.
 
-#h3: Scope and Shadowing
+#---: Scope and Shadowing
 
 Macro invocation creates a new scope at the call site. Local argument names
 shadow any definitions outside the macro call with the same name.
 
-#h3: Macro References as Argument Values
+#---: Macro References as Argument Values
 
 A zero-argument macro (variable) can be passed as an argument value using
 the \#identifier form\:
@@ -782,7 +789,7 @@ the \#identifier form\:
     [#link to=#site-url : Our site]
     """
 
-#h2: Conditionals
+#--: Conditionals
 
 PicoDoc has no expression language. Conditions are limited to simple
 comparisons via specialised macros.
@@ -813,7 +820,7 @@ Conditionals can be nested\:
     ]
     """
 
-#h2: Includes
+#--: Includes
 
 The \#include macro inserts the contents of another file at the call site. The
 filename is provided as the body. The included file is parsed and expanded as
@@ -838,12 +845,12 @@ To include a file as raw text without parsing (e.g. source code), use the [#code
     [#include literal=true : code.js]
     """
 
-#h2: Global Environment (env.*)
+#--: Global Environment (env.*)
 
 The env.* namespace provides global values accessible to all macros, including
 external filters.
 
-#h3: Defining Environment Values
+#---: Defining Environment Values
 
 Values can be set from three sources (listed in ascending precedence)\:
 
@@ -858,7 +865,7 @@ Values can be set from three sources (listed in ascending precedence)\:
 Document-level definitions have the highest precedence. The document author
 has final say.
 
-#h3: Accessing Environment Values
+#---: Accessing Environment Values
 
 Environment values are accessed as zero-argument macros\:
 
@@ -870,18 +877,18 @@ Environment values are accessed as zero-argument macros\:
 They are inherited through nested macro calls. A macro body can reference
 \#env.mode and it resolves from the global environment.
 
-#h3: Immutability
+#---: Immutability
 
 Environment values are global and immutable once set. They cannot be
 overridden locally within macro bodies. This prevents confusing
 action-at-a-distance where a macro silently changes global state.
 
-#h2: External Filters
+#--: External Filters
 
 External filters allow users to define macros as command-line programs in any
 language.
 
-#h3: Protocol
+#---: Protocol
 
 The filter receives a JSON object on stdin containing all named arguments
 (including body if present) and all env.* values\:
@@ -896,7 +903,7 @@ any macro calls in the output on subsequent passes.
 A filter that wants to return final HTML (preventing re-expansion) wraps its
 output in \#literal.
 
-#h3: Discovery
+#---: Discovery
 
 The converter searches for filter executables in this order\:
 
@@ -908,13 +915,13 @@ The converter searches for filter executables in this order\:
 
 The executable name maps to the macro name.
 
-#h3: Timeout
+#---: Timeout
 
 A configurable timeout (default 5 seconds, set via [#code"--filter-timeout"]
 or config) kills long-running filters. Non-zero exit codes are treated as
 expansion errors with the filter's stderr included in the error message.
 
-#h2: Configuration File
+#--: Configuration File
 
 Place a [#code"picodoc.toml"] next to your input file (or point to one with
 the [#code"--config"] flag). CLI flags override config values.
@@ -938,7 +945,7 @@ the [#code"--config"] flag). CLI flags override config values.
     timeout = 10.0
     """
 
-#h2: Command-Line Interface
+#--: Command-Line Interface
 
 Usage\:
 
@@ -946,7 +953,7 @@ Usage\:
     uv run picodoc [OPTIONS] INPUT
     """
 
-#h3: Options
+#---: Options
 
 #table:
   Flag | Description
@@ -961,7 +968,7 @@ Usage\:
   [#code"--watch"] | Watch for changes and recompile on save
   [#code"--debug"] | Dump the AST to stderr
 
-#h3: Exit Codes
+#---: Exit Codes
 
 #table:
   Code | Meaning
@@ -969,7 +976,7 @@ Usage\:
   1 | Syntax error (lex or parse failure)
   2 | Evaluation error or invalid arguments
 
-#h2: Expansion Model
+#--: Expansion Model
 
 PicoDoc processes a document through a pipeline of stages\:
 
@@ -992,19 +999,19 @@ PicoDoc processes a document through a pipeline of stages\:
     proper document structure (doctype, head, body).]
 ]
 
-#h3: Multi-Pass Expansion
+#---: Multi-Pass Expansion
 
 Expansion is convergence-based. The evaluator keeps walking the AST until no
 unexpanded macro calls remain. This allows macros to produce output containing
 other macro calls that are expanded on subsequent passes (e.g. \#table pipe
 form emits \#tr/\#th/\#td calls).
 
-#h3: Call Stack Depth
+#---: Call Stack Depth
 
 A global maximum call stack depth (configurable, default 64) catches infinite
 or excessive recursion. Exceeding this limit is an evaluation error.
 
-#h3: Preventing Re-Expansion
+#---: Preventing Re-Expansion
 
 The \#literal macro prevents its body from being re-expanded. This is useful
 for\:
