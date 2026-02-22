@@ -3,7 +3,7 @@
 #comment: PicoDoc Tutorial — Getting Started
 #comment: A progressive guide from minimal document to productive use.
 
-#title: Getting Started with PicoDoc
+#doc.title: Getting Started with PicoDoc
 
 #h2: What is PicoDoc?
 
@@ -33,7 +33,7 @@ Verify the installation\:
 Create a file called [#code"hello.pdoc"]\:
 
 #code: """
-    #title: Hello, PicoDoc
+    #doc.title: Hello, PicoDoc
     #-: Hello, PicoDoc
 
     This is my first document.
@@ -46,18 +46,18 @@ Compile it to HTML\:
     """
 
 Open [#code"hello.html"] in your browser. You should see a heading and a
-paragraph. The \#title macro sets the browser tab title, while \#- (alias
+paragraph. The \#doc.title macro sets the browser tab title, while \#- (alias
 for \#h1) creates a visible heading. The bare text was automatically wrapped
 in a [#code"<p>"] tag because PicoDoc treats any text not inside a macro
 call as an implicit paragraph.
 
 #h2: Headings and Structure
 
-PicoDoc uses \#title for the document's [#code"<title>"] (shown in the browser
-tab) and separate heading macros for visible headings in the body\:
+PicoDoc uses \#doc.title for the document's [#code"<title>"] (shown in the
+browser tab) and separate heading macros for visible headings in the body\:
 
 #code: """
-    #title: Page Title (in browser tab only)
+    #doc.title: Page Title (in browser tab only)
     #h1: Level 1 (visible heading)
     #h2: Level 2 (Section)
     #h3: Level 3 (Subsection)

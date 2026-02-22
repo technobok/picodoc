@@ -12,7 +12,7 @@ class TestHash:
         assert tokens[0].value == "#"
 
     def test_hash_followed_by_identifier(self, lex):
-        tokens = lex("#title")
+        tokens = lex("#doc.title")
         assert_types(tokens, [TokenType.HASH, TokenType.IDENTIFIER])
 
     def test_hash_position(self, lex):

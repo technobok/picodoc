@@ -12,7 +12,7 @@
     console.log("Hello from PicoDoc");
     """]
 
-#title: Document Meta Example
+#doc.title: Document Meta Example
 
 #-: Document Meta Example
 

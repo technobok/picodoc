@@ -62,12 +62,12 @@ class TestHeadings:
         assert "<h1>Alt</h1>" in result
 
     def test_title_in_head(self) -> None:
-        result = render(_doc(_call("title", body=_body(_text("My Page")))))
+        result = render(_doc(_call("doc.title", body=_body(_text("My Page")))))
         assert "<title>My Page</title>" in result
         assert "<title>My Page</title>" in result.split("<head>")[1].split("</head>")[0]
 
     def test_title_not_in_body(self) -> None:
-        result = render(_doc(_call("title", body=_body(_text("My Page")))))
+        result = render(_doc(_call("doc.title", body=_body(_text("My Page")))))
         body_section = result.split("<body>")[1].split("</body>")[0]
         assert "<title>" not in body_section
 

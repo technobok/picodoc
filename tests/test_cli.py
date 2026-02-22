@@ -117,7 +117,7 @@ class TestArgParsing:
 class TestExitCodes:
     def test_success(self, tmp_path: Path) -> None:
         doc = tmp_path / "ok.pdoc"
-        doc.write_text("#title: Hello\n")
+        doc.write_text("#doc.title: Hello\n")
         assert main([str(doc)]) == 0
 
     def test_syntax_error_returns_1(self, tmp_path: Path) -> None:
@@ -165,7 +165,7 @@ class TestEnvPassthrough:
 class TestCssJsMetaCli:
     def test_css_in_output(self, tmp_path: Path) -> None:
         doc = tmp_path / "doc.pdoc"
-        doc.write_text("#title: Test\n")
+        doc.write_text("#doc.title: Test\n")
         out = tmp_path / "out.html"
         assert main([str(doc), "--css", "style.css", "-o", str(out)]) == 0
         html = out.read_text()
@@ -173,7 +173,7 @@ class TestCssJsMetaCli:
 
     def test_js_in_output(self, tmp_path: Path) -> None:
         doc = tmp_path / "doc.pdoc"
-        doc.write_text("#title: Test\n")
+        doc.write_text("#doc.title: Test\n")
         out = tmp_path / "out.html"
         assert main([str(doc), "--js", "app.js", "-o", str(out)]) == 0
         html = out.read_text()
@@ -181,7 +181,7 @@ class TestCssJsMetaCli:
 
     def test_meta_in_output(self, tmp_path: Path) -> None:
         doc = tmp_path / "doc.pdoc"
-        doc.write_text("#title: Test\n")
+        doc.write_text("#doc.title: Test\n")
         out = tmp_path / "out.html"
         assert main([str(doc), "--meta", "author=Me", "-o", str(out)]) == 0
         html = out.read_text()
@@ -196,7 +196,7 @@ class TestCssJsMetaCli:
 class TestCompileFile:
     def test_basic(self, tmp_path: Path) -> None:
         doc = tmp_path / "simple.pdoc"
-        doc.write_text("#title: Hello World\n")
+        doc.write_text("#doc.title: Hello World\n")
         opts = CliOptions(
             input_file=doc,
             output_file=None,

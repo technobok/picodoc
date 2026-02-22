@@ -23,7 +23,7 @@ syn match picodocProseEscape /\\U\x\{8}/
 
 " --- Macro calls: # prefix + name ------------------------------------------
 " Structural macros
-syn match picodocStructural /#\%(title\|h[1-6]\|-\{1,6}\|p\|hr\)\>/
+syn match picodocStructural /#\%(h[1-6]\|-\{1,6}\|p\|hr\)\>/
 " Conditional / expansion-time macros
 syn match picodocConditional /#\%(set\|ifeq\|ifne\|ifset\|include\|\/\/\)\>/
 " Inline macros

@@ -3,7 +3,7 @@
 #comment: PicoDoc Language Reference
 #comment: Authoritative documentation of every language feature.
 
-#title: PicoDoc Language Reference
+#doc.title: PicoDoc Language Reference
 
 #h2: Overview
 
@@ -116,7 +116,7 @@ After the identifier, the parser examines the next token\:
 ]
 
 #code: """
-    #title: Document Title
+    #doc.title: Document Title
     #-: Visible Heading
     #hr
     #p"Explicit paragraph."
@@ -291,15 +291,6 @@ This prevents a mismatched quote from silently cascading through the file.
 PicoDoc has 28 builtin macros in 7 categories, plus 11 aliases.
 
 #h3: Structural Macros
-
-#h4: \#title
-
-Sets the document [#code"<title>"] in the HTML [#code"<head>"] section. Does
-not produce any output in [#code"<body>"]. Takes body, no parameters.
-
-#code: """
-    #title: My Document
-    """
 
 #h4: \#h1
 
@@ -522,6 +513,15 @@ body.
 
 All document-level macros live under the [#code"doc.*"] namespace. They produce
 elements in the HTML [#code"<head>"] section, not in [#code"<body>"].
+
+#h4: \#doc.title
+
+Sets the document [#code"<title>"] in the HTML [#code"<head>"] section. Does
+not produce any output in [#code"<body>"]. Takes body, no parameters.
+
+#code: """
+    #doc.title: My Document
+    """
 
 #h4: \#doc.lang
 

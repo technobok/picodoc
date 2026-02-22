@@ -72,7 +72,7 @@ class TestParagraphTermination:
 
 class TestMixedBlocks:
     def test_macro_then_paragraph(self, parse_source):
-        doc = parse_source("#title: Hello\n\nSome text.\n")
+        doc = parse_source("#doc.title: Hello\n\nSome text.\n")
         assert len(doc.children) == 2
         assert isinstance(doc.children[0], MacroCall)
         assert isinstance(doc.children[1], Paragraph)

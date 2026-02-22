@@ -31,8 +31,8 @@ class TestRawStringNoEscapeProcessing:
         assert tokens[0].value == "\\n"
 
     def test_hash_literal(self, lex):
-        tokens = lex('"""#title"""')
-        assert tokens[0].value == "#title"
+        tokens = lex('"""#doc.title"""')
+        assert tokens[0].value == "#doc.title"
 
     def test_backslash_literal(self, lex):
         tokens = lex('"""\\\\"""')

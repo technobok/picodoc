@@ -87,12 +87,12 @@ class TestSetCollection:
     def test_set_collected_and_removed(self) -> None:
         doc = _doc(
             _call("set", (_arg("name", "version"),), _body(_text("1.0"))),
-            _call("title", body=_body(_text("Hello"))),
+            _call("doc.title", body=_body(_text("Hello"))),
         )
         result = evaluate(doc)
         assert len(result.children) == 1
         assert isinstance(result.children[0], MacroCall)
-        assert result.children[0].name == "title"
+        assert result.children[0].name == "doc.title"
 
     def test_set_value_available_for_ifset(self) -> None:
         doc = _doc(
@@ -110,7 +110,7 @@ class TestSetCollection:
 
     def test_set_stores_definition(self) -> None:
         """Parse-level test: verify #set is collected into context."""
-        source = "[#set name=version : 1.0]\n#title: Hello"
+        source = "[#set name=version : 1.0]\n#doc.title: Hello"
         doc = parse(source)
         result = evaluate(doc)
         assert len(result.children) == 1

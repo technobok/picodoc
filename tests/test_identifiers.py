@@ -70,9 +70,9 @@ class TestIdentifierLexing:
         assert_values(tokens, ["h2"])
 
     def test_identifier_ends_at_colon(self, lex):
-        tokens = lex("title:")
+        tokens = lex("doc.title:")
         assert_types(tokens, [TokenType.IDENTIFIER, TokenType.COLON])
-        assert tokens[0].value == "title"
+        assert tokens[0].value == "doc.title"
 
     def test_identifier_ends_at_equals(self, lex):
         tokens = lex("name=")

@@ -116,7 +116,7 @@ class TestEvalErrors:
 class TestCleanDocument:
     def test_valid_document(self, lsp_env) -> None:
         ls, published, put = lsp_env
-        put("#title: Hello World\n\nSome body text.")
+        put("#doc.title: Hello World\n\nSome body text.")
         _validate(ls, "file:///test.pdoc")
 
         assert len(published) == 1
@@ -160,7 +160,7 @@ def _make_params(line: int, character: int) -> TextDocumentPositionParams:
 
 class TestAnalyze:
     def test_collects_set_definitions(self) -> None:
-        source = '#set name=greeting: Hello\n#title: #greeting'
+        source = '#set name=greeting: Hello\n#doc.title: #greeting'
         ast, defs = _analyze(source, "test.pdoc")
         assert ast is not None
         assert "greeting" in defs
@@ -180,27 +180,27 @@ class TestAnalyze:
 
 class TestFindMacroAtPosition:
     def test_finds_macro_on_hash(self) -> None:
-        source = "#title: Hello"
+        source = "#doc.title: Hello"
         ast, _ = _analyze(source, "test.pdoc")
         assert ast is not None
         # cursor on #  (line 0, col 0 in 0-based)
         name = _find_macro_at_position(source, ast, 0, 0)
-        assert name == "title"
+        assert name == "doc.title"
 
     def test_finds_macro_on_name(self) -> None:
-        source = "#title: Hello"
+        source = "#doc.title: Hello"
         ast, _ = _analyze(source, "test.pdoc")
         assert ast is not None
-        # cursor on 'i' of title (col 3 in 0-based)
-        name = _find_macro_at_position(source, ast, 0, 3)
-        assert name == "title"
+        # cursor on 't' of title (col 5 in 0-based)
+        name = _find_macro_at_position(source, ast, 0, 5)
+        assert name == "doc.title"
 
     def test_returns_none_off_macro(self) -> None:
-        source = "#title: Hello"
+        source = "#doc.title: Hello"
         ast, _ = _analyze(source, "test.pdoc")
         assert ast is not None
-        # cursor on 'H' in body (col 8 in 0-based)
-        name = _find_macro_at_position(source, ast, 0, 8)
+        # cursor on 'H' in body (col 12 in 0-based)
+        name = _find_macro_at_position(source, ast, 0, 12)
         assert name is None
 
     def test_finds_bracketed_macro(self) -> None:
@@ -220,12 +220,15 @@ class TestFindMacroAtPosition:
 class TestGotoDefinition:
     def test_jumps_to_set_definition(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        source = '#set name=greeting: Hello\n#title: [#greeting]'
+        source = '#set name=greeting: Hello\n#doc.title: [#greeting]'
         put(source)
 
         # cursor on "greeting" in the second line's [#greeting]
-        # line 1, col 10 (0-based) → on the 'g' of greeting
-        params = _make_params(1, 9)
+        # #doc.title: [#greeting]
+        # 0         1
+        # 0123456789012345
+        # line 1, col 14 (0-based) → on the 'g' of greeting
+        params = _make_params(1, 14)
         result = goto_definition(ls, params)
 
         assert result is not None
@@ -235,16 +238,16 @@ class TestGotoDefinition:
 
     def test_returns_none_for_builtin(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put("#title: Hello")
+        put("#doc.title: Hello")
         params = _make_params(0, 0)
         result = goto_definition(ls, params)
         assert result is None
 
     def test_returns_none_for_no_macro(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put("#title: Hello")
+        put("#doc.title: Hello")
         # cursor on body text
-        params = _make_params(0, 10)
+        params = _make_params(0, 14)
         result = goto_definition(ls, params)
         assert result is None
 
@@ -264,13 +267,13 @@ class TestGotoDefinition:
 class TestHover:
     def test_hover_builtin(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put("#title: Hello")
+        put("#doc.title: Hello")
         params = _make_params(0, 1)
         result = hover(ls, params)
 
         assert result is not None
         assert result.contents.kind == MarkupKind.Markdown
-        assert "#title" in result.contents.value
+        assert "#doc.title" in result.contents.value
         assert "builtin" in result.contents.value
 
     def test_hover_builtin_with_params(self, lsp_env) -> None:
@@ -296,10 +299,10 @@ class TestHover:
 
     def test_hover_user_macro(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        source = '#set name=greeting: Hello\n#title: [#greeting]'
+        source = '#set name=greeting: Hello\n#doc.title: [#greeting]'
         put(source)
         # cursor on #greeting, line 1
-        params = _make_params(1, 9)
+        params = _make_params(1, 14)
         result = hover(ls, params)
 
         assert result is not None
@@ -308,8 +311,8 @@ class TestHover:
 
     def test_hover_returns_none_off_macro(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put("#title: Hello")
-        params = _make_params(0, 10)
+        put("#doc.title: Hello")
+        params = _make_params(0, 14)
         result = hover(ls, params)
         assert result is None
 
@@ -334,7 +337,7 @@ class TestCompletion:
         result = completion(ls, params)
 
         labels = [item.label for item in result.items]
-        assert "#title" in labels
+        assert "#doc.title" in labels
         assert "#b" in labels
         assert "#set" in labels
 
@@ -355,7 +358,7 @@ class TestCompletion:
 
     def test_includes_user_macros(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#set name=greeting: Hello\n#title: world')
+        put('#set name=greeting: Hello\n#doc.title: world')
         params = _make_params(1, 1)
         result = completion(ls, params)
 
@@ -386,7 +389,7 @@ class TestCompletion:
 
     def test_user_macro_with_params(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#set name=greet who=?: Hello [#who]!\n#title: hi')
+        put('#set name=greet who=?: Hello [#who]!\n#doc.title: hi')
         params = _make_params(1, 1)
         result = completion(ls, params)
 

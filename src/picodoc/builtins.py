@@ -49,7 +49,6 @@ def _make_builtins() -> dict[str, BuiltinDef]:
         defs[name] = BuiltinDef(name, params, has_body)
 
     # Structural
-    d("title", has_body=True)
     d("h1", has_body=True)
     d("h2", has_body=True)
     d("h3", has_body=True)
@@ -88,6 +87,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
         ParamDecl("sizes", False),
     ))
     d("doc.script", (ParamDecl("src", False),), has_body=True)
+    d("doc.title", has_body=True)
     d("doc.lang", has_body=True)
     d("doc.author", has_body=True)
     d("doc.version", has_body=True)

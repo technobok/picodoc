@@ -25,16 +25,16 @@ class TestUnbracketedNoBody:
 
 class TestUnbracketedInlineBody:
     def test_colon_body(self, parse_source):
-        doc = parse_source("#title: Welcome to PicoDoc\n")
+        doc = parse_source("#doc.title: Welcome to PicoDoc\n")
         call = doc.children[0]
-        assert_call(call, "title", has_body=True, bracketed=False)
+        assert_call(call, "doc.title", has_body=True, bracketed=False)
         assert isinstance(call.body, Body)
         assert body_text(call) == "Welcome to PicoDoc"
 
     def test_colon_no_ws_before(self, parse_source):
-        doc = parse_source("#title:text\n")
+        doc = parse_source("#doc.title:text\n")
         call = doc.children[0]
-        assert_call(call, "title", has_body=True, bracketed=False)
+        assert_call(call, "doc.title", has_body=True, bracketed=False)
         assert body_text(call) == "text"
 
     def test_comment(self, parse_source):

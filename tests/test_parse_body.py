@@ -8,7 +8,7 @@ from tests.conftest import assert_call, body_text
 
 class TestInlineBody:
     def test_simple_text(self, parse_source):
-        doc = parse_source("#title: Hello World\n")
+        doc = parse_source("#doc.title: Hello World\n")
         call = doc.children[0]
         assert isinstance(call.body, Body)
         assert body_text(call) == "Hello World"
@@ -143,10 +143,10 @@ class TestStringBody:
 
 class TestBodySpans:
     def test_inline_body_span(self, parse_source):
-        doc = parse_source("#title: Hello\n")
+        doc = parse_source("#doc.title: Hello\n")
         call = doc.children[0]
         assert isinstance(call.body, Body)
-        assert call.body.span.start.column == 9  # 'H' of 'Hello'
+        assert call.body.span.start.column == 13  # 'H' of 'Hello'
 
     def test_macro_call_span(self, parse_source):
         doc = parse_source("#hr\n")

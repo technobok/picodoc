@@ -15,7 +15,7 @@ def _doc_with_title() -> Document:
     from picodoc.ast import Body
 
     title = MacroCall(
-        "title",
+        "doc.title",
         (),
         Body((Text("Hello", _SPAN),), _SPAN),
         False,
@@ -102,7 +102,7 @@ class TestNoopPassthrough:
         assert doc.children[0].name == "doc.link"
         assert doc.children[1].name == "doc.script"
         assert doc.children[2].name == "doc.meta"
-        assert doc.children[3].name == "title"
+        assert doc.children[3].name == "doc.title"
 
 
 class TestCombinedInjection:

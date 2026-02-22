@@ -27,7 +27,7 @@ def render(doc: Document) -> str:
         name = resolve_name(child.name)
         if name == "doc.lang":
             lang = _body_text(child.body)
-        elif name == "title" or name.startswith("doc."):
+        elif name.startswith("doc."):
             head_items.append(child)
         else:
             body_items.append(child)
@@ -348,7 +348,7 @@ def _render_th(node: MacroCall) -> str:
 def _render_head_item(node: MacroCall) -> str:
     name = resolve_name(node.name)
 
-    if name == "title":
+    if name == "doc.title":
         return f"<title>{_render_body(node.body)}</title>"
 
     if name == "doc.meta":
