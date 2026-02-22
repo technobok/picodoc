@@ -4,12 +4,17 @@
 #//: Authoritative documentation of every language feature.
 
 #doc.title: PicoDoc Language Reference
+#doc.content type=main id=content
 #doc.link rel=stylesheet href=style/picodoc.css 
 #doc.script type=text/javascript src=style/tocbot.min.js
 #//: #doc.script type=text/javascript: [#include literal=true: style/init.js]
 #doc.script type=text/javascript src=style/init.js
 
-#include literal=true: style/nav.html
+#//: #include literal=true: style/nav.html
+
+#nav id=nav: [#include literal=true: style/nav.html]
+
+#include literal=true: style/theme_preload.js
 
 #-: PicoDoc Language Reference
 
