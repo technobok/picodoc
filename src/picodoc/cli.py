@@ -223,7 +223,7 @@ def compile_file(options: CliOptions) -> str:
         timeout=options.filter_timeout,
     )
 
-    doc = evaluate(doc, str(options.input_file), env=options.env, filters=filters)
+    doc = evaluate(doc, str(options.input_file), source=source, env=options.env, filters=filters)
 
     if options.debug:
         dump_ast(doc)

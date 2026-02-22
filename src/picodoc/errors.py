@@ -98,14 +98,17 @@ class EvalError(Exception):
         span: Span,
         source: str,
         call_stack: list[str] | None = None,
+        filename: str = "input.pdoc",
     ) -> None:
         self.message = message
         self.span = span
         self.source = source
         self.call_stack = call_stack or []
+        self.filename = filename
         super().__init__(self.format())
 
-    def format(self, filename: str = "input.pdoc") -> str:
+    def format(self, filename: str | None = None) -> str:
+        filename = filename or self.filename
         lines = self.source.splitlines(keepends=True)
         line_idx = self.span.start.line - 1
         col = self.span.start.column

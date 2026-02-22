@@ -32,6 +32,7 @@ class EvalContext:
     """State carried through evaluation."""
 
     filename: str
+    source: str
     source_dir: Path
     definitions: dict[str, MacroCall] = field(default_factory=dict)
     include_stack: list[str] = field(default_factory=list)
@@ -45,6 +46,7 @@ class EvalContext:
 def evaluate(
     doc: Document,
     filename: str = "input.pdoc",
+    source: str = "",
     env: dict[str, str] | None = None,
     filters: FilterRegistry | None = None,
 ) -> Document:
@@ -54,6 +56,7 @@ def evaluate(
         source_dir = Path(".")
     ctx = EvalContext(
         filename=filename,
+        source=source,
         source_dir=source_dir,
         include_stack=[str(Path(filename).resolve())],
         filters=filters,
@@ -65,7 +68,7 @@ def evaluate(
     # Filter to MacroCall nodes — Text/Escape from conditionals are whitespace
     children = tuple(c for c in expanded if isinstance(c, MacroCall))
     result = Document(children, doc.span)
-    _validate_nesting(result)
+    _validate_nesting(result, ctx.source, ctx.filename)
     return result
 
 
@@ -82,14 +85,16 @@ _NESTING_RULES: dict[str, set[str]] = {
 }
 
 
-def _validate_nesting(doc: Document) -> None:
+def _validate_nesting(doc: Document, source: str, filename: str) -> None:
     """Validate that macro nesting is structurally correct after expansion."""
     for child in doc.children:
         if isinstance(child, MacroCall):
-            _validate_node(child, parent_name=None)
+            _validate_node(child, parent_name=None, source=source, filename=filename)
 
 
-def _validate_node(node: MacroCall, parent_name: str | None) -> None:
+def _validate_node(
+    node: MacroCall, parent_name: str | None, source: str, filename: str
+) -> None:
     name = resolve_name(node.name)
     if name in _NESTING_RULES:
         allowed = _NESTING_RULES[name]
@@ -98,12 +103,13 @@ def _validate_node(node: MacroCall, parent_name: str | None) -> None:
             raise EvalError(
                 f"#{node.name} must appear inside {allowed_str}",
                 node.span,
-                "",
+                source,
+                filename=filename,
             )
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):
-                _validate_node(child, parent_name=name)
+                _validate_node(child, parent_name=name, source=source, filename=filename)
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +136,8 @@ def _collect_definitions(
             raise EvalError(
                 f"duplicate definition: {def_name}",
                 child.span,
-                "",
+                ctx.source,
+                filename=ctx.filename,
             )
         ctx.definitions[def_name] = child
         if def_name.startswith("env."):
@@ -167,7 +174,7 @@ def _expand_top_node(
 # ---------------------------------------------------------------------------
 
 
-def _validate_builtin_args(node: MacroCall, name: str) -> None:
+def _validate_builtin_args(node: MacroCall, name: str, ctx: EvalContext) -> None:
     """Raise EvalError if a builtin macro receives unknown arguments."""
     if name == "set":
         return  # #set accepts arbitrary args as macro parameter declarations
@@ -180,7 +187,8 @@ def _validate_builtin_args(node: MacroCall, name: str) -> None:
             raise EvalError(
                 f"unknown argument '{arg.name}' for #{name}",
                 arg.name_span,
-                "",
+                ctx.source,
+                filename=ctx.filename,
             )
 
 
@@ -190,7 +198,7 @@ def _expand_macro(
 ) -> list[MacroCall | Text | Escape]:
     name = resolve_name(node.name)
 
-    _validate_builtin_args(node, name)
+    _validate_builtin_args(node, name, ctx)
 
     if name.startswith("env."):
         env_key = name[4:]
@@ -309,8 +317,9 @@ def _expand_user_macro(
                 raise EvalError(
                     f"missing required argument: {param_name}",
                     node.span,
-                    "",
+                    ctx.source,
                     call_stack=list(ctx.call_stack),
+                    filename=ctx.filename,
                 )
             if default is not None:
                 bindings[param_name] = _value_to_body_children(default, node.span)
@@ -322,8 +331,9 @@ def _expand_user_macro(
         raise EvalError(
             f"macro call depth limit ({ctx.max_call_depth}) exceeded",
             node.span,
-            "",
+            ctx.source,
             call_stack=list(ctx.call_stack),
+            filename=ctx.filename,
         )
 
     ctx.call_stack.append(name)
@@ -341,8 +351,9 @@ def _expand_user_macro(
                 raise EvalError(
                     f"cannot shadow environment variable: {param_name}",
                     node.span,
-                    "",
+                    ctx.source,
                     call_stack=list(ctx.call_stack),
+                    filename=ctx.filename,
                 )
             if param_name in ctx.definitions:
                 saved[param_name] = ctx.definitions[param_name]
@@ -602,14 +613,16 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
         raise EvalError(
             f"include depth limit ({ctx.max_include_depth}) exceeded",
             node.span,
-            "",
+            ctx.source,
+            filename=ctx.filename,
         )
 
     if resolved in ctx.include_stack:
         raise EvalError(
             f"circular include detected: {filename}",
             node.span,
-            "",
+            ctx.source,
+            filename=ctx.filename,
         )
 
     try:
@@ -618,7 +631,8 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
         raise EvalError(
             f"included file not found: {filename}",
             node.span,
-            "",
+            ctx.source,
+            filename=ctx.filename,
         ) from None
 
     # Check literal mode

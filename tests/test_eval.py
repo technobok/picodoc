@@ -374,26 +374,26 @@ class TestValueResolution:
     def test_text_value(self) -> None:
         from picodoc.eval import _resolve_value
 
-        ctx = EvalContext(filename="test.pdoc", source_dir=Path("."))
+        ctx = EvalContext(filename="test.pdoc", source="", source_dir=Path("."))
         assert _resolve_value(_text("hello"), ctx) == "hello"
 
     def test_raw_string_value(self) -> None:
         from picodoc.eval import _resolve_value
 
-        ctx = EvalContext(filename="test.pdoc", source_dir=Path("."))
+        ctx = EvalContext(filename="test.pdoc", source="", source_dir=Path("."))
         assert _resolve_value(RawString("raw text", S), ctx) == "raw text"
 
     def test_interp_string_value(self) -> None:
         from picodoc.eval import _resolve_value
 
-        ctx = EvalContext(filename="test.pdoc", source_dir=Path("."))
+        ctx = EvalContext(filename="test.pdoc", source="", source_dir=Path("."))
         s = InterpString((_text("hello "), _text("world")), S)
         assert _resolve_value(s, ctx) == "hello world"
 
     def test_macro_ref_value(self) -> None:
         from picodoc.eval import _resolve_value
 
-        ctx = EvalContext(filename="test.pdoc", source_dir=Path("."))
+        ctx = EvalContext(filename="test.pdoc", source="", source_dir=Path("."))
         ctx.definitions["version"] = _call("set", body=_body(_text("1.0")))
         ref = _call("version")
         assert _resolve_value(ref, ctx) == "1.0"
