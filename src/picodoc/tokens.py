@@ -16,7 +16,7 @@ class TokenType(Enum):
     QUESTION = auto()  # ?
 
     # Content
-    IDENTIFIER = auto()  # ident_char+ (letters, digits, ., !$%&*+-/@^_~)
+    IDENTIFIER = auto()  # ident_char+ (letters, digits, ., !$%&*+-/<>@^_~|)
     TEXT = auto()  # non-ident, non-special char runs (, ( ) etc.)
     ESCAPE = auto()  # prose escape — value is resolved character
 
@@ -65,8 +65,8 @@ class Token:
     span: Span
 
 
-# Identifier special characters: ! $ % & * + - / @ ^ _ ~
-_IDENT_SPECIAL = frozenset("!$%&*+-/@^_~")
+# Identifier special characters: ! $ % & * + - / < > @ ^ _ ~ |
+_IDENT_SPECIAL = frozenset("!$%&*+-/<>@^_~|")
 
 
 def is_ident_char(ch: str) -> bool:

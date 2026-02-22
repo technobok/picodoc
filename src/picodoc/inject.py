@@ -14,7 +14,7 @@ def inject_head_items(
     js_files: list[str],
     meta_tags: list[tuple[str, str]],
 ) -> Document:
-    """Prepend #link, #script, and #meta nodes to a Document.
+    """Prepend #doc.link, #doc.script, and #doc.meta nodes to a Document.
 
     Returns the document unchanged if there is nothing to inject.
     """
@@ -26,7 +26,7 @@ def inject_head_items(
     for path in css_files:
         items.append(
             MacroCall(
-                "link",
+                "doc.link",
                 (
                     NamedArg("rel", Text("stylesheet", _CLI_SPAN), _CLI_SPAN, _CLI_SPAN),
                     NamedArg("href", Text(path, _CLI_SPAN), _CLI_SPAN, _CLI_SPAN),
@@ -40,7 +40,7 @@ def inject_head_items(
     for path in js_files:
         items.append(
             MacroCall(
-                "script",
+                "doc.script",
                 (NamedArg("src", Text(path, _CLI_SPAN), _CLI_SPAN, _CLI_SPAN),),
                 None,
                 True,
@@ -51,7 +51,7 @@ def inject_head_items(
     for name, content in meta_tags:
         items.append(
             MacroCall(
-                "meta",
+                "doc.meta",
                 (
                     NamedArg("name", Text(name, _CLI_SPAN), _CLI_SPAN, _CLI_SPAN),
                     NamedArg("content", Text(content, _CLI_SPAN), _CLI_SPAN, _CLI_SPAN),

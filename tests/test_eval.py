@@ -189,7 +189,7 @@ class TestInclude:
         included.write_text("#p: Included content\n")
 
         main = tmp_path / "main.pdoc"
-        main.write_text('[#include file="part.pdoc"]\n')
+        main.write_text("[#include : part.pdoc]\n")
 
         source = main.read_text()
         doc = parse(source, str(main))
@@ -202,8 +202,8 @@ class TestInclude:
     def test_circular_include(self, tmp_path: Path) -> None:
         a = tmp_path / "a.pdoc"
         b = tmp_path / "b.pdoc"
-        a.write_text('[#include file="b.pdoc"]\n')
-        b.write_text('[#include file="a.pdoc"]\n')
+        a.write_text("[#include : b.pdoc]\n")
+        b.write_text("[#include : a.pdoc]\n")
 
         source = a.read_text()
         doc = parse(source, str(a))
@@ -215,7 +215,7 @@ class TestInclude:
         depth = 18
         for i in range(depth):
             f = tmp_path / f"f{i}.pdoc"
-            f.write_text(f'[#include file="f{i + 1}.pdoc"]\n')
+            f.write_text(f"[#include : f{i + 1}.pdoc]\n")
         # Last file is normal
         (tmp_path / f"f{depth}.pdoc").write_text("#p: end\n")
 
@@ -226,12 +226,30 @@ class TestInclude:
 
     def test_missing_file(self, tmp_path: Path) -> None:
         main = tmp_path / "main.pdoc"
-        main.write_text('[#include file="missing.pdoc"]\n')
+        main.write_text("[#include : missing.pdoc]\n")
 
         source = main.read_text()
         doc = parse(source, str(main))
         with pytest.raises(EvalError, match="not found"):
             evaluate(doc, str(main))
+
+    def test_literal_include(self, tmp_path: Path) -> None:
+        js_file = tmp_path / "code.js"
+        js_file.write_text('console.log("hello");\n')
+
+        main = tmp_path / "main.pdoc"
+        main.write_text("#p: [#include literal=true : code.js]\n")
+
+        source = main.read_text()
+        doc = parse(source, str(main))
+        result = evaluate(doc, str(main))
+
+        assert len(result.children) == 1
+        p = result.children[0]
+        assert isinstance(p, MacroCall) and p.name == "p"
+        assert isinstance(p.body, Body)
+        text = "".join(c.value for c in p.body.children if isinstance(c, (Text, Escape)))
+        assert 'console.log("hello");' in text
 
 
 class TestTableExpansion:
@@ -454,17 +472,17 @@ class TestUserMacro:
     def test_macro_ref_as_arg_value(self) -> None:
         source = (
             "[#set name=site-url : https://example.com]\n"
-            '#p: Visit [#url link=#site-url text="our site"] today.\n'
+            "#p: Visit [#link to=#site-url : our site] today.\n"
         )
         doc = parse(source)
         result = evaluate(doc)
         p = result.children[0]
         assert isinstance(p.body, Body)
-        # Should contain: Text("Visit "), MacroCall("url" with resolved link), Text(" today.")
-        url_node = next(c for c in p.body.children if isinstance(c, MacroCall))
-        link_arg = next(a for a in url_node.args if a.name == "link")
-        assert isinstance(link_arg.value, Text)
-        assert link_arg.value.value == "https://example.com"
+        # Should contain: Text("Visit "), MacroCall("link" with resolved to), Text(" today.")
+        link_node = next(c for c in p.body.children if isinstance(c, MacroCall))
+        to_arg = next(a for a in link_node.args if a.name == "to")
+        assert isinstance(to_arg.value, Text)
+        assert to_arg.value.value == "https://example.com"
 
     def test_string_literal_body_set(self) -> None:
         defn = _call(

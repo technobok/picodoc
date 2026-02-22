@@ -30,7 +30,7 @@ class TestCssInjection:
         assert len(doc.children) == 1
         node = doc.children[0]
         assert isinstance(node, MacroCall)
-        assert node.name == "link"
+        assert node.name == "doc.link"
         args = {a.name: a.value for a in node.args}
         assert isinstance(args["rel"], Text)
         assert args["rel"].value == "stylesheet"
@@ -40,7 +40,7 @@ class TestCssInjection:
     def test_multiple_css_files(self) -> None:
         doc = inject_head_items(_empty_doc(), ["a.css", "b.css"], [], [])
         assert len(doc.children) == 2
-        assert all(isinstance(c, MacroCall) and c.name == "link" for c in doc.children)
+        assert all(isinstance(c, MacroCall) and c.name == "doc.link" for c in doc.children)
 
     def test_css_renders_to_html(self) -> None:
         from picodoc.render import render
@@ -56,7 +56,7 @@ class TestJsInjection:
         assert len(doc.children) == 1
         node = doc.children[0]
         assert isinstance(node, MacroCall)
-        assert node.name == "script"
+        assert node.name == "doc.script"
         args = {a.name: a.value for a in node.args}
         assert isinstance(args["src"], Text)
         assert args["src"].value == "app.js"
@@ -75,7 +75,7 @@ class TestMetaInjection:
         assert len(doc.children) == 1
         node = doc.children[0]
         assert isinstance(node, MacroCall)
-        assert node.name == "meta"
+        assert node.name == "doc.meta"
         args = {a.name: a.value for a in node.args}
         assert isinstance(args["name"], Text)
         assert args["name"].value == "viewport"
@@ -99,9 +99,9 @@ class TestNoopPassthrough:
     def test_injected_items_prepended(self) -> None:
         doc = inject_head_items(_doc_with_title(), ["s.css"], ["a.js"], [("k", "v")])
         assert len(doc.children) == 4
-        assert doc.children[0].name == "link"
-        assert doc.children[1].name == "script"
-        assert doc.children[2].name == "meta"
+        assert doc.children[0].name == "doc.link"
+        assert doc.children[1].name == "doc.script"
+        assert doc.children[2].name == "doc.meta"
         assert doc.children[3].name == "title"
 
 
@@ -119,4 +119,4 @@ class TestCombinedInjection:
         assert '<link rel="stylesheet" href="style.css">' in html
         assert '<script src="app.js"></script>' in html
         assert '<meta name="author" content="Test">' in html
-        assert "<h1>Hello</h1>" in html
+        assert "<title>Hello</title>" in html

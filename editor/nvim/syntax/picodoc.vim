@@ -4,8 +4,8 @@ if exists('b:current_syntax')
 endif
 
 " --- Comments ---------------------------------------------------------------
-syn region picodocComment start=/#comment\s*:/ end=/$/ contains=@NoSpell
-syn region picodocComment start=/\[#comment\>/ end=/\]/ contains=@NoSpell
+syn region picodocComment start=/#\%(comment\|\/\/\)\s*:/ end=/$/ contains=@NoSpell
+syn region picodocComment start=/\[#\%(comment\|\/\/\)\>/ end=/\]/ contains=@NoSpell
 
 " --- Raw strings (triple-quoted, no escapes) --------------------------------
 syn region picodocRawString start=/"""/ end=/"""/
@@ -25,15 +25,15 @@ syn match picodocProseEscape /\\U\x\{8}/
 " Structural macros
 syn match picodocStructural /#\%(title\|h[1-6]\|-\{1,6}\|p\|hr\)\>/
 " Conditional / expansion-time macros
-syn match picodocConditional /#\%(set\|ifeq\|ifne\|ifset\|include\)\>/
+syn match picodocConditional /#\%(set\|ifeq\|ifne\|ifset\|include\|\/\/\)\>/
 " Inline macros
-syn match picodocInline /#\%(\*\*\|__\|b\|i\|url\)\>/
-" Environment variable pattern
-syn match picodocEnv /#env\.[A-Za-z0-9._\-]*/
+syn match picodocInline /#\%(\*\*\|__\|b\|i\|link\|>\)\>/
+" Environment variable pattern and doc.* namespace
+syn match picodocEnv /#\%(env\|doc\)\.[A-Za-z0-9._\-]*/
 " Comment macro (hash form — region above handles the full extent)
 syn match picodocMacroHash /#/ contained containedin=picodocStructural,picodocConditional,picodocInline,picodocEnv
 " Fallback: any other #identifier
-syn match picodocMacroName /#[A-Za-z!$%&*+\-/@^_~.][A-Za-z0-9!$%&*+\-/@^_~.]*/
+syn match picodocMacroName /#[A-Za-z!$%&*+\-/<>@^_~|.][A-Za-z0-9!$%&*+\-/<>@^_~|.]*/
 
 " --- Bracketed calls [#...] ------------------------------------------------
 syn region picodocBracketCall matchgroup=picodocBracket start=/\[#/ end=/\]/ transparent contains=TOP

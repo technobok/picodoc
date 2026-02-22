@@ -84,10 +84,10 @@ class TestBracketedCalls:
         assert isinstance(call.body, Body)
         assert body_text(call) == "1.0"
 
-    def test_bracketed_no_body(self, parse_source):
-        doc = parse_source('[#include file="header.pdoc"]\n')
+    def test_bracketed_with_body(self, parse_source):
+        doc = parse_source("[#include : header.pdoc]\n")
         call = doc.children[0]
-        assert_call(call, "include", num_args=1, has_body=False, bracketed=True)
+        assert_call(call, "include", num_args=0, has_body=True, bracketed=True)
 
     def test_bracketed_inline_body(self, parse_source):
         doc = parse_source("[#b : bold text]\n")

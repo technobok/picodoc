@@ -25,9 +25,9 @@ def render(doc: Document) -> str:
         if not isinstance(child, MacroCall):
             continue
         name = resolve_name(child.name)
-        if name == "lang":
+        if name == "doc.lang":
             lang = _body_text(child.body)
-        elif name in ("meta", "link", "script"):
+        elif name == "title" or name.startswith("doc."):
             head_items.append(child)
         else:
             body_items.append(child)
@@ -102,7 +102,7 @@ def _escape_attr(text: str) -> str:
 
 
 def _body_text(body: Body | InterpString | RawString | None) -> str:
-    """Extract plain text from a body (for #lang, etc.)."""
+    """Extract plain text from a body (for #doc.lang, etc.)."""
     if body is None:
         return ""
     if isinstance(body, Body):
@@ -182,7 +182,7 @@ def _arg_value_text(value: Text | InterpString | RawString | object) -> str:
 def _render_node(node: MacroCall) -> str:
     name = resolve_name(node.name)
     match name:
-        case "title":
+        case "h1":
             return f"<h1>{_render_body(node.body)}</h1>"
         case "h2":
             return f"<h2>{_render_body(node.body)}</h2>"
@@ -202,8 +202,8 @@ def _render_node(node: MacroCall) -> str:
             return f"<strong>{_render_body(node.body)}</strong>"
         case "i":
             return f"<em>{_render_body(node.body)}</em>"
-        case "url":
-            return _render_url(node)
+        case "link":
+            return _render_link(node)
         case "code":
             return _render_code(node)
         case "literal":
@@ -231,18 +231,21 @@ def _render_node(node: MacroCall) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _render_url(node: MacroCall) -> str:
-    link = _get_arg_text(node, "link") or ""
-    text = _get_arg_text(node, "text")
+def _render_link(node: MacroCall) -> str:
+    to = _get_arg_text(node, "to") or ""
 
-    if text is not None:
-        body_html = _escape_html(text)
-    elif node.body is not None:
+    # Determine href: if no "://" and no "/", treat as fragment reference
+    if "://" not in to and "/" not in to:
+        href = f"#{to}"
+    else:
+        href = to
+
+    if node.body is not None:
         body_html = _render_body(node.body)
     else:
-        body_html = _escape_html(link)
+        body_html = _escape_html(to)
 
-    return f'<a href="{_escape_attr(link)}">{body_html}</a>'
+    return f'<a href="{_escape_attr(href)}">{body_html}</a>'
 
 
 def _render_code(node: MacroCall) -> str:
@@ -345,7 +348,10 @@ def _render_th(node: MacroCall) -> str:
 def _render_head_item(node: MacroCall) -> str:
     name = resolve_name(node.name)
 
-    if name == "meta":
+    if name == "title":
+        return f"<title>{_render_body(node.body)}</title>"
+
+    if name == "doc.meta":
         meta_name = _get_arg_text(node, "name")
         prop = _get_arg_text(node, "property")
         content = _get_arg_text(node, "content") or ""
@@ -355,12 +361,35 @@ def _render_head_item(node: MacroCall) -> str:
             return f'<meta name="{_escape_attr(meta_name)}" content="{_escape_attr(content)}">'
         return ""
 
-    if name == "link":
+    if name == "doc.author":
+        content = _body_text(node.body)
+        return f'<meta name="author" content="{_escape_attr(content)}">'
+
+    if name == "doc.version":
+        content = _body_text(node.body)
+        return f'<meta name="version" content="{_escape_attr(content)}">'
+
+    if name == "doc.datecreated":
+        content = _body_text(node.body)
+        return f'<meta name="datecreated" content="{_escape_attr(content)}">'
+
+    if name == "doc.datemodified":
+        content = _body_text(node.body)
+        return f'<meta name="datemodified" content="{_escape_attr(content)}">'
+
+    if name == "doc.link":
         rel = _get_arg_text(node, "rel") or ""
         href = _get_arg_text(node, "href") or ""
-        return f'<link rel="{_escape_attr(rel)}" href="{_escape_attr(href)}">'
+        type_val = _get_arg_text(node, "type")
+        sizes_val = _get_arg_text(node, "sizes")
+        attrs = f'rel="{_escape_attr(rel)}" href="{_escape_attr(href)}"'
+        if type_val:
+            attrs += f' type="{_escape_attr(type_val)}"'
+        if sizes_val:
+            attrs += f' sizes="{_escape_attr(sizes_val)}"'
+        return f"<link {attrs}>"
 
-    if name == "script":
+    if name == "doc.script":
         src = _get_arg_text(node, "src")
         if src:
             return f'<script src="{_escape_attr(src)}"></script>'

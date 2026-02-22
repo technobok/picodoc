@@ -6,13 +6,14 @@ from dataclasses import dataclass
 
 # Alias map: alternate name -> canonical name
 ALIASES: dict[str, str] = {
-    "-": "title",
-    "h1": "title",
+    "-": "h1",
     "--": "h2",
     "---": "h3",
     "----": "h4",
     "-----": "h5",
     "------": "h6",
+    "//": "comment",
+    ">": "link",
     "**": "b",
     "__": "i",
     "li": "*",
@@ -49,6 +50,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
 
     # Structural
     d("title", has_body=True)
+    d("h1", has_body=True)
     d("h2", has_body=True)
     d("h3", has_body=True)
     d("h4", has_body=True)
@@ -60,7 +62,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     # Inline
     d("b", has_body=True)
     d("i", has_body=True)
-    d("url", (ParamDecl("link", True), ParamDecl("text", False)), has_body=True)
+    d("link", (ParamDecl("to", True),), has_body=True)
 
     # Code / literal
     d("code", (ParamDecl("language", False),), has_body=True)
@@ -78,10 +80,19 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("th", (ParamDecl("span", False),), has_body=True)
 
     # Document
-    d("meta", (ParamDecl("name", False), ParamDecl("property", False), ParamDecl("content", True)))
-    d("link", (ParamDecl("rel", True), ParamDecl("href", True)))
-    d("script", (ParamDecl("src", False),), has_body=True)
-    d("lang", has_body=True)
+    d("doc.meta", (ParamDecl("name", False), ParamDecl("property", False), ParamDecl("content", True)))
+    d("doc.link", (
+        ParamDecl("rel", True),
+        ParamDecl("href", True),
+        ParamDecl("type", False),
+        ParamDecl("sizes", False),
+    ))
+    d("doc.script", (ParamDecl("src", False),), has_body=True)
+    d("doc.lang", has_body=True)
+    d("doc.author", has_body=True)
+    d("doc.version", has_body=True)
+    d("doc.datecreated", has_body=True)
+    d("doc.datemodified", has_body=True)
 
     # Expansion-time
     d("comment", has_body=True)
@@ -89,7 +100,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("ifeq", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True)
     d("ifne", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True)
     d("ifset", (ParamDecl("name", True),), has_body=True)
-    d("include", (ParamDecl("file", True),))
+    d("include", (ParamDecl("literal", False),), has_body=True)
 
     return defs
 

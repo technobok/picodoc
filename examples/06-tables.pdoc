@@ -18,7 +18,7 @@
 #table:
   Feature | Supported
   Bold | [#**"Yes"]
-  Links | [#url link="https://example.com" text="Yes"]
+  Links | [#link to="https://example.com" : Yes]
 
 #h2: Table Cell with Colspan
 

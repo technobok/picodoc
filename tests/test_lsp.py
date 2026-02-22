@@ -275,23 +275,23 @@ class TestHover:
 
     def test_hover_builtin_with_params(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#url link=https://example.com: click')
+        put('#link to=https://example.com: click')
         params = _make_params(0, 1)
         result = hover(ls, params)
 
         assert result is not None
-        assert "link" in result.contents.value
+        assert "to" in result.contents.value
         assert "required" in result.contents.value
 
     def test_hover_alias(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        # #- is alias for #title
+        # #- is alias for #h1
         put("#-: Hello")
         params = _make_params(0, 0)
         result = hover(ls, params)
 
         assert result is not None
-        assert "#title" in result.contents.value
+        assert "#h1" in result.contents.value
         assert "builtin" in result.contents.value
 
     def test_hover_user_macro(self, lsp_env) -> None:
@@ -345,13 +345,13 @@ class TestCompletion:
         result = completion(ls, params)
 
         labels = [item.label for item in result.items]
-        assert "#-" in labels  # alias for title
+        assert "#-" in labels  # alias for h1
         assert "#**" in labels  # alias for b
 
         # Check alias detail
         alias_items = [i for i in result.items if i.label == "#-"]
         assert len(alias_items) == 1
-        assert "alias for #title" in alias_items[0].detail
+        assert "alias for #h1" in alias_items[0].detail
 
     def test_includes_user_macros(self, lsp_env) -> None:
         ls, _, put = lsp_env
@@ -372,10 +372,10 @@ class TestCompletion:
         params = _make_params(0, 1)
         result = completion(ls, params)
 
-        url_items = [i for i in result.items if i.label == "#url"]
-        assert len(url_items) == 1
-        assert "link" in url_items[0].detail
-        assert "builtin" in url_items[0].detail
+        link_items = [i for i in result.items if i.label == "#link"]
+        assert len(link_items) == 1
+        assert "to" in link_items[0].detail
+        assert "builtin" in link_items[0].detail
 
     def test_completion_not_incomplete(self, lsp_env) -> None:
         ls, _, put = lsp_env

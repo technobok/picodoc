@@ -53,17 +53,23 @@ class TestDocumentStructure:
 
 
 class TestHeadings:
-    def test_h1_title(self) -> None:
-        result = render(_doc(_call("title", body=_body(_text("Hello")))))
+    def test_h1(self) -> None:
+        result = render(_doc(_call("h1", body=_body(_text("Hello")))))
         assert "<h1>Hello</h1>" in result
 
     def test_h1_alias(self) -> None:
         result = render(_doc(_call("-", body=_body(_text("Alt")))))
         assert "<h1>Alt</h1>" in result
 
-    def test_h1_alias2(self) -> None:
-        result = render(_doc(_call("h1", body=_body(_text("H1")))))
-        assert "<h1>H1</h1>" in result
+    def test_title_in_head(self) -> None:
+        result = render(_doc(_call("title", body=_body(_text("My Page")))))
+        assert "<title>My Page</title>" in result
+        assert "<title>My Page</title>" in result.split("<head>")[1].split("</head>")[0]
+
+    def test_title_not_in_body(self) -> None:
+        result = render(_doc(_call("title", body=_body(_text("My Page")))))
+        body_section = result.split("<body>")[1].split("</body>")[0]
+        assert "<title>" not in body_section
 
     def test_h2(self) -> None:
         result = render(_doc(_call("h2", body=_body(_text("Sub")))))
@@ -129,16 +135,35 @@ class TestItalic:
         assert "<em>italic</em>" in result
 
 
-class TestUrl:
-    def test_with_text_arg(self) -> None:
-        args = (_iarg("link", "https://example.com"), _iarg("text", "Example"))
-        result = render(_doc(_call("p", body=_body(_call("url", args)))))
-        assert '<a href="https://example.com">Example</a>' in result
-
+class TestLink:
     def test_with_body(self) -> None:
-        args = (_iarg("link", "https://example.com"),)
-        url = _call("url", args, _body(_text("Click")))
-        result = render(_doc(_call("p", body=_body(url))))
+        args = (_iarg("to", "https://example.com"),)
+        link = _call("link", args, _body(_text("Click")))
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="https://example.com">Click</a>' in result
+
+    def test_no_body_uses_to(self) -> None:
+        args = (_iarg("to", "https://example.com"),)
+        link = _call("link", args)
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="https://example.com">https://example.com</a>' in result
+
+    def test_fragment_reference(self) -> None:
+        args = (_iarg("to", "section1"),)
+        link = _call("link", args, _body(_text("go")))
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="#section1">go</a>' in result
+
+    def test_path_with_slash_no_fragment(self) -> None:
+        args = (_iarg("to", "page/about"),)
+        link = _call("link", args)
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="page/about">page/about</a>' in result
+
+    def test_alias(self) -> None:
+        args = (_iarg("to", "https://example.com"),)
+        link = _call(">", args, _body(_text("Click")))
+        result = render(_doc(_call("p", body=_body(link))))
         assert '<a href="https://example.com">Click</a>' in result
 
 
@@ -228,33 +253,59 @@ class TestTables:
 
 class TestDocumentMeta:
     def test_meta_name(self) -> None:
-        meta = _call("meta", (_arg("name", "viewport"), _iarg("content", "width=device-width")))
+        meta = _call("doc.meta", (_arg("name", "viewport"), _iarg("content", "width=device-width")))
         result = render(_doc(meta))
         assert '<meta name="viewport" content="width=device-width">' in result
 
     def test_meta_property(self) -> None:
-        meta = _call("meta", (_iarg("property", "og:title"), _iarg("content", "Title")))
+        meta = _call("doc.meta", (_iarg("property", "og:title"), _iarg("content", "Title")))
         result = render(_doc(meta))
         assert '<meta property="og:title" content="Title">' in result
 
     def test_link(self) -> None:
-        link = _call("link", (_arg("rel", "stylesheet"), _iarg("href", "style.css")))
+        link = _call("doc.link", (_arg("rel", "stylesheet"), _iarg("href", "style.css")))
         result = render(_doc(link))
         assert '<link rel="stylesheet" href="style.css">' in result
 
+    def test_link_with_type_and_sizes(self) -> None:
+        link = _call("doc.link", (
+            _arg("rel", "icon"),
+            _iarg("href", "icon.png"),
+            _arg("type", "image/png"),
+            _arg("sizes", "32x32"),
+        ))
+        result = render(_doc(link))
+        assert '<link rel="icon" href="icon.png" type="image/png" sizes="32x32">' in result
+
     def test_script_src(self) -> None:
-        script = _call("script", (_iarg("src", "app.js"),))
+        script = _call("doc.script", (_iarg("src", "app.js"),))
         result = render(_doc(script))
         assert '<script src="app.js"></script>' in result
 
     def test_script_inline(self) -> None:
-        script = _call("script", body=RawString('console.log("hi");', S))
+        script = _call("doc.script", body=RawString('console.log("hi");', S))
         result = render(_doc(script))
         assert '<script>\nconsole.log("hi");\n</script>' in result
 
     def test_lang(self) -> None:
-        result = render(_doc(_call("lang", body=_body(_text("en")))))
+        result = render(_doc(_call("doc.lang", body=_body(_text("en")))))
         assert '<html lang="en">' in result
+
+    def test_doc_author(self) -> None:
+        result = render(_doc(_call("doc.author", body=_body(_text("Jane Doe")))))
+        assert '<meta name="author" content="Jane Doe">' in result
+
+    def test_doc_version(self) -> None:
+        result = render(_doc(_call("doc.version", body=_body(_text("2.0")))))
+        assert '<meta name="version" content="2.0">' in result
+
+    def test_doc_datecreated(self) -> None:
+        result = render(_doc(_call("doc.datecreated", body=_body(_text("2025-01-01")))))
+        assert '<meta name="datecreated" content="2025-01-01">' in result
+
+    def test_doc_datemodified(self) -> None:
+        result = render(_doc(_call("doc.datemodified", body=_body(_text("2025-06-15")))))
+        assert '<meta name="datemodified" content="2025-06-15">' in result
 
 
 class TestHtmlEscaping:

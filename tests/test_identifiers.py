@@ -18,7 +18,7 @@ class TestIsIdentChar:
         assert is_ident_char(".")
 
     def test_special_chars(self):
-        for ch in "!$%&*+-/@^_~":
+        for ch in "!$%&*+-/<>@^_~|":
             assert is_ident_char(ch), f"Expected '{ch}' to be ident_char"
 
     def test_non_ident(self):
@@ -58,6 +58,11 @@ class TestIdentifierLexing:
         tokens = lex("__")
         assert_types(tokens, [TokenType.IDENTIFIER])
         assert_values(tokens, ["__"])
+
+    def test_angle_bracket_ident(self, lex):
+        tokens = lex(">")
+        assert_types(tokens, [TokenType.IDENTIFIER])
+        assert_values(tokens, [">"])
 
     def test_identifier_with_digits(self, lex):
         tokens = lex("h2")

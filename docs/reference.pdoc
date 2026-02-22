@@ -1,4 +1,4 @@
-#lang: en
+#doc.lang: en
 
 #comment: PicoDoc Language Reference
 #comment: Authoritative documentation of every language feature.
@@ -33,12 +33,12 @@ An identifier consists of one or more letters, digits, dots, or special
 characters\:
 
 [#code : """
-    ! $ % & * + - / @ ^ _ ~
+    ! $ % & * + - / < > @ ^ _ ~ |
     """]
 
-Dots allow namespacing (e.g. [#code : env.mode]). The identifier terminates at
-the first character that is not in the set above, such as whitespace, colons,
-quotes, brackets, equals signs, hash, or backslash.
+Dots allow namespacing (e.g. [#code : env.mode], [#code : doc.lang]). The
+identifier terminates at the first character that is not in the set above, such
+as whitespace, colons, quotes, brackets, equals signs, hash, or backslash.
 
 #h3: Escape Sequences
 
@@ -75,13 +75,24 @@ produces a literal \[, while in strings it enters code mode.
 
 #h3: Comments
 
-The \#comment macro removes its body from the output entirely.
+The \#comment macro (alias \#//) removes its body from the output entirely.
+Three forms are available\:
+
+[#ol :
+  [#* : [#b : Inline] (colon body to end of line)\: [#code"#//: This text will not appear."]]
+  [#* : [#b : Bracketed] (multi-line)\: [#code"[#// : Multi-line comment here.]"]]
+  [#* : [#b : Paragraph body] (colon + following paragraph)\:]
+]
 
 #code: """
-    #comment: This text will not appear in the output.
+    #//: This text will not appear.
 
-    [#comment : Multi-line comments
+    [#// : Multi-line comments
       use the bracketed form.]
+
+    #//:
+    This entire paragraph
+    is a comment.
     """
 
 #h2: Macro Calls
@@ -106,7 +117,7 @@ After the identifier, the parser examines the next token\:
 
 #code: """
     #title: Document Title
-    #h2: Section Heading
+    #-: Visible Heading
     #hr
     #p"Explicit paragraph."
     """
@@ -119,7 +130,7 @@ prose.
 
 #code: """
     #code language=python : print("hello")
-    #meta name=viewport content="width=device-width"
+    #doc.meta name=viewport content="width=device-width"
     """
 
 #h3: Bracketed Form
@@ -131,7 +142,7 @@ bracket is body, which may span multiple lines and paragraphs.
 
 #code: """
     [#b : bold text]
-    [#url link="https://example.com" text="Click here"]
+    [#link to="https://example.com" : Click here]
     [#code language=python : """
         def hello():
             print("world")
@@ -152,9 +163,9 @@ Argument values can be\:
   [#* : [#b : Bareword] (a simple word with no syntactic characters)\:
     [#code"language=python"]]
   [#* : [#b : String literal] (interpreted or raw)\:
-    [#code"text=\"Click here\""]]
+    [#code"to=\"https://example.com\""]]
   [#* : [#b : Macro reference] (a zero-argument macro)\:
-    [#code"link=#site-url"]]
+    [#code"to=#site-url"]]
   [#* : [#b : Bracketed call] (a macro call in brackets)\:
     [#code"style=[#get-style]"]]
 ]
@@ -166,7 +177,7 @@ Body content is introduced by a colon or by a string literal\:
 #p: [#b : Colon, inline body]\: text follows the colon on the same line.
 
 #code: """
-    #title: Document Title
+    #-: Document Heading
     """
 
 #p: [#b : Colon, paragraph body]\: nothing follows the colon on the line. The
@@ -277,17 +288,26 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #h2: Builtin Macros
 
-PicoDoc has 26 builtin macros in 7 categories, plus 10 aliases.
+PicoDoc has 28 builtin macros in 7 categories, plus 11 aliases.
 
 #h3: Structural Macros
 
 #h4: \#title
 
-Aliases\: \#h1, \#-. Top-level document title. Renders as [#code"<h1>"].
-Takes body, no parameters.
+Sets the document [#code"<title>"] in the HTML [#code"<head>"] section. Does
+not produce any output in [#code"<body>"]. Takes body, no parameters.
 
 #code: """
     #title: My Document
+    """
+
+#h4: \#h1
+
+Alias\: \#-. Top-level heading. Renders as [#code"<h1>"] in the document body.
+Takes body, no parameters.
+
+#code: """
+    #h1: Main Heading
     #-: Alias form
     """
 
@@ -353,21 +373,25 @@ parameters.
     This is [#i : also italic] text.
     """
 
-#h4: \#url
+#h4: \#link
 
-Hyperlink. Renders as [#code"<a>"]. Parameters\:
+Alias\: \#>. Hyperlink. Renders as [#code"<a>"]. Parameters\:
 
 #table:
   Parameter | Required | Description
-  link | Yes | URL target (href)
-  text | No | Link text (defaults to empty)
+  to | Yes | Link target (URL, path, or fragment name)
 
-Takes optional body. If body is provided, it is used as the link content
-(overriding the text parameter).
+Takes optional body (the link text). If no body is provided, the [#code : to] value is used as the link text.
+
+Fragment reference behavior\: if [#code : to] does not contain [#code"://"]
+and does not contain [#code"/"], it is treated as a fragment reference and
+\# is prepended (e.g. [#code"to=section1"] produces [#code"href=\"#section1\""]).
 
 #code: """
-    [#url link="https://example.com" text="Click here"]
-    [#url link="https://example.com" : Click here]
+    [#link to="https://example.com" : Click here]
+    [#> to="https://example.com" : Alias form]
+    [#link to=section1 : Jump to section]
+    [#link to=page/about : About page]
     """
 
 #h3: Code and Literal Macros
@@ -401,7 +425,7 @@ for output from external filters. Takes body, no parameters.
 #code: """"
     #literal"""
     The #b macro makes text bold.
-    Use [#url link="..." text="..."] for links.
+    Use [#link to="..." : text] for links.
     """
     """"
 
@@ -494,18 +518,21 @@ body.
     ]
     """
 
-#h3: Document Macros
+#h3: Document Macros (doc.* Namespace)
 
-#h4: \#lang
+All document-level macros live under the [#code"doc.*"] namespace. They produce
+elements in the HTML [#code"<head>"] section, not in [#code"<body>"].
+
+#h4: \#doc.lang
 
 Sets the lang attribute on the HTML [#code"<html>"] element. Takes body (the
 language code), no parameters.
 
 #code: """
-    #lang: en
+    #doc.lang: en
     """
 
-#h4: \#meta
+#h4: \#doc.meta
 
 Adds a [#code"<meta>"] tag to the document head. Parameters\:
 
@@ -518,11 +545,11 @@ Adds a [#code"<meta>"] tag to the document head. Parameters\:
 No body.
 
 #code: """
-    #meta name=viewport content="width=device-width, initial-scale=1"
-    #meta property="og:title" content="PicoDoc Reference"
+    #doc.meta name=viewport content="width=device-width, initial-scale=1"
+    #doc.meta property="og:title" content="PicoDoc Reference"
     """
 
-#h4: \#link
+#h4: \#doc.link
 
 Adds a [#code"<link>"] tag to the document head. Parameters\:
 
@@ -530,14 +557,18 @@ Adds a [#code"<link>"] tag to the document head. Parameters\:
   Parameter | Required | Description
   rel | Yes | Relationship (e.g. stylesheet)
   href | Yes | URL of the linked resource
+  type | No | MIME type (e.g. image/png)
+  sizes | No | Icon sizes (e.g. 32x32)
 
-No body.
+No body. The optional [#code"type"] and [#code"sizes"] attributes are only
+included in the output when non-empty.
 
 #code: """
-    #link rel=stylesheet href="style.css"
+    #doc.link rel=stylesheet href="style.css"
+    #doc.link rel=icon href="icon.png" type="image/png" sizes="32x32"
     """
 
-#h4: \#script
+#h4: \#doc.script
 
 Adds a [#code"<script>"] element. Parameters\:
 
@@ -549,10 +580,46 @@ Takes optional body (inline script content). Use either the src parameter or
 body, not both.
 
 #code: """
-    #script src="app.js"
-    [#script : """
+    #doc.script src="app.js"
+    [#doc.script : """
         console.log("Hello from PicoDoc");
         """]
+    """
+
+#h4: \#doc.author
+
+Convenience macro. Renders as [#code"<meta name=\"author\" content=\"...\">"].
+Takes body (the author name), no parameters.
+
+#code: """
+    #doc.author: Jane Doe
+    """
+
+#h4: \#doc.version
+
+Convenience macro. Renders as [#code"<meta name=\"version\" content=\"...\">"].
+Takes body (the version string), no parameters.
+
+#code: """
+    #doc.version: 2.0
+    """
+
+#h4: \#doc.datecreated
+
+Convenience macro. Renders as [#code"<meta name=\"datecreated\" content=\"...\">"].
+Takes body (the date string), no parameters.
+
+#code: """
+    #doc.datecreated: 2025-01-01
+    """
+
+#h4: \#doc.datemodified
+
+Convenience macro. Renders as [#code"<meta name=\"datemodified\" content=\"...\">"].
+Takes body (the date string), no parameters.
+
+#code: """
+    #doc.datemodified: 2025-06-15
     """
 
 #h3: Expansion-Time Macros
@@ -560,8 +627,8 @@ body, not both.
 These macros are fully resolved during evaluation and do not appear in the
 final AST.
 
-The \#comment macro removes its body from the output. Takes body, no
-parameters.
+The \#comment macro (alias \#//) removes its body from the output. Takes body,
+no parameters.
 
 The \#set macro defines a user macro. See the User-Defined Macros section
 below.
@@ -596,28 +663,41 @@ Takes body.
 
 #h4: \#include
 
-Inserts the contents of another file. The included file is parsed and expanded
-as if its contents appeared at the call site. Parameters\:
+Inserts the contents of another file. The filename is provided as the body of
+the macro call. The included file is parsed and expanded as if its contents
+appeared at the call site. Parameters\:
 
 #table:
   Parameter | Required | Description
-  file | Yes | Path to the file to include
+  literal | No | If "true", include as raw text without parsing
 
-No body.
+Takes body (the filename). Forward slashes are used as path separators on all
+platforms. Backslashes in the filename are normalized to forward slashes.
+
+#code: """
+    [#include : header.pdoc]
+    #include: footer.pdoc
+    [#include literal=true : code.js]
+    """
+
+When [#code"literal=true"] is set, the file contents are included as raw text
+without parsing or macro expansion. This is useful for including source code
+or other non-PicoDoc content.
 
 #h3: Alias Table
 
-All 10 aliases mapped to their canonical names\:
+All 11 aliases mapped to their canonical names\:
 
 #table:
   Alias | Canonical
-  \#- | \#title
-  \#h1 | \#title
+  \#- | \#h1
   \#-- | \#h2
   \#--- | \#h3
   \#---- | \#h4
   \#----- | \#h5
   \#------ | \#h6
+  \#// | \#comment
+  \#> | \#link
   \#** | \#b
   \#__ | \#i
   \#li | \#*
@@ -699,7 +779,7 @@ the \#identifier form\:
 
 #code: """
     [#set name=site-url : https://example.com]
-    [#url link=#site-url text="Our site"]
+    [#link to=#site-url : Our site]
     """
 
 #h2: Conditionals
@@ -736,20 +816,27 @@ Conditionals can be nested\:
 #h2: Includes
 
 The \#include macro inserts the contents of another file at the call site. The
-included file is parsed and expanded as if it appeared inline.
+filename is provided as the body. The included file is parsed and expanded as
+if it appeared inline.
 
 #code: """
-    [#include file="header.pdoc"]
+    [#include : header.pdoc]
 
     #h2: Main Content
 
     #p: The body of the document.
 
-    [#include file="footer.pdoc"]
+    [#include : footer.pdoc]
     """
 
 A common pattern is to use includes for shared headers and footers across
 multiple documents.
+
+To include a file as raw text without parsing (e.g. source code), use the [#code"literal"] parameter\:
+
+#code: """
+    [#include literal=true : code.js]
+    """
 
 #h2: Global Environment (env.*)
 

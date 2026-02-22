@@ -18,7 +18,7 @@
 
 #h2: Links
 
-#p: Visit [#url link="https://example.com" text="Example Site"] today.
+#p: Visit [#link to="https://example.com" : Example Site] today.
 
 #h2: Nesting
 
@@ -28,4 +28,4 @@
 
 #h2: Mixed Inline
 
-#p: A line with #**"bold" and #__"italic" and [#url link="https://example.com" text="a link"] together.
+#p: A line with #**"bold" and #__"italic" and [#link to="https://example.com" : a link] together.

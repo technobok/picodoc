@@ -28,7 +28,7 @@
 
 [#set name=site-url : https://example.com]
 
-#p: Visit [#url link=#site-url text="our site"] today.
+#p: Visit [#link to=#site-url : our site] today.
 
 #h2: String Literal Body on Set
 

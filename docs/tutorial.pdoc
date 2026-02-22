@@ -1,4 +1,4 @@
-#lang: en
+#doc.lang: en
 
 #comment: PicoDoc Tutorial — Getting Started
 #comment: A progressive guide from minimal document to productive use.
@@ -14,7 +14,7 @@ you learn the macro syntax, you know the entire language.
 
 #h2: Installation
 
-PicoDoc requires [#b : Python 3.14+] and [#url link="https://docs.astral.sh/uv/" text="uv"].
+PicoDoc requires [#b : Python 3.14+] and [#link to="https://docs.astral.sh/uv/" : uv].
 
 #code: """
     git clone <repo-url> picodoc
@@ -34,6 +34,7 @@ Create a file called [#code"hello.pdoc"]\:
 
 #code: """
     #title: Hello, PicoDoc
+    #-: Hello, PicoDoc
 
     This is my first document.
     """
@@ -45,16 +46,19 @@ Compile it to HTML\:
     """
 
 Open [#code"hello.html"] in your browser. You should see a heading and a
-paragraph. The bare text was automatically wrapped in a [#code"<p>"] tag
-because PicoDoc treats any text not inside a macro call as an implicit
-paragraph.
+paragraph. The \#title macro sets the browser tab title, while \#- (alias
+for \#h1) creates a visible heading. The bare text was automatically wrapped
+in a [#code"<p>"] tag because PicoDoc treats any text not inside a macro
+call as an implicit paragraph.
 
 #h2: Headings and Structure
 
-PicoDoc supports six levels of headings\:
+PicoDoc uses \#title for the document's [#code"<title>"] (shown in the browser
+tab) and separate heading macros for visible headings in the body\:
 
 #code: """
-    #title: Level 1 (Document Title)
+    #title: Page Title (in browser tab only)
+    #h1: Level 1 (visible heading)
     #h2: Level 2 (Section)
     #h3: Level 3 (Subsection)
     #h4: Level 4
@@ -62,10 +66,10 @@ PicoDoc supports six levels of headings\:
     #h6: Level 6
     """
 
-All six levels have dash aliases that are shorter to type\:
+All heading levels have dash aliases that are shorter to type\:
 
 #code: """
-    #-: Level 1 (same as #title)
+    #-: Level 1 (same as #h1)
     #--: Level 2 (same as #h2)
     #---: Level 3 (same as #h3)
     #----: Level 4 (same as #h4)
@@ -73,13 +77,13 @@ All six levels have dash aliases that are shorter to type\:
     #------: Level 6 (same as #h6)
     """
 
-Use [#code"#hr"] for a horizontal rule and [#code"#comment"] for text that
-should not appear in the output\:
+Use [#code"#hr"] for a horizontal rule and [#code"#//"] (or [#code"#comment"])
+for text that should not appear in the output\:
 
 #code: """
     #hr
 
-    #comment: This is a note to myself — not rendered.
+    #//: This is a note to myself — not rendered.
     """
 
 #h2: Paragraphs
@@ -131,17 +135,17 @@ Bold and italic can be nested\:
 
 #h3: Links
 
-Use [#code"#url"] with [#code"link"] and [#code"text"] arguments\:
+Use [#code"#link"] (or its alias [#code"#>"]) with a [#code"to"] argument
+and optional body for the link text\:
 
 #code: """
-    Visit [#url link="https://example.com" text="Example Site"] today.
+    Visit [#link to="https://example.com" : Example Site] today.
+    [#> to="https://example.com" : Short form with alias]
     """
 
-You can also use the body form for the link text\:
-
-#code: """
-    Visit [#url link="https://example.com" : Example Site] today.
-    """
+If no body is provided, the [#code"to"] value is used as the link text.
+If [#code"to"] contains no [#code"://"] and no [#code"/"], it is treated as
+a fragment reference (e.g. [#code"to=section1"] produces [#code"href=\"#section1\""]).
 
 #h3: Mixed Inline Example
 
@@ -149,7 +153,7 @@ All inline formatting can appear together in a paragraph\:
 
 #code: """
     A paragraph with #**"bold", #__"italic", and
-    [#url link="https://example.com" text="a link"] all in one line.
+    [#link to="https://example.com" : a link] all in one line.
     """
 
 #h2: Lists
@@ -186,7 +190,7 @@ List items can contain any inline macro\:
     [#ul :
       #*: A #**"bold" item
       #*: An #__"italic" item
-      #*: A [#url link="https://example.com" text="linked"] item
+      #*: A [#link to="https://example.com" : linked] item
     ]
     """
 
@@ -225,7 +229,7 @@ Cells can contain inline macros\:
     #table:
       Feature | Supported
       Bold | [#**"Yes"]
-      Links | [#url link="https://example.com" text="Yes"]
+      Links | [#link to="https://example.com" : Yes]
     """
 
 For full control (colspan, custom structure), use the explicit form with
@@ -265,7 +269,7 @@ To show PicoDoc syntax itself without it being interpreted, use \#literal\:
 #code: """"
     #literal"""
     The #b macro makes text bold.
-    Use [#url link="..." text="..."] for links.
+    Use [#link to="..." : text] for links.
     """
     """"
 
@@ -396,20 +400,40 @@ Then compile with [#code"uv run picodoc -e mode=draft doc.pdoc -o doc.html"].
 
 #h2: Including Other Files
 
-The [#code"#include"] macro inserts another file at the call site\:
+The [#code"#include"] macro inserts another file at the call site. The
+filename is provided as the body\:
 
 #code: """
-    [#include file="header.pdoc"]
+    [#include : header.pdoc]
 
     #h2: Main Content
 
     #p: The body of the document.
 
-    [#include file="footer.pdoc"]
+    [#include : footer.pdoc]
     """
 
 This is the standard pattern for shared headers and footers across a set of
 documents.
+
+To include a file as raw text without parsing, use the [#code"literal"]
+parameter\:
+
+#code: """
+    [#include literal=true : code.js]
+    """
+
+#h2: Document Metadata
+
+Use the [#code"doc.*"] namespace for HTML head elements\:
+
+#code: """
+    #doc.lang: en
+    #doc.meta name=viewport content="width=device-width, initial-scale=1"
+    #doc.link rel=stylesheet href="style.css"
+    #doc.script src="app.js"
+    #doc.author: Jane Doe
+    """
 
 #h2: Environment Variables
 

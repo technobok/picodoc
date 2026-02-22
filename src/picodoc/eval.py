@@ -570,10 +570,12 @@ def _get_condition_body(
 
 
 def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text | Escape]:
-    file_val = _get_arg(node, "file")
-    if file_val is None:
+    if node.body is None:
         return []
-    filename = _resolve_value(file_val, ctx)
+    filename = _extract_body_text(node.body).strip()
+    if not filename:
+        return []
+    filename = filename.replace("\\", "/")
     filepath = ctx.source_dir / filename
     resolved = str(filepath.resolve())
 
@@ -599,6 +601,16 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
             node.span,
             "",
         ) from None
+
+    # Check literal mode
+    literal_val = _get_arg(node, "literal")
+    literal = (
+        literal_val is not None
+        and _resolve_value(literal_val, ctx).lower() == "true"
+    )
+
+    if literal:
+        return [Text(content, node.span)]
 
     from picodoc.parser import parse
 

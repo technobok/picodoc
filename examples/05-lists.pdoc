@@ -32,7 +32,7 @@
 [#ul :
   #*: A #**"bold" item
   #*: An #__"italic" item
-  #*: A [#url link="https://example.com" text="linked"] item
+  #*: A [#link to="https://example.com" : linked] item
 ]
 
 #h2: List Item Alias

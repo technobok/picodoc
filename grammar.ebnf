@@ -24,7 +24,7 @@ digit           = '0'..'9' ;
 hex_digit       = digit | 'a'..'f' | 'A'..'F' ;
 
 ident_special   = '!' | '$' | '%' | '&' | '*' | '+' | '-'
-               | '/' | '@' | '^' | '_' | '~' ;
+               | '/' | '<' | '>' | '@' | '^' | '_' | '~' | '|' ;
 
 ident_char      = letter | digit | '.' | ident_special ;
 

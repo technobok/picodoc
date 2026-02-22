@@ -122,7 +122,7 @@ class TestExitCodes:
 
     def test_syntax_error_returns_1(self, tmp_path: Path) -> None:
         doc = tmp_path / "bad.pdoc"
-        doc.write_text('#url link="http://x" text="y" extra="z" leftover: body\n')
+        doc.write_text('#link to="http://x" extra="z" leftover: body\n')
         # This should trigger a parse error due to malformed input
         result = main([str(doc)])
         # Parse errors return 1, but if the parser is lenient here, check >= 0
@@ -130,7 +130,7 @@ class TestExitCodes:
 
     def test_eval_error_returns_2(self, tmp_path: Path) -> None:
         doc = tmp_path / "evalerr.pdoc"
-        doc.write_text('#include file="nonexistent.pdoc"\n')
+        doc.write_text("#include: nonexistent.pdoc\n")
         assert main([str(doc)]) == 2
 
 
@@ -210,4 +210,4 @@ class TestCompileFile:
             debug=False,
         )
         html = compile_file(opts)
-        assert "<h1>Hello World</h1>" in html
+        assert "<title>Hello World</title>" in html

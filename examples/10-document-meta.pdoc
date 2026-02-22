@@ -1,17 +1,19 @@
-#lang: en
+#doc.lang: en
 
-#meta name=viewport content="width=device-width, initial-scale=1"
-#meta name=description content="A PicoDoc example document"
-#meta property="og:title" content="PicoDoc Meta Example"
+#doc.meta name=viewport content="width=device-width, initial-scale=1"
+#doc.meta name=description content="A PicoDoc example document"
+#doc.meta property="og:title" content="PicoDoc Meta Example"
 
-#link rel=stylesheet href="style.css"
+#doc.link rel=stylesheet href="style.css"
 
-#script src="app.js"
+#doc.script src="app.js"
 
-[#script : """
+[#doc.script : """
     console.log("Hello from PicoDoc");
     """]
 
 #title: Document Meta Example
 
-#p: This document demonstrates meta, link, script, and lang macros.
+#-: Document Meta Example
+
+#p: This document demonstrates doc.meta, doc.link, doc.script, and doc.lang macros.
