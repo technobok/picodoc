@@ -78,6 +78,17 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("td", (ParamDecl("span", False),), has_body=True)
     d("th", (ParamDecl("span", False),), has_body=True)
 
+    # Wrapper / container
+    d("div", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("section", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("span", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("nav", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("header", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("footer", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("main", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("article", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+    d("aside", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
+
     # Document
     d("doc.meta", (ParamDecl("name", False), ParamDecl("property", False), ParamDecl("content", True)))
     d("doc.link", (
@@ -93,6 +104,11 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("doc.version", has_body=True)
     d("doc.datecreated", has_body=True)
     d("doc.datemodified", has_body=True)
+    d("doc.content", (
+        ParamDecl("type", True),
+        ParamDecl("class", False),
+        ParamDecl("id", False),
+    ))
 
     # Expansion-time
     d("comment", has_body=True)
@@ -106,3 +122,8 @@ def _make_builtins() -> dict[str, BuiltinDef]:
 
 
 BUILTINS: dict[str, BuiltinDef] = _make_builtins()
+
+WRAPPER_TAGS: frozenset[str] = frozenset({
+    "div", "section", "span", "nav", "header",
+    "footer", "main", "article", "aside",
+})

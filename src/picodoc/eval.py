@@ -19,7 +19,7 @@ from picodoc.ast import (
     RequiredMarker,
     Text,
 )
-from picodoc.builtins import BUILTINS, resolve_name
+from picodoc.builtins import BUILTINS, WRAPPER_TAGS, resolve_name
 from picodoc.errors import EvalError
 from picodoc.tokens import Span
 
@@ -67,9 +67,61 @@ def evaluate(
     expanded = _expand_top_level(doc.children, ctx)
     # Filter to MacroCall nodes — Text/Escape from conditionals are whitespace
     children = tuple(c for c in expanded if isinstance(c, MacroCall))
+    _validate_doc_content(children, ctx.source, ctx.filename)
     result = Document(children, doc.span)
     _validate_nesting(result, ctx.source, ctx.filename)
     return result
+
+
+# ---------------------------------------------------------------------------
+# doc.content validation
+# ---------------------------------------------------------------------------
+
+
+def _validate_doc_content(
+    children: tuple[MacroCall, ...],
+    source: str,
+    filename: str,
+) -> None:
+    """Validate doc.content usage: at most one, with a valid type."""
+    seen = False
+    for child in children:
+        if not isinstance(child, MacroCall):
+            continue
+        if resolve_name(child.name) != "doc.content":
+            continue
+        if seen:
+            raise EvalError(
+                "duplicate #doc.content",
+                child.span,
+                source,
+                filename=filename,
+            )
+        seen = True
+        type_val = _get_arg(child, "type")
+        if type_val is not None:
+            type_text = _resolve_value_simple(type_val)
+            if type_text not in WRAPPER_TAGS:
+                raise EvalError(
+                    f"invalid doc.content type '{type_text}'; "
+                    f"must be one of: {', '.join(sorted(WRAPPER_TAGS))}",
+                    child.span,
+                    source,
+                    filename=filename,
+                )
+
+
+def _resolve_value_simple(
+    value: Text | InterpString | RawString | MacroCall | RequiredMarker,
+) -> str:
+    """Extract plain text from an argument value without context (post-expansion)."""
+    if isinstance(value, Text):
+        return value.value
+    if isinstance(value, RawString):
+        return value.value
+    if isinstance(value, InterpString):
+        return "".join(p.value for p in value.parts if isinstance(p, Text))
+    return ""
 
 
 # ---------------------------------------------------------------------------

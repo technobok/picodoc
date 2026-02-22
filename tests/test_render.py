@@ -313,6 +313,111 @@ class TestDocumentMeta:
         assert '<meta name="datemodified" content="2025-06-15">' in result
 
 
+class TestWrappers:
+    def test_div_basic(self) -> None:
+        result = render(_doc(_call("div", body=_body(_call("p", body=_body(_text("Hello")))))))
+        assert "<div>\n<p>Hello</p>\n</div>" in result
+
+    def test_div_with_class(self) -> None:
+        result = render(_doc(_call("div", (_arg("class", "box"),), _body(_call("p", body=_body(_text("Hi")))))))
+        assert '<div class="box">\n<p>Hi</p>\n</div>' in result
+
+    def test_div_with_id(self) -> None:
+        result = render(_doc(_call("div", (_arg("id", "main"),), _body(_call("p", body=_body(_text("Hi")))))))
+        assert '<div id="main">\n<p>Hi</p>\n</div>' in result
+
+    def test_div_with_class_and_id(self) -> None:
+        result = render(_doc(_call("div", (_arg("class", "box"), _arg("id", "main")), _body(_call("p", body=_body(_text("Hi")))))))
+        assert '<div class="box" id="main">\n<p>Hi</p>\n</div>' in result
+
+    def test_span_inline(self) -> None:
+        p = _call("p", body=_body(_call("span", (_arg("class", "hl"),), _body(_text("word")))))
+        result = render(_doc(p))
+        assert '<span class="hl">word</span>' in result
+        # span should NOT have newlines around content
+        assert '<span class="hl">\n' not in result
+
+    def test_nested_wrappers(self) -> None:
+        inner_div = _call("div", (_arg("class", "inner"),), _body(_call("p", body=_body(_text("Content")))))
+        outer_section = _call("section", (_arg("class", "outer"),), _body(inner_div))
+        result = render(_doc(outer_section))
+        assert '<section class="outer">' in result
+        assert '<div class="inner">' in result
+        assert "</div>" in result
+        assert "</section>" in result
+
+    def test_all_wrapper_tags(self) -> None:
+        from picodoc.builtins import WRAPPER_TAGS
+        for tag in sorted(WRAPPER_TAGS):
+            node = _call(tag, body=_body(_call("p", body=_body(_text("X")))))
+            result = render(_doc(node))
+            if tag == "span":
+                assert f"<span><p>X</p></span>" in result
+            else:
+                assert f"<{tag}>\n<p>X</p>\n</{tag}>" in result
+
+
+class TestDocContent:
+    def test_loose_items_wrapped(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"),)),
+            _call("p", body=_body(_text("Loose paragraph."))),
+        )
+        result = render(doc)
+        assert "<main>\n<p>Loose paragraph.</p>\n</main>" in result
+
+    def test_wrappers_outside_content(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"),)),
+            _call("header", body=_body(_call("h1", body=_body(_text("Site"))))),
+            _call("p", body=_body(_text("Loose."))),
+            _call("footer", body=_body(_call("p", body=_body(_text("Copyright"))))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        # header and footer should NOT be inside <main>
+        assert "<header>" in body
+        assert "<footer>" in body
+        assert "<main>\n<p>Loose.</p>\n</main>" in body
+        # header appears before main
+        assert body.index("<header>") < body.index("<main>")
+        # footer appears after main
+        assert body.index("</main>") < body.index("<footer>")
+
+    def test_ordering_preserved(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"),)),
+            _call("header", body=_body(_call("h1", body=_body(_text("Site"))))),
+            _call("p", body=_body(_text("A"))),
+            _call("p", body=_body(_text("B"))),
+            _call("footer", body=_body(_call("p", body=_body(_text("End"))))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        # header, main(with 2 paragraphs), footer
+        assert body.index("<header>") < body.index("<main>")
+        assert body.index("</main>") < body.index("<footer>")
+        assert "<p>A</p>" in body
+        assert "<p>B</p>" in body
+
+    def test_no_doc_content(self) -> None:
+        doc = _doc(
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = render(doc)
+        # Without doc.content, no wrapping
+        assert "<main>" not in result
+        assert "<p>Hello</p>" in result
+
+    def test_doc_content_with_class_and_id(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"), _arg("class", "content"), _arg("id", "page"))),
+            _call("p", body=_body(_text("Text"))),
+        )
+        result = render(doc)
+        assert '<main class="content" id="page">' in result
+
+
 class TestHtmlEscaping:
     def test_angle_brackets(self) -> None:
         result = render(_doc(_call("p", body=_body(_text("a < b > c")))))

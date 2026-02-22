@@ -9,10 +9,12 @@ from picodoc.ast import (
     Escape,
     InterpString,
     MacroCall,
+    NamedArg,
     RawString,
     Text,
 )
-from picodoc.builtins import resolve_name
+from picodoc.builtins import WRAPPER_TAGS, resolve_name
+from picodoc.tokens import Span
 
 
 def render(doc: Document) -> str:
@@ -20,6 +22,9 @@ def render(doc: Document) -> str:
     lang: str | None = None
     head_items: list[MacroCall] = []
     body_items: list[MacroCall] = []
+    content_type: str | None = None
+    content_class: str | None = None
+    content_id: str | None = None
 
     for child in doc.children:
         if not isinstance(child, MacroCall):
@@ -27,10 +32,20 @@ def render(doc: Document) -> str:
         name = resolve_name(child.name)
         if name == "doc.lang":
             lang = _body_text(child.body)
+        elif name == "doc.content":
+            content_type = _get_arg_text(child, "type")
+            content_class = _get_arg_text(child, "class")
+            content_id = _get_arg_text(child, "id")
         elif name.startswith("doc."):
             head_items.append(child)
         else:
             body_items.append(child)
+
+    # doc.content wrapping: wrap loose top-level items in a container element
+    if content_type:
+        body_items = _wrap_loose_items(
+            body_items, content_type, content_class, content_id,
+        )
 
     parts: list[str] = ["<!DOCTYPE html>\n"]
     if lang:
@@ -53,6 +68,52 @@ def render(doc: Document) -> str:
     parts.append("</html>\n")
 
     return "".join(parts)
+
+
+def _wrap_loose_items(
+    body_items: list[MacroCall],
+    content_type: str,
+    content_class: str | None,
+    content_id: str | None,
+) -> list[MacroCall]:
+    """Wrap loose (non-wrapper) top-level items in a synthetic wrapper."""
+    output: list[MacroCall | None] = []
+    loose: list[MacroCall] = []
+    placeholder_idx: int = -1
+
+    for item in body_items:
+        rname = resolve_name(item.name)
+        if rname in WRAPPER_TAGS:
+            output.append(item)
+        else:
+            if placeholder_idx == -1:
+                placeholder_idx = len(output)
+                output.append(None)  # placeholder
+            loose.append(item)
+
+    if loose and placeholder_idx >= 0:
+        span = loose[0].span
+        wrapper_args = _build_content_args(content_type, content_class, content_id, span)
+        wrapper_body = Body(tuple(loose), span)
+        wrapper = MacroCall(content_type, wrapper_args, wrapper_body, False, span)
+        output[placeholder_idx] = wrapper
+
+    return [item for item in output if item is not None]
+
+
+def _build_content_args(
+    tag: str,
+    cls: str | None,
+    id_val: str | None,
+    span: Span,
+) -> tuple[NamedArg, ...]:
+    """Build NamedArg tuple for a synthetic doc.content wrapper."""
+    args: list[NamedArg] = []
+    if cls:
+        args.append(NamedArg("class", Text(cls, span), span, span))
+    if id_val:
+        args.append(NamedArg("id", Text(id_val, span), span, span))
+    return tuple(args)
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +283,10 @@ def _render_node(node: MacroCall) -> str:
             return _render_td(node)
         case "th":
             return _render_th(node)
+        case "div" | "section" | "nav" | "header" | "footer" | "main" | "article" | "aside":
+            return _render_wrapper(node, name)
+        case "span":
+            return _render_wrapper(node, "span", block=False)
         case _:
             return _render_body(node.body)
 
@@ -338,6 +403,24 @@ def _render_th(node: MacroCall) -> str:
     if span:
         return f'<th colspan="{_escape_attr(span)}">{body_html}</th>'
     return f"<th>{body_html}</th>"
+
+
+def _render_wrapper(node: MacroCall, tag: str, *, block: bool = True) -> str:
+    cls = _get_arg_text(node, "class")
+    id_val = _get_arg_text(node, "id")
+    attrs = ""
+    if cls:
+        attrs += f' class="{_escape_attr(cls)}"'
+    if id_val:
+        attrs += f' id="{_escape_attr(id_val)}"'
+    if block and isinstance(node.body, Body):
+        parts: list[str] = []
+        for child in node.body.children:
+            if isinstance(child, MacroCall):
+                parts.append(_render_node(child))
+                parts.append("\n")
+        return f"<{tag}{attrs}>\n{''.join(parts)}</{tag}>"
+    return f"<{tag}{attrs}>{_render_body(node.body)}</{tag}>"
 
 
 # ---------------------------------------------------------------------------

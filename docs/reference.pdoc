@@ -296,7 +296,7 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #--: Builtin Macros
 
-PicoDoc has 28 builtin macros in 7 categories, plus 11 aliases.
+PicoDoc has 38 builtin macros in 8 categories, plus 11 aliases.
 
 #---: Structural Macros
 
@@ -517,6 +517,46 @@ body.
     ]
     """
 
+#---: Wrapper / Container Macros
+
+PicoDoc provides 9 wrapper macros for grouping content in HTML container
+elements. All wrapper macros accept optional [#code"class"] and [#code"id"]
+parameters and take a body.
+
+#table:
+  Macro | HTML element | Display
+  \#div | [#code"<div>"] | Block
+  \#section | [#code"<section>"] | Block
+  \#nav | [#code"<nav>"] | Block
+  \#header | [#code"<header>"] | Block
+  \#footer | [#code"<footer>"] | Block
+  \#main | [#code"<main>"] | Block
+  \#article | [#code"<article>"] | Block
+  \#aside | [#code"<aside>"] | Block
+  \#span | [#code"<span>"] | Inline
+
+Block wrappers render their body children on separate lines within the
+opening and closing tags. The \#span macro is inline and renders its body
+without added newlines.
+
+#code: """
+    [#div class=container :
+      #-: Welcome
+      #p: This content is inside a div.
+    ]
+
+    #p: Text with [#span class=highlight : highlighted words] inside.
+
+    [#section class=sidebar id=nav :
+      [#nav :
+        [#ul :
+          #*: [#link to=page1 : Page 1]
+          #*: [#link to=page2 : Page 2]
+        ]
+      ]
+    ]
+    """
+
 #---: Document Macros (doc.* Namespace)
 
 All document-level macros live under the [#code"doc.*"] namespace. They produce
@@ -631,6 +671,43 @@ Takes body (the date string), no parameters.
 #code: """
     #doc.datemodified: 2025-06-15
     """
+
+#----: \#doc.content
+
+Wraps all "loose" top-level content (anything not inside an explicit wrapper
+macro) in a specified HTML container element. This is a document-level
+directive that affects the rendering of body items. Parameters\:
+
+#table:
+  Parameter | Required | Description
+  type | Yes | Wrapper tag (must be one of the 9 wrapper tags)
+  class | No | CSS class for the wrapper element
+  id | No | HTML id for the wrapper element
+
+No body. Only one \#doc.content may appear per document. The [#code"type"]
+value must be one of\: article, aside, div, footer, header, main, nav,
+section, span.
+
+Behavior\: during rendering, top-level items whose resolved name is one of the
+9 wrapper tags remain outside the content wrapper. All other items (paragraphs,
+headings, lists, tables, etc.) are collected and wrapped in a single element
+of the specified type. The wrapper is placed at the position of the first
+loose item, preserving source order.
+
+#code: """
+    #doc.content type=main class=content
+
+    [#header : #-: My Site]
+
+    #p: This paragraph is loose and will be wrapped.
+
+    #p: So will this one.
+
+    [#footer : #p: Copyright 2025]
+    """
+
+This produces header, then [#code"<main class=\"content\">"] containing the
+two paragraphs, then footer.
 
 #---: Expansion-Time Macros
 

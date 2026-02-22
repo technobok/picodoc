@@ -322,6 +322,33 @@ first, then expands\:
     [#set name=project-name : PicoDoc]
     """
 
+#h2: Content Wrappers
+
+PicoDoc provides wrapper macros (\#div, \#section, \#span, \#nav, \#header,
+\#footer, \#main, \#article, \#aside) for grouping content in HTML container
+elements. They accept optional [#code"class"] and [#code"id"] parameters\:
+
+#code: """
+    [#div class=card :
+      #--: Card Title
+      #p: Card body text here.
+    ]
+    """
+
+For page-level layout, use \#doc.content to automatically wrap loose content
+(anything not inside an explicit wrapper) in a container element\:
+
+#code: """
+    #doc.content type=main class=content
+
+    [#header : #-: My Site]
+    #p: This paragraph gets wrapped in <main class="content">.
+    [#footer : #p: Copyright]
+    """
+
+The header and footer remain outside the [#code"<main>"] element, while loose
+paragraphs and headings are collected inside it.
+
 #h2: String Literals
 
 #h3: Interpreted Strings

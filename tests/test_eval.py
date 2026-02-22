@@ -821,6 +821,45 @@ class TestUnknownArgValidation:
         assert len(result.children) == 1
 
 
+class TestDocContentValidation:
+    def test_doc_content_duplicate_error(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"),)),
+            _call("doc.content", (_arg("type", "div"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        with pytest.raises(EvalError, match="duplicate #doc.content"):
+            evaluate(doc)
+
+    def test_doc_content_invalid_type(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "banana"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        with pytest.raises(EvalError, match="invalid doc.content type 'banana'"):
+            evaluate(doc)
+
+    def test_doc_content_valid_type(self) -> None:
+        doc = _doc(
+            _call("doc.content", (_arg("type", "main"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = evaluate(doc)
+        # doc.content is a directive, should be kept for render
+        names = [c.name for c in result.children if isinstance(c, MacroCall)]
+        assert "doc.content" in names
+
+    def test_doc_content_all_valid_types(self) -> None:
+        from picodoc.builtins import WRAPPER_TAGS
+        for tag in sorted(WRAPPER_TAGS):
+            doc = _doc(
+                _call("doc.content", (_arg("type", tag),)),
+                _call("p", body=_body(_text("Hello"))),
+            )
+            result = evaluate(doc)
+            assert len(result.children) >= 1
+
+
 class TestNestingValidation:
     def test_td_outside_tr(self) -> None:
         doc = _doc(_call("td", body=_body(_text("cell"))))
