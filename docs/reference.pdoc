@@ -6,8 +6,6 @@
 #doc.title: PicoDoc Language Reference
 #doc.link rel=stylesheet href=style/picodoc.css 
 
-Include nav....
-
 #include literal=true: style/nav.html
 
 #-: PicoDoc Language Reference

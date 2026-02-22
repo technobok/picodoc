@@ -1,3 +1,11 @@
+<script>
+  <!-- prevent FOUC -->
+  if (localStorage.getItem('theme') === 'dark') {
+    //root.classList.add('dark-mode');
+    document.body.classList.add('dark-mode');
+  };
+</script>
+
 <div id="nav">
   <div class="doc-wrapper">
     <a title="ZeroLang Documents" href="/doc/">Zero</a>
