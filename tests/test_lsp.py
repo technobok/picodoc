@@ -35,7 +35,11 @@ def lsp_env():
     ls.protocol._workspace = ws
 
     published: list[PublishDiagnosticsParams] = []
-    ls.text_document_publish_diagnostics = lambda params: published.append(params)
+
+    def capture_diagnostics(params: PublishDiagnosticsParams) -> None:
+        published.append(params)
+
+    ls.text_document_publish_diagnostics = capture_diagnostics  # type: ignore[assignment]
 
     def put(source: str, uri: str = "file:///test.pdoc") -> None:
         ws.put_text_document(
@@ -160,7 +164,7 @@ def _make_params(line: int, character: int) -> TextDocumentPositionParams:
 
 class TestAnalyze:
     def test_collects_set_definitions(self) -> None:
-        source = '#set name=greeting: Hello\n#doc.title: #greeting'
+        source = "#set name=greeting: Hello\n#doc.title: #greeting"
         ast, defs = _analyze(source, "test.pdoc")
         assert ast is not None
         assert "greeting" in defs
@@ -220,7 +224,7 @@ class TestFindMacroAtPosition:
 class TestGotoDefinition:
     def test_jumps_to_set_definition(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        source = '#set name=greeting: Hello\n#doc.title: [#greeting]'
+        source = "#set name=greeting: Hello\n#doc.title: [#greeting]"
         put(source)
 
         # cursor on "greeting" in the second line's [#greeting]
@@ -278,7 +282,7 @@ class TestHover:
 
     def test_hover_builtin_with_params(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#link to=https://example.com: click')
+        put("#link to=https://example.com: click")
         params = _make_params(0, 1)
         result = hover(ls, params)
 
@@ -299,7 +303,7 @@ class TestHover:
 
     def test_hover_user_macro(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        source = '#set name=greeting: Hello\n#doc.title: [#greeting]'
+        source = "#set name=greeting: Hello\n#doc.title: [#greeting]"
         put(source)
         # cursor on #greeting, line 1
         params = _make_params(1, 14)
@@ -358,7 +362,7 @@ class TestCompletion:
 
     def test_includes_user_macros(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#set name=greeting: Hello\n#doc.title: world')
+        put("#set name=greeting: Hello\n#doc.title: world")
         params = _make_params(1, 1)
         result = completion(ls, params)
 
@@ -389,7 +393,7 @@ class TestCompletion:
 
     def test_user_macro_with_params(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        put('#set name=greet who=?: Hello [#who]!\n#doc.title: hi')
+        put("#set name=greet who=?: Hello [#who]!\n#doc.title: hi")
         params = _make_params(1, 1)
         result = completion(ls, params)
 

@@ -61,7 +61,9 @@ def _collect_headings(nodes: tuple[MacroCall | object, ...], state: _RenderState
 
 
 def _collect_headings_recursive(
-    node: MacroCall, state: _RenderState, used: dict[str, int],
+    node: MacroCall,
+    state: _RenderState,
+    used: dict[str, int],
 ) -> None:
     """Recursively find heading and doc.toc nodes."""
     name = resolve_name(node.name)
@@ -118,7 +120,10 @@ def render(doc: Document) -> str:
     # doc.content wrapping: wrap loose top-level items in a container element
     if content_type:
         body_items = _wrap_loose_items(
-            body_items, content_type, content_class, content_id,
+            body_items,
+            content_type,
+            content_class,
+            content_id,
         )
 
     # Pre-pass: collect headings and TOC configuration
@@ -444,15 +449,8 @@ def _render_link(node: MacroCall, state: _RenderState) -> str:
     to = _get_arg_text(node, "to") or ""
 
     # Determine href: if no "://" and no "/", treat as fragment reference
-    if "://" not in to and "/" not in to:
-        href = f"#{to}"
-    else:
-        href = to
-
-    if node.body is not None:
-        body_html = _render_body(node.body, state)
-    else:
-        body_html = _escape_html(to)
+    href = f"#{to}" if "://" not in to and "/" not in to else to
+    body_html = _render_body(node.body, state) if node.body is not None else _escape_html(to)
 
     return f'<a href="{_escape_attr(href)}">{body_html}</a>'
 

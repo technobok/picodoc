@@ -99,10 +99,11 @@ class TestNoopPassthrough:
     def test_injected_items_prepended(self) -> None:
         doc = inject_head_items(_doc_with_title(), ["s.css"], ["a.js"], [("k", "v")])
         assert len(doc.children) == 4
-        assert doc.children[0].name == "doc.link"
-        assert doc.children[1].name == "doc.script"
-        assert doc.children[2].name == "doc.meta"
-        assert doc.children[3].name == "doc.title"
+        c0, c1, c2, c3 = doc.children
+        assert isinstance(c0, MacroCall) and c0.name == "doc.link"
+        assert isinstance(c1, MacroCall) and c1.name == "doc.script"
+        assert isinstance(c2, MacroCall) and c2.name == "doc.meta"
+        assert isinstance(c3, MacroCall) and c3.name == "doc.title"
 
 
 class TestCombinedInjection:

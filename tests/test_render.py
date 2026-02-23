@@ -253,7 +253,9 @@ class TestTables:
 
 class TestDocumentMeta:
     def test_meta_name(self) -> None:
-        meta = _call("doc.meta", (_arg("name", "viewport"), _iarg("content", "width=device-width")))
+        meta = _call(
+            "doc.meta", (_arg("name", "viewport"), _iarg("content", "width=device-width"))
+        )
         result = render(_doc(meta))
         assert '<meta name="viewport" content="width=device-width">' in result
 
@@ -268,12 +270,15 @@ class TestDocumentMeta:
         assert '<link rel="stylesheet" href="style.css">' in result
 
     def test_link_with_type_and_sizes(self) -> None:
-        link = _call("doc.link", (
-            _arg("rel", "icon"),
-            _iarg("href", "icon.png"),
-            _arg("type", "image/png"),
-            _arg("sizes", "32x32"),
-        ))
+        link = _call(
+            "doc.link",
+            (
+                _arg("rel", "icon"),
+                _iarg("href", "icon.png"),
+                _arg("type", "image/png"),
+                _arg("sizes", "32x32"),
+            ),
+        )
         result = render(_doc(link))
         assert '<link rel="icon" href="icon.png" type="image/png" sizes="32x32">' in result
 
@@ -319,15 +324,27 @@ class TestWrappers:
         assert "<div>\n<p>Hello</p>\n</div>" in result
 
     def test_div_with_class(self) -> None:
-        result = render(_doc(_call("div", (_arg("class", "box"),), _body(_call("p", body=_body(_text("Hi")))))))
+        result = render(
+            _doc(_call("div", (_arg("class", "box"),), _body(_call("p", body=_body(_text("Hi"))))))
+        )
         assert '<div class="box">\n<p>Hi</p>\n</div>' in result
 
     def test_div_with_id(self) -> None:
-        result = render(_doc(_call("div", (_arg("id", "main"),), _body(_call("p", body=_body(_text("Hi")))))))
+        result = render(
+            _doc(_call("div", (_arg("id", "main"),), _body(_call("p", body=_body(_text("Hi"))))))
+        )
         assert '<div id="main">\n<p>Hi</p>\n</div>' in result
 
     def test_div_with_class_and_id(self) -> None:
-        result = render(_doc(_call("div", (_arg("class", "box"), _arg("id", "main")), _body(_call("p", body=_body(_text("Hi")))))))
+        result = render(
+            _doc(
+                _call(
+                    "div",
+                    (_arg("class", "box"), _arg("id", "main")),
+                    _body(_call("p", body=_body(_text("Hi")))),
+                )
+            )
+        )
         assert '<div class="box" id="main">\n<p>Hi</p>\n</div>' in result
 
     def test_span_inline(self) -> None:
@@ -338,7 +355,9 @@ class TestWrappers:
         assert '<span class="hl">\n' not in result
 
     def test_nested_wrappers(self) -> None:
-        inner_div = _call("div", (_arg("class", "inner"),), _body(_call("p", body=_body(_text("Content")))))
+        inner_div = _call(
+            "div", (_arg("class", "inner"),), _body(_call("p", body=_body(_text("Content"))))
+        )
         outer_section = _call("section", (_arg("class", "outer"),), _body(inner_div))
         result = render(_doc(outer_section))
         assert '<section class="outer">' in result
@@ -348,11 +367,12 @@ class TestWrappers:
 
     def test_all_wrapper_tags(self) -> None:
         from picodoc.builtins import WRAPPER_TAGS
+
         for tag in sorted(WRAPPER_TAGS):
             node = _call(tag, body=_body(_call("p", body=_body(_text("X")))))
             result = render(_doc(node))
             if tag == "span":
-                assert f"<span><p>X</p></span>" in result
+                assert "<span><p>X</p></span>" in result
             else:
                 assert f"<{tag}>\n<p>X</p>\n</{tag}>" in result
 
@@ -411,7 +431,9 @@ class TestDocContent:
 
     def test_doc_content_with_class_and_id(self) -> None:
         doc = _doc(
-            _call("doc.content", (_arg("type", "main"), _arg("class", "content"), _arg("id", "page"))),
+            _call(
+                "doc.content", (_arg("type", "main"), _arg("class", "content"), _arg("id", "page"))
+            ),
             _call("p", body=_body(_text("Text"))),
         )
         result = render(doc)
@@ -499,19 +521,23 @@ class TestHeadingIds:
         assert 'id="a-b"' in result
 
     def test_duplicate_heading_text(self) -> None:
-        result = render(_doc(
-            _call("h2", body=_body(_text("Intro"))),
-            _call("h2", body=_body(_text("Intro"))),
-        ))
+        result = render(
+            _doc(
+                _call("h2", body=_body(_text("Intro"))),
+                _call("h2", body=_body(_text("Intro"))),
+            )
+        )
         assert '<h2 id="intro">Intro</h2>' in result
         assert '<h2 id="intro-2">Intro</h2>' in result
 
     def test_triple_duplicate(self) -> None:
-        result = render(_doc(
-            _call("h2", body=_body(_text("Same"))),
-            _call("h2", body=_body(_text("Same"))),
-            _call("h2", body=_body(_text("Same"))),
-        ))
+        result = render(
+            _doc(
+                _call("h2", body=_body(_text("Same"))),
+                _call("h2", body=_body(_text("Same"))),
+                _call("h2", body=_body(_text("Same"))),
+            )
+        )
         assert 'id="same"' in result
         assert 'id="same-2"' in result
         assert 'id="same-3"' in result

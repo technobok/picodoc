@@ -128,11 +128,18 @@ class TestAdjacentStrings:
 
     def test_separated_strings_ok(self, lex):
         tokens = lex('"foo" "bar"')
-        assert_types(tokens, [
-            TokenType.STRING_START, TokenType.STRING_TEXT, TokenType.STRING_END,
-            TokenType.WS,
-            TokenType.STRING_START, TokenType.STRING_TEXT, TokenType.STRING_END,
-        ])
+        assert_types(
+            tokens,
+            [
+                TokenType.STRING_START,
+                TokenType.STRING_TEXT,
+                TokenType.STRING_END,
+                TokenType.WS,
+                TokenType.STRING_START,
+                TokenType.STRING_TEXT,
+                TokenType.STRING_END,
+            ],
+        )
 
     def test_newline_separated_strings_ok(self, lex):
         tokens = lex('"foo"\n"bar"')

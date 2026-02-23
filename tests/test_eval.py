@@ -257,7 +257,7 @@ class TestInclude:
 
     def test_literal_include_top_level(self, tmp_path: Path) -> None:
         html_file = tmp_path / "nav.html"
-        html_file.write_text('<nav>hello</nav>\n')
+        html_file.write_text("<nav>hello</nav>\n")
 
         main = tmp_path / "main.pdoc"
         main.write_text("#include literal=true: nav.html\n")
@@ -273,7 +273,7 @@ class TestInclude:
 
     def test_literal_include_renders_unescaped(self, tmp_path: Path) -> None:
         html_file = tmp_path / "nav.html"
-        html_file.write_text('<nav>hello</nav>\n')
+        html_file.write_text("<nav>hello</nav>\n")
 
         main = tmp_path / "main.pdoc"
         main.write_text("#include literal=true: nav.html\n")
@@ -283,6 +283,7 @@ class TestInclude:
         result = evaluate(doc, str(main))
 
         from picodoc.render import render
+
         html = render(result)
         assert "<nav>hello</nav>" in html
 
@@ -309,6 +310,7 @@ class TestTableExpansion:
 
         # Second row: td
         tr2 = rows[1]
+        assert isinstance(tr2.body, Body)
         cells2 = [c for c in tr2.body.children if isinstance(c, MacroCall)]
         assert all(c.name == "td" for c in cells2)
 
@@ -410,7 +412,7 @@ def _narg(
     return NamedArg(name, value, S, S)
 
 
-def _body_text(node: MacroCall) -> str:
+def _body_text(node: MacroCall | Paragraph) -> str:
     """Extract concatenated text from a MacroCall's Body children."""
     assert isinstance(node.body, Body)
     return "".join(c.value for c in node.body.children if isinstance(c, (Text, Escape)))
@@ -828,7 +830,7 @@ class TestDocContentValidation:
             _call("doc.content", (_arg("type", "div"),)),
             _call("p", body=_body(_text("Hello"))),
         )
-        with pytest.raises(EvalError, match="duplicate #doc.content"):
+        with pytest.raises(EvalError, match=r"duplicate #doc\.content"):
             evaluate(doc)
 
     def test_doc_content_invalid_type(self) -> None:
@@ -836,7 +838,7 @@ class TestDocContentValidation:
             _call("doc.content", (_arg("type", "banana"),)),
             _call("p", body=_body(_text("Hello"))),
         )
-        with pytest.raises(EvalError, match="invalid doc.content type 'banana'"):
+        with pytest.raises(EvalError, match=r"invalid doc\.content type 'banana'"):
             evaluate(doc)
 
     def test_doc_content_valid_type(self) -> None:
@@ -851,6 +853,7 @@ class TestDocContentValidation:
 
     def test_doc_content_all_valid_types(self) -> None:
         from picodoc.builtins import WRAPPER_TAGS
+
         for tag in sorted(WRAPPER_TAGS):
             doc = _doc(
                 _call("doc.content", (_arg("type", tag),)),
@@ -918,21 +921,30 @@ class TestNestingValidation:
 
     def test_block_inside_p(self) -> None:
         doc = _doc(_call("p", body=_body(_call("h2", body=_body(_text("bad"))))))
-        with pytest.raises(EvalError, match=r"block element #h2 cannot appear inside inline element #p"):
+        with pytest.raises(
+            EvalError, match=r"block element #h2 cannot appear inside inline element #p"
+        ):
             evaluate(doc)
 
     def test_block_inside_b(self) -> None:
         doc = _doc(
-            _call("p", body=_body(
-                _call("b", body=_body(_call("h2", body=_body(_text("bad"))))),
-            ))
+            _call(
+                "p",
+                body=_body(
+                    _call("b", body=_body(_call("h2", body=_body(_text("bad"))))),
+                ),
+            )
         )
-        with pytest.raises(EvalError, match=r"block element #h2 cannot appear inside inline element #b"):
+        with pytest.raises(
+            EvalError, match=r"block element #h2 cannot appear inside inline element #b"
+        ):
             evaluate(doc)
 
     def test_block_inside_span(self) -> None:
         doc = _doc(_call("span", body=_body(_call("p", body=_body(_text("bad"))))))
-        with pytest.raises(EvalError, match=r"block element #p cannot appear inside inline element #span"):
+        with pytest.raises(
+            EvalError, match=r"block element #p cannot appear inside inline element #span"
+        ):
             evaluate(doc)
 
     def test_block_inside_div_ok(self) -> None:
@@ -952,7 +964,9 @@ class TestNestingValidation:
 
     def test_block_code_inside_p(self) -> None:
         doc = _doc(_call("p", body=_body(_call("code", body=_body(_text("bad"))))))
-        with pytest.raises(EvalError, match=r"block element #code cannot appear inside inline element #p"):
+        with pytest.raises(
+            EvalError, match=r"block element #code cannot appear inside inline element #p"
+        ):
             evaluate(doc)
 
     def test_inline_code_inside_p_ok(self) -> None:

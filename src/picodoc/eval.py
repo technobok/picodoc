@@ -136,9 +136,17 @@ _NESTING_RULES: dict[str, set[str]] = {
     "*": {"ul", "ol"},
 }
 
-_INLINE_CONTEXT: frozenset[str] = frozenset({
-    "p", "b", "i", "link", "~", "span", "literal",
-})
+_INLINE_CONTEXT: frozenset[str] = frozenset(
+    {
+        "p",
+        "b",
+        "i",
+        "link",
+        "~",
+        "span",
+        "literal",
+    }
+)
 
 
 def _validate_nesting(doc: Document, source: str, filename: str) -> None:
@@ -148,9 +156,7 @@ def _validate_nesting(doc: Document, source: str, filename: str) -> None:
             _validate_node(child, parent_name=None, source=source, filename=filename)
 
 
-def _validate_node(
-    node: MacroCall, parent_name: str | None, source: str, filename: str
-) -> None:
+def _validate_node(node: MacroCall, parent_name: str | None, source: str, filename: str) -> None:
     name = resolve_name(node.name)
     if name in _NESTING_RULES:
         allowed = _NESTING_RULES[name]
@@ -700,19 +706,18 @@ def _expand_include(node: MacroCall, ctx: EvalContext) -> list[MacroCall | Text 
 
     # Check literal mode
     literal_val = _get_arg(node, "literal")
-    literal = (
-        literal_val is not None
-        and _resolve_value(literal_val, ctx).lower() == "true"
-    )
+    literal = literal_val is not None and _resolve_value(literal_val, ctx).lower() == "true"
 
     if literal:
-        return [MacroCall(
-            "literal",
-            (),
-            Body((Text(content, node.span),), node.span),
-            False,
-            node.span,
-        )]
+        return [
+            MacroCall(
+                "literal",
+                (),
+                Body((Text(content, node.span),), node.span),
+                False,
+                node.span,
+            )
+        ]
 
     from picodoc.parser import parse
 

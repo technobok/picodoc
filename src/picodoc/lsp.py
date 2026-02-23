@@ -65,11 +65,9 @@ def _analyze(source: str, filename: str) -> tuple[Document | None, dict[str, Mac
             continue
         for arg in child.args:
             if arg.name == "name":
-                from picodoc.ast import Text, InterpString, RawString
+                from picodoc.ast import InterpString, RawString, Text
 
-                if isinstance(arg.value, Text):
-                    definitions[arg.value.value] = child
-                elif isinstance(arg.value, RawString):
+                if isinstance(arg.value, (Text, RawString)):
                     definitions[arg.value.value] = child
                 elif isinstance(arg.value, InterpString):
                     # Simple case: all-text interp string
@@ -83,9 +81,7 @@ def _analyze(source: str, filename: str) -> tuple[Document | None, dict[str, Mac
     return ast, definitions
 
 
-def _find_macro_at_position(
-    source: str, ast: Document, line_0: int, col_0: int
-) -> str | None:
+def _find_macro_at_position(source: str, ast: Document, line_0: int, col_0: int) -> str | None:
     """Find the macro name at the given 0-based cursor position.
 
     Walks the AST looking for MacroCall nodes whose name the cursor is on.
@@ -130,10 +126,7 @@ def _find_macro_at_position(
             # start.column+1 to start.column+len(node.name).
             # For bracketed calls [#name ...], the [ is at start.column,
             # # is at start.column+1, name from start.column+2.
-            if node.bracketed:
-                hash_col = start.column + 1
-            else:
-                hash_col = start.column
+            hash_col = start.column + 1 if node.bracketed else start.column
             name_end_col = hash_col + len(node.name)  # exclusive
             if hash_col <= col_1 <= name_end_col:
                 return node.name
@@ -309,9 +302,7 @@ def did_change(ls: LanguageServer, params: DidChangeTextDocumentParams) -> None:
 
 
 @server.feature(TEXT_DOCUMENT_DEFINITION)
-def goto_definition(
-    ls: LanguageServer, params: TextDocumentPositionParams
-) -> Location | None:
+def goto_definition(ls: LanguageServer, params: TextDocumentPositionParams) -> Location | None:
     uri = params.text_document.uri
     doc = ls.workspace.get_text_document(uri)
     source = doc.source
@@ -321,9 +312,7 @@ def goto_definition(
     if ast is None:
         return None
 
-    name = _find_macro_at_position(
-        source, ast, params.position.line, params.position.character
-    )
+    name = _find_macro_at_position(source, ast, params.position.line, params.position.character)
     if name is None:
         return None
 
@@ -359,9 +348,7 @@ def hover(ls: LanguageServer, params: TextDocumentPositionParams) -> Hover | Non
     if ast is None:
         return None
 
-    name = _find_macro_at_position(
-        source, ast, params.position.line, params.position.character
-    )
+    name = _find_macro_at_position(source, ast, params.position.line, params.position.character)
     if name is None:
         return None
 
@@ -386,9 +373,7 @@ def hover(ls: LanguageServer, params: TextDocumentPositionParams) -> Hover | Non
     TEXT_DOCUMENT_COMPLETION,
     CompletionOptions(trigger_characters=["#"]),
 )
-def completion(
-    ls: LanguageServer, params: TextDocumentPositionParams
-) -> CompletionList:
+def completion(ls: LanguageServer, params: TextDocumentPositionParams) -> CompletionList:
     uri = params.text_document.uri
     doc = ls.workspace.get_text_document(uri)
     source = doc.source
@@ -400,9 +385,7 @@ def completion(
 
     # Builtin macros
     for name, defn in sorted(BUILTINS.items()):
-        params_str = ", ".join(
-            f"{p.name}{'?' if not p.required else ''}" for p in defn.params
-        )
+        params_str = ", ".join(f"{p.name}{'?' if not p.required else ''}" for p in defn.params)
         detail = f"builtin({params_str})" if params_str else "builtin"
         if defn.has_body:
             detail += " +body"

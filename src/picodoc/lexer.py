@@ -92,8 +92,9 @@ class Lexer:
     def _check_adjacent_string(self) -> None:
         """Raise an error if the next character is a quote (adjacent strings)."""
         if self._pos < len(self._source) and self._peek() == '"':
-            raise self._error("adjacent strings are not allowed — "
-                              "insert whitespace between string literals")
+            raise self._error(
+                "adjacent strings are not allowed — insert whitespace between string literals"
+            )
 
     # ------------------------------------------------------------------
     # State management

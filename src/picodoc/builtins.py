@@ -91,13 +91,19 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("aside", (ParamDecl("class", False), ParamDecl("id", False)), has_body=True)
 
     # Document
-    d("doc.meta", (ParamDecl("name", False), ParamDecl("property", False), ParamDecl("content", True)))
-    d("doc.link", (
-        ParamDecl("rel", True),
-        ParamDecl("href", True),
-        ParamDecl("type", False),
-        ParamDecl("sizes", False),
-    ))
+    d(
+        "doc.meta",
+        (ParamDecl("name", False), ParamDecl("property", False), ParamDecl("content", True)),
+    )
+    d(
+        "doc.link",
+        (
+            ParamDecl("rel", True),
+            ParamDecl("href", True),
+            ParamDecl("type", False),
+            ParamDecl("sizes", False),
+        ),
+    )
     d("doc.script", (ParamDecl("src", False), ParamDecl("type", False)), has_body=True)
     d("doc.title", has_body=True)
     d("doc.lang", has_body=True)
@@ -105,16 +111,22 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("doc.version", has_body=True)
     d("doc.datecreated", has_body=True)
     d("doc.datemodified", has_body=True)
-    d("doc.content", (
-        ParamDecl("type", True),
-        ParamDecl("class", False),
-        ParamDecl("id", False),
-    ))
-    d("doc.toc", (
-        ParamDecl("level", False),
-        ParamDecl("id", False),
-        ParamDecl("class", False),
-    ))
+    d(
+        "doc.content",
+        (
+            ParamDecl("type", True),
+            ParamDecl("class", False),
+            ParamDecl("id", False),
+        ),
+    )
+    d(
+        "doc.toc",
+        (
+            ParamDecl("level", False),
+            ParamDecl("id", False),
+            ParamDecl("class", False),
+        ),
+    )
 
     # Expansion-time
     d("comment", has_body=True)
@@ -129,16 +141,41 @@ def _make_builtins() -> dict[str, BuiltinDef]:
 
 BUILTINS: dict[str, BuiltinDef] = _make_builtins()
 
-WRAPPER_TAGS: frozenset[str] = frozenset({
-    "div", "section", "span", "nav", "header",
-    "footer", "main", "article", "aside",
-})
+WRAPPER_TAGS: frozenset[str] = frozenset(
+    {
+        "div",
+        "section",
+        "span",
+        "nav",
+        "header",
+        "footer",
+        "main",
+        "article",
+        "aside",
+    }
+)
 
-BLOCK_MACROS: frozenset[str] = frozenset({
-    "h1", "h2", "h3", "h4", "h5", "h6",
-    "p", "hr",
-    "ul", "ol",
-    "table",
-    "div", "section", "nav", "header", "footer", "main", "article", "aside",
-    "code",
-})
+BLOCK_MACROS: frozenset[str] = frozenset(
+    {
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "hr",
+        "ul",
+        "ol",
+        "table",
+        "div",
+        "section",
+        "nav",
+        "header",
+        "footer",
+        "main",
+        "article",
+        "aside",
+        "code",
+    }
+)
