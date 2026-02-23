@@ -15,44 +15,28 @@
     function handleTocOnResize() {
         if (document.body.clientWidth < 768) {
             // hide the generated js toc
-            e = document.getElementById("generated-toc");
-            e.classList.add('hide');
-            e.classList.remove('show');
+            var g = document.getElementById("generated-toc");
+            g.classList.add('hide');
+            g.classList.remove('show');
 
-            // show the default asciidoc inline toc
-            var l = document.getElementsByClassName("sectlevel0");
-            for (let i of l) {
-                i.classList.add('show');
-                i.classList.remove('hide');
+            // show the default inline toc
+            // var t = document.getElementById("toc");
+            var t = document.querySelector("#toc ul");
+            t.classList.add('show');
+            t.classList.remove('hide');
 
-            }
-            var l = document.getElementsByClassName("sectlevel1");
-            for (let i of l) {
-                i.classList.add('show');
-                i.classList.remove('hide');
-
-            }
         }
         else {
             // show the generated js toc
-            e = document.getElementById("generated-toc");
-            e.classList.add('show');
-            e.classList.remove('hide');
-
-            // hide the default asciidoc inline toc
-            var l = document.getElementsByClassName("sectlevel0");
-            for (let i of l) {
-                i.classList.add('hide');
-                i.classList.remove('show');
-
-            }
-            var l = document.getElementsByClassName("sectlevel1");
-            for (let i of l) {
-                i.classList.add('hide');
-                i.classList.remove('show');
-
-            }
-
+            var g = document.getElementById("generated-toc");
+            g.classList.add('show');
+            g.classList.remove('hide');
+            
+            // hide the default inline toc
+            // var t = document.getElementById("toc");
+            var t = document.querySelector("#toc ul");
+            t.classList.add('hide');
+            t.classList.remove('show');
         }
     };
 
@@ -61,7 +45,6 @@
         // styling
         console.debug("ready");
 
-/*
         var t = document.getElementById("toc");
         t.insertAdjacentHTML("beforeend", "<div id='generated-toc'></div>");
         tocbot.init({
@@ -69,7 +52,8 @@
             contentSelector: '#content',
             //headingSelector: 'h1, h2, h3, h4, h5',
             headingSelector: document.getElementById("content").getElementsByTagName("h1").length > 0 ? "h1,h2,h3,h4,h5" : "h2,h3,h4,h5",
-            hasInnerContainers: true,
+            //hasInnerContainers: true,
+            hasInnerContainers: false,
             listClass: 'toc-list',
             listItemClass: 'toc-list-item',
             activeListItemClass: 'toc-list-item-focus',
@@ -82,8 +66,6 @@
         // $(window).resize(handleTocOnResize);
         addEventListener("resize", (event) => { handleTocOnResize() });
         handleTocOnResize();
-
-*/
 
         const toggleCheckbox = document.getElementById('mode-checkbox');
         const root = document.documentElement;
