@@ -551,8 +551,8 @@ def _render_wrapper(node: MacroCall, tag: str, state: _RenderState, *, block: bo
     if block and isinstance(node.body, Body):
         parts: list[str] = []
         for child in node.body.children:
+            parts.append(_render_child(child, state))
             if isinstance(child, MacroCall):
-                parts.append(_render_node(child, state))
                 parts.append("\n")
         return f"<{tag}{attrs}>\n{''.join(parts)}</{tag}>"
     return f"<{tag}{attrs}>{_render_body(node.body, state)}</{tag}>"
