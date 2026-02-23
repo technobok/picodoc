@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass, field
+
 from picodoc.ast import (
     Body,
     CodeSection,
@@ -15,6 +18,75 @@ from picodoc.ast import (
 )
 from picodoc.builtins import WRAPPER_TAGS, resolve_name
 from picodoc.tokens import Span
+
+_HEADING_NAMES: frozenset[str] = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
+_HEADING_LEVEL: dict[str, int] = {f"h{i}": i for i in range(1, 7)}
+
+_SLUG_RE = re.compile(r"[^a-z0-9]")
+_COLLAPSE_RE = re.compile(r"-{2,}")
+
+
+@dataclass
+class _RenderState:
+    heading_ids: dict[int, str] = field(default_factory=dict)
+    toc_entries: list[tuple[int, str, str]] = field(default_factory=list)
+    toc_level: int = 0
+    toc_id: str = "toc"
+    toc_class: str = ""
+
+
+def _slugify(text: str, used: dict[str, int]) -> str:
+    """Generate a unique URL-friendly slug from text."""
+    slug = text.lower()
+    slug = _SLUG_RE.sub("-", slug)
+    slug = _COLLAPSE_RE.sub("-", slug)
+    slug = slug.strip("-")
+    if not slug:
+        slug = "heading"
+    base = slug
+    count = used.get(base, 0)
+    if count > 0:
+        slug = f"{base}-{count + 1}"
+    used[base] = count + 1
+    return slug
+
+
+def _collect_headings(nodes: tuple[MacroCall | object, ...], state: _RenderState) -> None:
+    """Walk top-level nodes to find headings and doc.toc, populate state."""
+    used: dict[str, int] = {}
+    for node in nodes:
+        if not isinstance(node, MacroCall):
+            continue
+        _collect_headings_recursive(node, state, used)
+
+
+def _collect_headings_recursive(
+    node: MacroCall, state: _RenderState, used: dict[str, int],
+) -> None:
+    """Recursively find heading and doc.toc nodes."""
+    name = resolve_name(node.name)
+    if name in _HEADING_NAMES:
+        level = _HEADING_LEVEL[name]
+        text = _body_text(node.body)
+        slug = _slugify(text, used)
+        state.heading_ids[id(node)] = slug
+        if state.toc_level == 0 or level <= state.toc_level:
+            state.toc_entries.append((level, text, slug))
+    elif name == "doc.toc":
+        level_str = _get_arg_text(node, "level")
+        state.toc_level = int(level_str) if level_str else 3
+        toc_id = _get_arg_text(node, "id")
+        if toc_id is not None:
+            state.toc_id = toc_id
+        toc_class = _get_arg_text(node, "class")
+        if toc_class is not None:
+            state.toc_class = toc_class
+
+    # Recurse into body children
+    if isinstance(node.body, Body):
+        for child in node.body.children:
+            if isinstance(child, MacroCall):
+                _collect_headings_recursive(child, state, used)
 
 
 def render(doc: Document) -> str:
@@ -36,6 +108,8 @@ def render(doc: Document) -> str:
             content_type = _get_arg_text(child, "type")
             content_class = _get_arg_text(child, "class")
             content_id = _get_arg_text(child, "id")
+        elif name == "doc.toc":
+            body_items.append(child)
         elif name.startswith("doc."):
             head_items.append(child)
         else:
@@ -47,6 +121,10 @@ def render(doc: Document) -> str:
             body_items, content_type, content_class, content_id,
         )
 
+    # Pre-pass: collect headings and TOC configuration
+    state = _RenderState()
+    _collect_headings(doc.children, state)
+
     parts: list[str] = ["<!DOCTYPE html>\n"]
     if lang:
         parts.append(f'<html lang="{_escape_attr(lang)}">\n')
@@ -55,12 +133,12 @@ def render(doc: Document) -> str:
     parts.append("<head>\n")
     parts.append('<meta charset="utf-8">\n')
     for item in head_items:
-        parts.append(_render_head_item(item))
+        parts.append(_render_head_item(item, state))
         parts.append("\n")
     parts.append("</head>\n")
     parts.append("<body>\n")
     for item in body_items:
-        rendered = _render_node(item)
+        rendered = _render_node(item, state)
         if rendered:
             parts.append(rendered)
             parts.append("\n")
@@ -175,38 +253,38 @@ def _body_text(body: Body | InterpString | RawString | None) -> str:
     return ""
 
 
-def _render_body(body: Body | InterpString | RawString | None) -> str:
+def _render_body(body: Body | InterpString | RawString | None, state: _RenderState) -> str:
     """Render a macro body to HTML."""
     if body is None:
         return ""
     if isinstance(body, Body):
-        return "".join(_render_child(c) for c in body.children)
+        return "".join(_render_child(c, state) for c in body.children)
     if isinstance(body, InterpString):
-        return _render_interp_string(body)
+        return _render_interp_string(body, state)
     if isinstance(body, RawString):
         return _escape_html(body.value)
     return ""
 
 
-def _render_interp_string(s: InterpString) -> str:
+def _render_interp_string(s: InterpString, state: _RenderState) -> str:
     parts: list[str] = []
     for part in s.parts:
         if isinstance(part, Text):
             parts.append(_escape_html(part.value))
         elif isinstance(part, CodeSection):
             for child in part.body:
-                parts.append(_render_child(child))
+                parts.append(_render_child(child, state))
     return "".join(parts)
 
 
-def _render_child(child: Text | Escape | MacroCall) -> str:
+def _render_child(child: Text | Escape | MacroCall, state: _RenderState) -> str:
     """Render a single body child node."""
     if isinstance(child, Text):
         return _escape_html(child.value)
     if isinstance(child, Escape):
         return _render_escape(child)
     if isinstance(child, MacroCall):
-        return _render_node(child)
+        return _render_node(child, state)
     return ""
 
 
@@ -236,59 +314,123 @@ def _arg_value_text(value: Text | InterpString | RawString | object) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Heading rendering
+# ---------------------------------------------------------------------------
+
+
+def _render_heading(node: MacroCall, level: int, state: _RenderState) -> str:
+    body_html = _render_body(node.body, state)
+    slug = state.heading_ids.get(id(node), "")
+    if slug:
+        return f'<h{level} id="{_escape_attr(slug)}">{body_html}</h{level}>'
+    return f"<h{level}>{body_html}</h{level}>"
+
+
+# ---------------------------------------------------------------------------
+# TOC rendering
+# ---------------------------------------------------------------------------
+
+
+def _render_toc(state: _RenderState) -> str:
+    """Render the table of contents as nested <nav>/<ul> HTML."""
+    if not state.toc_entries:
+        return ""
+
+    attrs = f' id="{_escape_attr(state.toc_id)}"'
+    if state.toc_class:
+        attrs += f' class="{_escape_attr(state.toc_class)}"'
+
+    parts: list[str] = [f"<nav{attrs}>\n"]
+    stack: list[int] = []  # tracks nesting levels
+
+    for level, text, slug in state.toc_entries:
+        if not stack:
+            parts.append("<ul>\n")
+            stack.append(level)
+        elif level > stack[-1]:
+            # Open deeper nesting
+            while level > stack[-1]:
+                parts.append("<ul>\n")
+                stack.append(stack[-1] + 1)
+        elif level < stack[-1]:
+            # Close back up
+            while stack and stack[-1] > level:
+                parts.append("</li>\n</ul>\n")
+                stack.pop()
+            # Close the previous <li> at this level
+            parts.append("</li>\n")
+        else:
+            # Same level — close previous <li>
+            parts.append("</li>\n")
+
+        escaped_text = _escape_html(text)
+        parts.append(f'<li><a href="#{_escape_attr(slug)}">{escaped_text}</a>\n')
+
+    # Close all remaining levels
+    while stack:
+        parts.append("</li>\n</ul>\n")
+        stack.pop()
+
+    parts.append("</nav>")
+    return "".join(parts)
+
+
+# ---------------------------------------------------------------------------
 # Node rendering dispatcher
 # ---------------------------------------------------------------------------
 
 
-def _render_node(node: MacroCall) -> str:
+def _render_node(node: MacroCall, state: _RenderState) -> str:
     name = resolve_name(node.name)
     match name:
         case "h1":
-            return f"<h1>{_render_body(node.body)}</h1>"
+            return _render_heading(node, 1, state)
         case "h2":
-            return f"<h2>{_render_body(node.body)}</h2>"
+            return _render_heading(node, 2, state)
         case "h3":
-            return f"<h3>{_render_body(node.body)}</h3>"
+            return _render_heading(node, 3, state)
         case "h4":
-            return f"<h4>{_render_body(node.body)}</h4>"
+            return _render_heading(node, 4, state)
         case "h5":
-            return f"<h5>{_render_body(node.body)}</h5>"
+            return _render_heading(node, 5, state)
         case "h6":
-            return f"<h6>{_render_body(node.body)}</h6>"
+            return _render_heading(node, 6, state)
         case "p":
-            return f"<p>{_render_body(node.body)}</p>"
+            return f"<p>{_render_body(node.body, state)}</p>"
         case "hr":
             return "<hr>"
         case "b":
-            return f"<strong>{_render_body(node.body)}</strong>"
+            return f"<strong>{_render_body(node.body, state)}</strong>"
         case "i":
-            return f"<em>{_render_body(node.body)}</em>"
+            return f"<em>{_render_body(node.body, state)}</em>"
         case "link":
-            return _render_link(node)
+            return _render_link(node, state)
         case "code":
-            return _render_code(node)
+            return _render_code(node, state)
         case "literal":
             return _render_literal(node)
         case "ul":
-            return _render_list(node, "ul")
+            return _render_list(node, "ul", state)
         case "ol":
-            return _render_list(node, "ol")
+            return _render_list(node, "ol", state)
         case "*":
-            return _render_li(node)
+            return _render_li(node, state)
         case "table":
-            return _render_table(node)
+            return _render_table(node, state)
         case "tr":
-            return _render_tr(node)
+            return _render_tr(node, state)
         case "td":
-            return _render_td(node)
+            return _render_td(node, state)
         case "th":
-            return _render_th(node)
+            return _render_th(node, state)
+        case "doc.toc":
+            return _render_toc(state)
         case "div" | "section" | "nav" | "header" | "footer" | "main" | "article" | "aside":
-            return _render_wrapper(node, name)
+            return _render_wrapper(node, name, state)
         case "span":
-            return _render_wrapper(node, "span", block=False)
+            return _render_wrapper(node, "span", state, block=False)
         case _:
-            return _render_body(node.body)
+            return _render_body(node.body, state)
 
 
 # ---------------------------------------------------------------------------
@@ -296,7 +438,7 @@ def _render_node(node: MacroCall) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _render_link(node: MacroCall) -> str:
+def _render_link(node: MacroCall, state: _RenderState) -> str:
     to = _get_arg_text(node, "to") or ""
 
     # Determine href: if no "://" and no "/", treat as fragment reference
@@ -306,14 +448,14 @@ def _render_link(node: MacroCall) -> str:
         href = to
 
     if node.body is not None:
-        body_html = _render_body(node.body)
+        body_html = _render_body(node.body, state)
     else:
         body_html = _escape_html(to)
 
     return f'<a href="{_escape_attr(href)}">{body_html}</a>'
 
 
-def _render_code(node: MacroCall) -> str:
+def _render_code(node: MacroCall, state: _RenderState) -> str:
     lang = _get_arg_text(node, "language")
     cls = f' class="language-{_escape_attr(lang)}"' if lang else ""
 
@@ -323,7 +465,7 @@ def _render_code(node: MacroCall) -> str:
         return f"<pre><code{cls}>{content}</code></pre>"
     else:
         # Inline code
-        content = _render_body(node.body)
+        content = _render_body(node.body, state)
         return f"<code{cls}>{content}</code>"
 
 
@@ -333,20 +475,20 @@ def _render_literal(node: MacroCall) -> str:
     return _body_text(node.body)
 
 
-def _render_list(node: MacroCall, tag: str) -> str:
+def _render_list(node: MacroCall, tag: str, state: _RenderState) -> str:
     parts: list[str] = [f"<{tag}>\n"]
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):
-                parts.append(_render_node(child))
+                parts.append(_render_node(child, state))
                 parts.append("\n")
     parts.append(f"</{tag}>")
     return "".join(parts)
 
 
-def _render_li(node: MacroCall) -> str:
+def _render_li(node: MacroCall, state: _RenderState) -> str:
     if not isinstance(node.body, Body):
-        return f"<li>{_render_body(node.body)}</li>"
+        return f"<li>{_render_body(node.body, state)}</li>"
 
     # Separate inline content from nested block lists
     inline: list[Text | Escape | MacroCall] = []
@@ -360,52 +502,52 @@ def _render_li(node: MacroCall) -> str:
         elif not seen_block:
             inline.append(child)
 
-    inline_html = "".join(_render_child(c) for c in inline).strip()
+    inline_html = "".join(_render_child(c, state) for c in inline).strip()
 
     if blocks:
-        block_html = "\n".join(_render_node(b) for b in blocks)
+        block_html = "\n".join(_render_node(b, state) for b in blocks)
         return f"<li>{inline_html}\n{block_html}\n</li>"
     return f"<li>{inline_html}</li>"
 
 
-def _render_table(node: MacroCall) -> str:
+def _render_table(node: MacroCall, state: _RenderState) -> str:
     parts: list[str] = ["<table>\n"]
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):
-                parts.append(_render_node(child))
+                parts.append(_render_node(child, state))
                 parts.append("\n")
     parts.append("</table>")
     return "".join(parts)
 
 
-def _render_tr(node: MacroCall) -> str:
+def _render_tr(node: MacroCall, state: _RenderState) -> str:
     parts: list[str] = ["<tr>"]
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):
-                parts.append(_render_node(child))
+                parts.append(_render_node(child, state))
     parts.append("</tr>")
     return "".join(parts)
 
 
-def _render_td(node: MacroCall) -> str:
+def _render_td(node: MacroCall, state: _RenderState) -> str:
     span = _get_arg_text(node, "span")
-    body_html = _render_body(node.body)
+    body_html = _render_body(node.body, state)
     if span:
         return f'<td colspan="{_escape_attr(span)}">{body_html}</td>'
     return f"<td>{body_html}</td>"
 
 
-def _render_th(node: MacroCall) -> str:
+def _render_th(node: MacroCall, state: _RenderState) -> str:
     span = _get_arg_text(node, "span")
-    body_html = _render_body(node.body)
+    body_html = _render_body(node.body, state)
     if span:
         return f'<th colspan="{_escape_attr(span)}">{body_html}</th>'
     return f"<th>{body_html}</th>"
 
 
-def _render_wrapper(node: MacroCall, tag: str, *, block: bool = True) -> str:
+def _render_wrapper(node: MacroCall, tag: str, state: _RenderState, *, block: bool = True) -> str:
     cls = _get_arg_text(node, "class")
     id_val = _get_arg_text(node, "id")
     attrs = ""
@@ -417,10 +559,10 @@ def _render_wrapper(node: MacroCall, tag: str, *, block: bool = True) -> str:
         parts: list[str] = []
         for child in node.body.children:
             if isinstance(child, MacroCall):
-                parts.append(_render_node(child))
+                parts.append(_render_node(child, state))
                 parts.append("\n")
         return f"<{tag}{attrs}>\n{''.join(parts)}</{tag}>"
-    return f"<{tag}{attrs}>{_render_body(node.body)}</{tag}>"
+    return f"<{tag}{attrs}>{_render_body(node.body, state)}</{tag}>"
 
 
 # ---------------------------------------------------------------------------
@@ -428,11 +570,11 @@ def _render_wrapper(node: MacroCall, tag: str, *, block: bool = True) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _render_head_item(node: MacroCall) -> str:
+def _render_head_item(node: MacroCall, state: _RenderState) -> str:
     name = resolve_name(node.name)
 
     if name == "doc.title":
-        return f"<title>{_render_body(node.body)}</title>"
+        return f"<title>{_render_body(node.body, state)}</title>"
 
     if name == "doc.meta":
         meta_name = _get_arg_text(node, "name")
@@ -484,7 +626,7 @@ def _render_head_item(node: MacroCall) -> str:
         if isinstance(node.body, RawString):
             return f"<script{attrs}>\n{node.body.value}\n</script>"
         if node.body is not None:
-            return f"<script{attrs}>\n{_render_body(node.body)}\n</script>"
+            return f"<script{attrs}>\n{_render_body(node.body, state)}\n</script>"
         return f"<script{attrs}></script>"
 
     return ""

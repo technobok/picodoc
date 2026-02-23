@@ -301,7 +301,7 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #--: Builtin Macros
 
-PicoDoc has 38 builtin macros in 8 categories, plus 11 aliases.
+PicoDoc has 39 builtin macros in 8 categories, plus 12 aliases.
 
 #---: Structural Macros
 
@@ -402,7 +402,7 @@ and does not contain [#code"/"], it is treated as a fragment reference and
 
 #----: \#code
 
-Code / monospace text. Renders as [#code"<code>"] (inline) or as
+Alias\: \#~. Code / monospace text. Renders as [#code"<code>"] (inline) or as
 a [#code"<pre><code>"] block. Parameters\:
 
 #table:
@@ -714,6 +714,53 @@ loose item, preserving source order.
 This produces header, then [#code"<main class=\"content\">"] containing the
 two paragraphs, then footer.
 
+#----: \#doc.toc
+
+Generates a table of contents from document headings. Unlike other
+[#code"doc.*"] macros, \#doc.toc renders in [#code"<body>"] (not
+[#code"<head>"]). Place it wherever the TOC should appear. Parameters\:
+
+#table:
+  Parameter | Required | Description
+  level | No | Maximum heading depth to include (default 3)
+  id | No | HTML id for the nav element (default "toc")
+  class | No | CSS class for the nav element (omitted when blank)
+
+No body. Renders as a [#code"<nav>"] element containing nested [#code"<ul>"]
+lists with [#code"<a>"] links pointing to heading IDs.
+
+All headings (\#h1 through \#h6) automatically receive an [#code"id"]
+attribute based on their text content. The slug algorithm lowercases the text,
+replaces non-alphanumeric characters with hyphens, collapses consecutive
+hyphens, and strips leading/trailing hyphens. Duplicate heading texts produce
+unique IDs by appending [#code"-2"], [#code"-3"], etc. Heading IDs are always
+generated, even without \#doc.toc, enabling deep linking.
+
+#code: """
+    #doc.toc level=3 id=toc class=sidebar-toc
+
+    #-: Introduction
+    #--: Getting Started
+    #--: Installation
+    """
+
+This produces\:
+
+#code: """
+    <nav id="toc" class="sidebar-toc">
+    <ul>
+    <li><a href="#introduction">Introduction</a>
+    <ul>
+    <li><a href="#getting-started">Getting Started</a>
+    </li>
+    <li><a href="#installation">Installation</a>
+    </li>
+    </ul>
+    </li>
+    </ul>
+    </nav>
+    """
+
 #---: Expansion-Time Macros
 
 These macros are fully resolved during evaluation and do not appear in the
@@ -778,7 +825,7 @@ or other non-PicoDoc content.
 
 #---: Alias Table
 
-All 11 aliases mapped to their canonical names\:
+All 12 aliases mapped to their canonical names\:
 
 #table:
   Alias | Canonical
@@ -792,6 +839,7 @@ All 11 aliases mapped to their canonical names\:
   \#> | \#link
   \#** | \#b
   \#__ | \#i
+  \#~ | \#code
   \#li | \#*
 
 #--: User-Defined Macros

@@ -125,14 +125,14 @@ class Parser:
         children: list[Text | Escape | MacroCall] = []
         start = self._peek().span.start
 
-        while not self._at_eof() and not self._is_blank_line() and not self._at_block_start():
+        while not self._at_eof() and not self._is_blank_line():
             line = self._parse_inline_content(_STOP_NEWLINE_EOF)
             children.extend(line)
 
             if self._at(TokenType.NEWLINE):
                 nl_tok = self._advance()
                 # If paragraph continues, insert newline text
-                if not self._at_eof() and not self._is_blank_line() and not self._at_block_start():
+                if not self._at_eof() and not self._is_blank_line():
                     children.append(Text("\n", nl_tok.span))
 
         children = _coalesce_text(children)

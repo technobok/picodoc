@@ -17,6 +17,7 @@ ALIASES: dict[str, str] = {
     "**": "b",
     "__": "i",
     "li": "*",
+    "~": "code",
 }
 
 
@@ -108,6 +109,11 @@ def _make_builtins() -> dict[str, BuiltinDef]:
         ParamDecl("type", True),
         ParamDecl("class", False),
         ParamDecl("id", False),
+    ))
+    d("doc.toc", (
+        ParamDecl("level", False),
+        ParamDecl("id", False),
+        ParamDecl("class", False),
     ))
 
     # Expansion-time

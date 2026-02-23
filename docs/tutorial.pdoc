@@ -245,10 +245,11 @@ For full control (colspan, custom structure), use the explicit form with
 
 #h2: Code Blocks
 
-For inline code, use [#code"#code"]\:
+For inline code, use [#code"#code"] (or its short alias [#code"#~"])\:
 
 #code: """
     Use the [#code : print()] function to output text.
+    Use the [#~ : print()] short form.
     """
 
 For code blocks, use a raw string body with an optional [#code"language"]
@@ -461,6 +462,30 @@ Use the [#code"doc.*"] namespace for HTML head elements\:
     #doc.script src="app.js"
     #doc.author: Jane Doe
     """
+
+#h2: Table of Contents
+
+Use [#code"#doc.toc"] to generate a table of contents from your document's
+headings. Place it wherever you want the TOC to appear\:
+
+#code: """
+    #doc.toc
+
+    #-: Introduction
+    #--: Getting Started
+    #--: Installation
+    """
+
+By default, headings up to level 3 are included. Use the [#code"level"]
+parameter to control depth, and [#code"id"] / [#code"class"] to style the
+generated [#code"<nav>"] element\:
+
+#code: """
+    #doc.toc level=2 id=sidebar-toc class=toc
+    """
+
+All headings automatically receive [#code"id"] attributes based on their text,
+enabling deep linking even without a TOC.
 
 #h2: Environment Variables
 

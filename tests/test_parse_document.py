@@ -51,14 +51,21 @@ class TestParagraphs:
 
 
 class TestParagraphTermination:
-    def test_paragraph_terminated_by_hash(self, parse_source):
+    def test_no_blank_line_hash_stays_in_paragraph(self, parse_source):
         doc = parse_source("Some text.\n#hr\n")
-        assert len(doc.children) == 2
+        assert len(doc.children) == 1
         assert isinstance(doc.children[0], Paragraph)
-        assert isinstance(doc.children[1], MacroCall)
+        # #hr is parsed as inline macro call within the paragraph
+        assert any(isinstance(c, MacroCall) and c.name == "hr" for c in doc.children[0].body)
 
-    def test_paragraph_terminated_by_bracket_hash(self, parse_source):
+    def test_no_blank_line_bracket_hash_stays_in_paragraph(self, parse_source):
         doc = parse_source("Some text.\n[#b : bold]\n")
+        assert len(doc.children) == 1
+        assert isinstance(doc.children[0], Paragraph)
+        assert any(isinstance(c, MacroCall) and c.name == "b" for c in doc.children[0].body)
+
+    def test_blank_line_separates_paragraph_from_macro(self, parse_source):
+        doc = parse_source("Some text.\n\n#hr\n")
         assert len(doc.children) == 2
         assert isinstance(doc.children[0], Paragraph)
         assert isinstance(doc.children[1], MacroCall)

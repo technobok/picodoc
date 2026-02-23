@@ -55,11 +55,11 @@ class TestDocumentStructure:
 class TestHeadings:
     def test_h1(self) -> None:
         result = render(_doc(_call("h1", body=_body(_text("Hello")))))
-        assert "<h1>Hello</h1>" in result
+        assert '<h1 id="hello">Hello</h1>' in result
 
     def test_h1_alias(self) -> None:
         result = render(_doc(_call("-", body=_body(_text("Alt")))))
-        assert "<h1>Alt</h1>" in result
+        assert '<h1 id="alt">Alt</h1>' in result
 
     def test_title_in_head(self) -> None:
         result = render(_doc(_call("doc.title", body=_body(_text("My Page")))))
@@ -73,25 +73,25 @@ class TestHeadings:
 
     def test_h2(self) -> None:
         result = render(_doc(_call("h2", body=_body(_text("Sub")))))
-        assert "<h2>Sub</h2>" in result
+        assert '<h2 id="sub">Sub</h2>' in result
 
     def test_h2_alias(self) -> None:
         result = render(_doc(_call("--", body=_body(_text("S")))))
-        assert "<h2>S</h2>" in result
+        assert '<h2 id="s">S</h2>' in result
 
     def test_h3(self) -> None:
         result = render(_doc(_call("h3", body=_body(_text("Sub2")))))
-        assert "<h3>Sub2</h3>" in result
+        assert '<h3 id="sub2">Sub2</h3>' in result
 
     def test_h3_alias(self) -> None:
         result = render(_doc(_call("---", body=_body(_text("S2")))))
-        assert "<h3>S2</h3>" in result
+        assert '<h3 id="s2">S2</h3>' in result
 
     def test_h4_through_h6(self) -> None:
         for level in (4, 5, 6):
             tag = f"h{level}"
             result = render(_doc(_call(tag, body=_body(_text("X")))))
-            assert f"<{tag}>X</{tag}>" in result
+            assert f'<{tag} id="x">X</{tag}>' in result
 
 
 class TestParagraph:
@@ -440,3 +440,185 @@ class TestHtmlEscaping:
         esc = Escape("\u2014", S)
         result = render(_doc(_call("p", body=_body(esc))))
         assert "<p>&#x2014;</p>" in result
+
+
+class TestTildeAlias:
+    def test_tilde_renders_as_code(self) -> None:
+        code = _call("~", (), _body(_text("code")))
+        result = render(_doc(_call("p", body=_body(code))))
+        assert "<code>code</code>" in result
+
+    def test_tilde_with_language(self) -> None:
+        code = _call("~", (_arg("language", "python"),), _body(_text("print()")))
+        result = render(_doc(_call("p", body=_body(code))))
+        assert '<code class="language-python">print()</code>' in result
+
+
+class TestHeadingIds:
+    def test_h1_gets_id(self) -> None:
+        result = render(_doc(_call("h1", body=_body(_text("Introduction")))))
+        assert '<h1 id="introduction">Introduction</h1>' in result
+
+    def test_h2_gets_id(self) -> None:
+        result = render(_doc(_call("h2", body=_body(_text("Getting Started")))))
+        assert '<h2 id="getting-started">Getting Started</h2>' in result
+
+    def test_h3_gets_id(self) -> None:
+        result = render(_doc(_call("h3", body=_body(_text("Details")))))
+        assert '<h3 id="details">Details</h3>' in result
+
+    def test_h4_through_h6_get_ids(self) -> None:
+        for level in (4, 5, 6):
+            tag = f"h{level}"
+            result = render(_doc(_call(tag, body=_body(_text("Sub")))))
+            assert f'<{tag} id="sub">Sub</{tag}>' in result
+
+    def test_alias_heading_gets_id(self) -> None:
+        result = render(_doc(_call("-", body=_body(_text("Top")))))
+        assert '<h1 id="top">Top</h1>' in result
+
+    def test_special_chars_become_hyphens(self) -> None:
+        result = render(_doc(_call("h1", body=_body(_text("Getting Started!")))))
+        assert '<h1 id="getting-started">Getting Started!</h1>' in result
+
+    def test_multiple_special_chars_collapse(self) -> None:
+        result = render(_doc(_call("h1", body=_body(_text("a  &  b")))))
+        assert 'id="a-b"' in result
+
+    def test_duplicate_heading_text(self) -> None:
+        result = render(_doc(
+            _call("h2", body=_body(_text("Intro"))),
+            _call("h2", body=_body(_text("Intro"))),
+        ))
+        assert '<h2 id="intro">Intro</h2>' in result
+        assert '<h2 id="intro-2">Intro</h2>' in result
+
+    def test_triple_duplicate(self) -> None:
+        result = render(_doc(
+            _call("h2", body=_body(_text("Same"))),
+            _call("h2", body=_body(_text("Same"))),
+            _call("h2", body=_body(_text("Same"))),
+        ))
+        assert 'id="same"' in result
+        assert 'id="same-2"' in result
+        assert 'id="same-3"' in result
+
+    def test_empty_heading_text(self) -> None:
+        result = render(_doc(_call("h1", body=_body(_text("")))))
+        assert 'id="heading"' in result
+
+
+class TestDocToc:
+    def test_toc_basic_structure(self) -> None:
+        doc = _doc(
+            _call("doc.toc"),
+            _call("h1", body=_body(_text("Chapter One"))),
+            _call("h2", body=_body(_text("Section A"))),
+            _call("h2", body=_body(_text("Section B"))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        assert '<nav id="toc">' in body
+        assert '<a href="#chapter-one">Chapter One</a>' in body
+        assert '<a href="#section-a">Section A</a>' in body
+        assert '<a href="#section-b">Section B</a>' in body
+        assert "</nav>" in body
+
+    def test_toc_in_body_not_head(self) -> None:
+        doc = _doc(
+            _call("doc.toc"),
+            _call("h1", body=_body(_text("Title"))),
+        )
+        result = render(doc)
+        head = result.split("<head>")[1].split("</head>")[0]
+        assert "<nav" not in head
+        body = result.split("<body>")[1].split("</body>")[0]
+        assert "<nav" in body
+
+    def test_toc_custom_id(self) -> None:
+        doc = _doc(
+            _call("doc.toc", (_arg("id", "my-toc"),)),
+            _call("h1", body=_body(_text("Title"))),
+        )
+        result = render(doc)
+        assert '<nav id="my-toc">' in result
+
+    def test_toc_custom_class(self) -> None:
+        doc = _doc(
+            _call("doc.toc", (_arg("class", "sidebar"),)),
+            _call("h1", body=_body(_text("Title"))),
+        )
+        result = render(doc)
+        assert '<nav id="toc" class="sidebar">' in result
+
+    def test_toc_custom_id_and_class(self) -> None:
+        doc = _doc(
+            _call("doc.toc", (_arg("id", "my-toc"), _arg("class", "sidebar"))),
+            _call("h1", body=_body(_text("Title"))),
+        )
+        result = render(doc)
+        assert '<nav id="my-toc" class="sidebar">' in result
+
+    def test_toc_level_default(self) -> None:
+        doc = _doc(
+            _call("doc.toc"),
+            _call("h1", body=_body(_text("H1"))),
+            _call("h2", body=_body(_text("H2"))),
+            _call("h3", body=_body(_text("H3"))),
+            _call("h4", body=_body(_text("H4"))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        assert '<a href="#h1">H1</a>' in body
+        assert '<a href="#h2">H2</a>' in body
+        assert '<a href="#h3">H3</a>' in body
+        # h4 should NOT be in TOC (default level=3)
+        assert '<a href="#h4">' not in body
+        # But h4 should still get an id attribute
+        assert '<h4 id="h4">H4</h4>' in body
+
+    def test_toc_level_param(self) -> None:
+        doc = _doc(
+            _call("doc.toc", (_arg("level", "2"),)),
+            _call("h1", body=_body(_text("H1"))),
+            _call("h2", body=_body(_text("H2"))),
+            _call("h3", body=_body(_text("H3"))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        assert '<a href="#h1">H1</a>' in body
+        assert '<a href="#h2">H2</a>' in body
+        # h3 should NOT be in TOC
+        assert '<a href="#h3">' not in body
+
+    def test_toc_no_headings(self) -> None:
+        doc = _doc(
+            _call("doc.toc"),
+            _call("p", body=_body(_text("Just a paragraph."))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        # With no headings, TOC renders as empty string
+        assert "<nav" not in body
+
+    def test_toc_nested_structure(self) -> None:
+        doc = _doc(
+            _call("doc.toc"),
+            _call("h1", body=_body(_text("Top"))),
+            _call("h2", body=_body(_text("Sub"))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        # Should have nested <ul> for h2 under h1
+        assert "<ul>" in body
+        assert "</ul>" in body
+
+    def test_headings_get_ids_without_toc(self) -> None:
+        """Headings always get IDs, even without #doc.toc."""
+        doc = _doc(
+            _call("h1", body=_body(_text("Title"))),
+            _call("h2", body=_body(_text("Section"))),
+        )
+        result = render(doc)
+        assert '<h1 id="title">Title</h1>' in result
+        assert '<h2 id="section">Section</h2>' in result
