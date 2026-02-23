@@ -406,7 +406,9 @@ def _render_node(node: MacroCall, state: _RenderState) -> str:
         case "link":
             return _render_link(node, state)
         case "code":
-            return _render_code(node, state)
+            return _render_block_code(node, state)
+        case "~":
+            return _render_inline_code(node, state)
         case "literal":
             return _render_literal(node)
         case "ul":
@@ -455,18 +457,24 @@ def _render_link(node: MacroCall, state: _RenderState) -> str:
     return f'<a href="{_escape_attr(href)}">{body_html}</a>'
 
 
-def _render_code(node: MacroCall, state: _RenderState) -> str:
+def _render_block_code(node: MacroCall, state: _RenderState) -> str:
     lang = _get_arg_text(node, "language")
     cls = f' class="language-{_escape_attr(lang)}"' if lang else ""
-
     if isinstance(node.body, RawString):
-        # Block code
         content = _escape_html(node.body.value)
-        return f"<pre><code{cls}>{content}</code></pre>"
     else:
-        # Inline code
         content = _render_body(node.body, state)
-        return f"<code{cls}>{content}</code>"
+    return f"<pre><code{cls}>{content}</code></pre>"
+
+
+def _render_inline_code(node: MacroCall, state: _RenderState) -> str:
+    lang = _get_arg_text(node, "language")
+    cls = f' class="language-{_escape_attr(lang)}"' if lang else ""
+    if isinstance(node.body, RawString):
+        content = _escape_html(node.body.value)
+    else:
+        content = _render_body(node.body, state)
+    return f"<code{cls}>{content}</code>"
 
 
 def _render_literal(node: MacroCall) -> str:

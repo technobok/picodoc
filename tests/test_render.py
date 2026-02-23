@@ -168,16 +168,16 @@ class TestLink:
 
 
 class TestCode:
-    def test_inline_with_language(self) -> None:
+    def test_block_with_body(self) -> None:
         args = (_arg("language", "python"),)
         code = _call("code", args, _body(_text("print()")))
-        result = render(_doc(_call("p", body=_body(code))))
-        assert '<code class="language-python">print()</code>' in result
+        result = render(_doc(code))
+        assert '<pre><code class="language-python">print()</code></pre>' in result
 
-    def test_inline_without_language(self) -> None:
+    def test_block_without_language(self) -> None:
         code = _call("code", (), _body(_text("mono")))
-        result = render(_doc(_call("p", body=_body(code))))
-        assert "<code>mono</code>" in result
+        result = render(_doc(code))
+        assert "<pre><code>mono</code></pre>" in result
 
     def test_block_with_raw_string(self) -> None:
         args = (_arg("language", "python"),)
@@ -185,10 +185,10 @@ class TestCode:
         result = render(_doc(code))
         assert '<pre><code class="language-python">x = 1</code></pre>' in result
 
-    def test_html_escaping_in_code(self) -> None:
+    def test_html_escaping_in_block_code(self) -> None:
         code = _call("code", (), _body(_text("<div>")))
-        result = render(_doc(_call("p", body=_body(code))))
-        assert "<code>&lt;div&gt;</code>" in result
+        result = render(_doc(code))
+        assert "<pre><code>&lt;div&gt;</code></pre>" in result
 
 
 class TestLiteral:
@@ -442,16 +442,29 @@ class TestHtmlEscaping:
         assert "<p>&#x2014;</p>" in result
 
 
-class TestTildeAlias:
-    def test_tilde_renders_as_code(self) -> None:
+class TestInlineCode:
+    def test_tilde_renders_inline_code(self) -> None:
         code = _call("~", (), _body(_text("code")))
         result = render(_doc(_call("p", body=_body(code))))
         assert "<code>code</code>" in result
+        assert "<pre>" not in result
 
     def test_tilde_with_language(self) -> None:
         code = _call("~", (_arg("language", "python"),), _body(_text("print()")))
         result = render(_doc(_call("p", body=_body(code))))
         assert '<code class="language-python">print()</code>' in result
+        assert "<pre>" not in result
+
+    def test_tilde_with_raw_string(self) -> None:
+        code = _call("~", (), RawString("<div>", S))
+        result = render(_doc(_call("p", body=_body(code))))
+        assert "<code>&lt;div&gt;</code>" in result
+        assert "<pre>" not in result
+
+    def test_tilde_html_escaping(self) -> None:
+        code = _call("~", (), _body(_text("<div>")))
+        result = render(_doc(_call("p", body=_body(code))))
+        assert "<code>&lt;div&gt;</code>" in result
 
 
 class TestHeadingIds:

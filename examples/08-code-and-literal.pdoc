@@ -1,6 +1,6 @@
 #h2: Inline Code
 
-#p: Use the [#code language=python : print()] function to output text.
+#p: Use the [#~ language=python : print()] function to output text.
 
 #h2: Code Block
 
@@ -11,7 +11,7 @@
 
 #h2: Code Without Language
 
-#p: Just some [#code : monospace] text.
+#p: Just some [#~ : monospace] text.
 
 #h2: Literal Text
 
@@ -22,7 +22,7 @@ Use [#link to="..." : text] for links.
 
 #h2: Code with HTML Special Characters
 
-#p: In HTML, use [#code : <div class="main">] for containers.
+#p: In HTML, use [#~ : <div class="main">] for containers.
 
 [#code language=html : """
     <p>x < y & y > z</p>

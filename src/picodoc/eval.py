@@ -19,7 +19,7 @@ from picodoc.ast import (
     RequiredMarker,
     Text,
 )
-from picodoc.builtins import BUILTINS, WRAPPER_TAGS, resolve_name
+from picodoc.builtins import BLOCK_MACROS, BUILTINS, WRAPPER_TAGS, resolve_name
 from picodoc.errors import EvalError
 from picodoc.tokens import Span
 
@@ -136,6 +136,10 @@ _NESTING_RULES: dict[str, set[str]] = {
     "*": {"ul", "ol"},
 }
 
+_INLINE_CONTEXT: frozenset[str] = frozenset({
+    "p", "b", "i", "link", "~", "span", "literal",
+})
+
 
 def _validate_nesting(doc: Document, source: str, filename: str) -> None:
     """Validate that macro nesting is structurally correct after expansion."""
@@ -158,6 +162,13 @@ def _validate_node(
                 source,
                 filename=filename,
             )
+    if name in BLOCK_MACROS and parent_name in _INLINE_CONTEXT:
+        raise EvalError(
+            f"block element #{node.name} cannot appear inside inline element #{parent_name}",
+            node.span,
+            source,
+            filename=filename,
+        )
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):

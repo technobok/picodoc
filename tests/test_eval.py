@@ -915,3 +915,47 @@ class TestNestingValidation:
         assert len(result.children) == 1
         table = result.children[0]
         assert isinstance(table, MacroCall) and table.name == "table"
+
+    def test_block_inside_p(self) -> None:
+        doc = _doc(_call("p", body=_body(_call("h2", body=_body(_text("bad"))))))
+        with pytest.raises(EvalError, match=r"block element #h2 cannot appear inside inline element #p"):
+            evaluate(doc)
+
+    def test_block_inside_b(self) -> None:
+        doc = _doc(
+            _call("p", body=_body(
+                _call("b", body=_body(_call("h2", body=_body(_text("bad"))))),
+            ))
+        )
+        with pytest.raises(EvalError, match=r"block element #h2 cannot appear inside inline element #b"):
+            evaluate(doc)
+
+    def test_block_inside_span(self) -> None:
+        doc = _doc(_call("span", body=_body(_call("p", body=_body(_text("bad"))))))
+        with pytest.raises(EvalError, match=r"block element #p cannot appear inside inline element #span"):
+            evaluate(doc)
+
+    def test_block_inside_div_ok(self) -> None:
+        doc = _doc(_call("div", body=_body(_call("p", body=_body(_text("ok"))))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_block_inside_header_ok(self) -> None:
+        doc = _doc(_call("header", body=_body(_call("h1", body=_body(_text("ok"))))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_h1_at_top_level_ok(self) -> None:
+        doc = _doc(_call("h1", body=_body(_text("ok"))))
+        result = evaluate(doc)
+        assert len(result.children) == 1
+
+    def test_block_code_inside_p(self) -> None:
+        doc = _doc(_call("p", body=_body(_call("code", body=_body(_text("bad"))))))
+        with pytest.raises(EvalError, match=r"block element #code cannot appear inside inline element #p"):
+            evaluate(doc)
+
+    def test_inline_code_inside_p_ok(self) -> None:
+        doc = _doc(_call("p", body=_body(_call("~", body=_body(_text("ok"))))))
+        result = evaluate(doc)
+        assert len(result.children) == 1

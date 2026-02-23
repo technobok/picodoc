@@ -36,7 +36,7 @@ Design principles\:
   [#* : [#b : HTML target] \: the primary output format is HTML.]
 ]
 
-The file extension is [#code : .pdoc].
+The file extension is [#~ : .pdoc].
 
 #--: Lexical Structure
 
@@ -45,11 +45,11 @@ The file extension is [#code : .pdoc].
 An identifier consists of one or more letters, digits, dots, or special
 characters\:
 
-[#code : """
+[#~ : """
     ! $ % & * + - / < > @ ^ _ ~ |
     """]
 
-Dots allow namespacing (e.g. [#code : env.mode], [#code : doc.lang]). The
+Dots allow namespacing (e.g. [#~ : env.mode], [#~ : doc.lang]). The
 identifier terminates at the first character that is not in the set above, such
 as whitespace, colons, quotes, brackets, equals signs, hash, or backslash.
 
@@ -62,28 +62,28 @@ valid list for the current context is a syntax error.
 
 #table:
   Sequence | Produces
-  [#code"\\\\"] | Literal backslash
-  [#code"\\#"] | Literal \#
-  [#code"\\["] | Literal \[
-  [#code"\\]"] | Literal \]
-  [#code"\\:"] | Literal \:
-  [#code"\\="] | Literal \=
-  [#code"\\xHH"] | Unicode codepoint U+0000 to U+00FF
-  [#code"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
+  [#~"\\\\"] | Literal backslash
+  [#~"\\#"] | Literal \#
+  [#~"\\["] | Literal \[
+  [#~"\\]"] | Literal \]
+  [#~"\\:"] | Literal \:
+  [#~"\\="] | Literal \=
+  [#~"\\xHH"] | Unicode codepoint U+0000 to U+00FF
+  [#~"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
 
 #p: [#b : String escapes] (inside interpreted string literals)\:
 
 #table:
   Sequence | Produces
-  [#code"\\\\"] | Literal backslash
-  [#code"\\\""] | Literal double quote
-  [#code"\\["] | Enter code mode (macro expansion)
-  [#code"\\n"] | Newline
-  [#code"\\t"] | Tab
-  [#code"\\xHH"] | Unicode codepoint U+0000 to U+00FF
-  [#code"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
+  [#~"\\\\"] | Literal backslash
+  [#~"\\\""] | Literal double quote
+  [#~"\\["] | Enter code mode (macro expansion)
+  [#~"\\n"] | Newline
+  [#~"\\t"] | Tab
+  [#~"\\xHH"] | Unicode codepoint U+0000 to U+00FF
+  [#~"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
 
-Note that [#code"\\["] has different meaning in the two contexts\: in prose it
+Note that [#~"\\["] has different meaning in the two contexts\: in prose it
 produces a literal \[, while in strings it enters code mode.
 
 #---: Comments
@@ -92,8 +92,8 @@ The \#comment macro (alias \#//) removes its body from the output entirely.
 Three forms are available\:
 
 [#ol :
-  [#* : [#b : Inline] (colon body to end of line)\: [#code"#//: This text will not appear."]]
-  [#* : [#b : Bracketed] (multi-line)\: [#code"[#// : Multi-line comment here.]"]]
+  [#* : [#b : Inline] (colon body to end of line)\: [#~"#//: This text will not appear."]]
+  [#* : [#b : Bracketed] (multi-line)\: [#~"[#// : Multi-line comment here.]"]]
   [#* : [#b : Paragraph body] (colon + following paragraph)\:]
 ]
 
@@ -119,7 +119,7 @@ A macro call begins with \# followed immediately by the macro identifier.
 After the identifier, the parser examines the next token\:
 
 [#ol :
-  [#* : If the token matches [#code"identifier="] (no whitespace before
+  [#* : If the token matches [#~"identifier="] (no whitespace before
     the equals sign), it enters argument mode and consumes name\=value pairs.]
   [#* : If the token is a colon, it enters body mode.]
   [#* : If the token is a string literal opening, it enters body mode
@@ -167,20 +167,20 @@ a colon or string literal is a syntax error.
 
 #---: Named Arguments
 
-Named arguments use the syntax [#code"name=value"] with no whitespace before
+Named arguments use the syntax [#~"name=value"] with no whitespace before
 the equals sign. Whitespace after the equals sign is permitted.
 
 Argument values can be\:
 
 [#ul :
   [#* : [#b : Bareword] (a simple word with no syntactic characters)\:
-    [#code"language=python"]]
+    [#~"language=python"]]
   [#* : [#b : String literal] (interpreted or raw)\:
-    [#code"to=\"https://example.com\""]]
+    [#~"to=\"https://example.com\""]]
   [#* : [#b : Macro reference] (a zero-argument macro)\:
-    [#code"to=#site-url"]]
+    [#~"to=#site-url"]]
   [#* : [#b : Bracketed call] (a macro call in brackets)\:
-    [#code"style=[#get-style]"]]
+    [#~"style=[#get-style]"]]
 ]
 
 #---: The Body Argument
@@ -241,9 +241,9 @@ but macro calls are NOT automatically scanned for.
     "A literal quote: \" inside."
     """
 
-To embed macro calls within an interpreted string, use [#code"\\["] to enter
+To embed macro calls within an interpreted string, use [#~"\\["] to enter
 code mode. Code mode ends at the matching closing \]. Normal bracketed macro
-call syntax applies inside [#code"\\[...\\]"].
+call syntax applies inside [#~"\\[...\\]"].
 
 #code: """
     "Hello, \[#name]!"
@@ -263,7 +263,7 @@ opaque (no escapes, no macro processing).
 
 #---: Empty String
 
-The empty string is always [#code"\"\""] (two double quotes). An empty raw
+The empty string is always [#~"\"\""] (two double quotes). An empty raw
 string is not possible because the opening quotes run into the closing.
 
 #---: Whitespace Stripping
@@ -290,7 +290,7 @@ affecting the result\:
         """]
     """
 
-The four spaces before [#code"def"] and [#code"print"] are stripped because
+The four spaces before [#~"def"] and [#~"print"] are stripped because
 they match the indentation of the closing delimiter.
 
 #---: Adjacent String Restriction
@@ -301,13 +301,13 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #--: Builtin Macros
 
-PicoDoc has 39 builtin macros in 8 categories, plus 12 aliases.
+PicoDoc has 40 builtin macros in 8 categories, plus 11 aliases.
 
 #---: Structural Macros
 
 #----: \#h1
 
-Alias\: \#-. Top-level heading. Renders as [#code"<h1>"] in the document body.
+Alias\: \#-. Top-level heading. Renders as [#~"<h1>"] in the document body.
 Takes body, no parameters.
 
 #code: """
@@ -317,32 +317,32 @@ Takes body, no parameters.
 
 #----: \#h2
 
-Alias\: \#--. Section heading. Renders as [#code"<h2>"]. Takes body, no
+Alias\: \#--. Section heading. Renders as [#~"<h2>"]. Takes body, no
 parameters.
 
 #----: \#h3
 
-Alias\: \#---. Subsection heading. Renders as [#code"<h3>"]. Takes body, no
+Alias\: \#---. Subsection heading. Renders as [#~"<h3>"]. Takes body, no
 parameters.
 
 #----: \#h4
 
-Alias\: \#----. Lower-level heading. Renders as [#code"<h4>"]. Takes body, no
+Alias\: \#----. Lower-level heading. Renders as [#~"<h4>"]. Takes body, no
 parameters.
 
 #----: \#h5
 
-Alias\: \#-----. Lower-level heading. Renders as [#code"<h5>"]. Takes body, no
+Alias\: \#-----. Lower-level heading. Renders as [#~"<h5>"]. Takes body, no
 parameters.
 
 #----: \#h6
 
-Alias\: \#------. Lower-level heading. Renders as [#code"<h6>"]. Takes body, no
+Alias\: \#------. Lower-level heading. Renders as [#~"<h6>"]. Takes body, no
 parameters.
 
 #----: \#p
 
-Paragraph. Renders as [#code"<p>"]. Takes body, no parameters. Bare text
+Paragraph. Renders as [#~"<p>"]. Takes body, no parameters. Bare text
 paragraphs (not inside a macro call) are implicitly wrapped in \#p.
 
 #code: """
@@ -353,13 +353,13 @@ paragraphs (not inside a macro call) are implicitly wrapped in \#p.
 
 #----: \#hr
 
-Horizontal rule. Renders as [#code"<hr>"]. No parameters, no body.
+Horizontal rule. Renders as [#~"<hr>"]. No parameters, no body.
 
 #---: Inline Macros
 
 #----: \#b
 
-Alias\: \#**. Bold text. Renders as [#code"<strong>"]. Takes body, no
+Alias\: \#**. Bold text. Renders as [#~"<strong>"]. Takes body, no
 parameters.
 
 #code: """
@@ -369,7 +369,7 @@ parameters.
 
 #----: \#i
 
-Alias\: \#__. Italic text. Renders as [#code"<em>"]. Takes body, no
+Alias\: \#__. Italic text. Renders as [#~"<em>"]. Takes body, no
 parameters.
 
 #code: """
@@ -379,17 +379,17 @@ parameters.
 
 #----: \#link
 
-Alias\: \#>. Hyperlink. Renders as [#code"<a>"]. Parameters\:
+Alias\: \#>. Hyperlink. Renders as [#~"<a>"]. Parameters\:
 
 #table:
   Parameter | Required | Description
   to | Yes | Link target (URL, path, or fragment name)
 
-Takes optional body (the link text). If no body is provided, the [#code : to] value is used as the link text.
+Takes optional body (the link text). If no body is provided, the [#~ : to] value is used as the link text.
 
-Fragment reference behavior\: if [#code : to] does not contain [#code"://"]
-and does not contain [#code"/"], it is treated as a fragment reference and
-\# is prepended (e.g. [#code"to=section1"] produces [#code"href=\"#section1\""]).
+Fragment reference behavior\: if [#~ : to] does not contain [#~"://"]
+and does not contain [#~"/"], it is treated as a fragment reference and
+\# is prepended (e.g. [#~"to=section1"] produces [#~"href=\"#section1\""]).
 
 #code: """
     [#link to="https://example.com" : Click here]
@@ -402,22 +402,36 @@ and does not contain [#code"/"], it is treated as a fragment reference and
 
 #----: \#code
 
-Alias\: \#~. Code / monospace text. Renders as [#code"<code>"] (inline) or as
-a [#code"<pre><code>"] block. Parameters\:
+Block code. Renders as [#~ : <pre><code>]. Parameters\:
 
 #table:
   Parameter | Required | Description
   language | No | Programming language for syntax class
 
-Takes body.
+Takes body. Always renders as a block [#~ : <pre><code>] element regardless
+of body type. For inline code, use \#~ instead.
 
 #code: """
-    Inline: [#code : print()]
-    Block with language:
     [#code language=python : """
         def hello():
             print("world")
         """]
+    """
+
+#----: \#~
+
+Inline code. Renders as [#~ : <code>]. Parameters\:
+
+#table:
+  Parameter | Required | Description
+  language | No | Programming language for syntax class
+
+Takes body. Always renders as an inline [#~ : <code>] element regardless
+of body type. For block code, use \#code instead.
+
+#code: """
+    Use the [#~ : print()] function to output text.
+    The [#~ language=python : def] keyword starts a function.
     """
 
 #----: \#literal
@@ -437,17 +451,17 @@ for output from external filters. Takes body, no parameters.
 
 #----: \#ul
 
-Unordered list. Renders as [#code"<ul>"]. Takes body, no parameters. Body must
+Unordered list. Renders as [#~"<ul>"]. Takes body, no parameters. Body must
 contain only \#* (list item) elements.
 
 #----: \#ol
 
-Ordered list. Renders as [#code"<ol>"]. Takes body, no parameters. Body must
+Ordered list. Renders as [#~"<ol>"]. Takes body, no parameters. Body must
 contain only \#* (list item) elements.
 
 #----: \#*
 
-Alias\: \#li. List item. Renders as [#code"<li>"]. Takes body, no parameters.
+Alias\: \#li. List item. Renders as [#~"<li>"]. Takes body, no parameters.
 Must appear inside \#ul or \#ol.
 
 #code: """
@@ -472,7 +486,7 @@ Must appear inside \#ul or \#ol.
 
 #----: \#table
 
-Table container. Renders as [#code"<table>"]. Takes body, no parameters.
+Table container. Renders as [#~"<table>"]. Takes body, no parameters.
 Supports two forms\:
 
 #p: [#b : Pipe-delimited form]\: the body is parsed as pipe-separated rows.
@@ -497,11 +511,11 @@ directly.
 
 #----: \#tr
 
-Table row. Renders as [#code"<tr>"]. Takes body, no parameters.
+Table row. Renders as [#~"<tr>"]. Takes body, no parameters.
 
 #----: \#td
 
-Table data cell. Renders as [#code"<td>"]. Parameters\:
+Table data cell. Renders as [#~"<td>"]. Parameters\:
 
 #table:
   Parameter | Required | Description
@@ -511,7 +525,7 @@ Takes body.
 
 #----: \#th
 
-Table header cell. Renders as [#code"<th>"]. Same parameters as \#td. Takes
+Table header cell. Renders as [#~"<th>"]. Same parameters as \#td. Takes
 body.
 
 #code: """
@@ -525,20 +539,20 @@ body.
 #---: Wrapper / Container Macros
 
 PicoDoc provides 9 wrapper macros for grouping content in HTML container
-elements. All wrapper macros accept optional [#code"class"] and [#code"id"]
+elements. All wrapper macros accept optional [#~"class"] and [#~"id"]
 parameters and take a body.
 
 #table:
   Macro | HTML element | Display
-  \#div | [#code"<div>"] | Block
-  \#section | [#code"<section>"] | Block
-  \#nav | [#code"<nav>"] | Block
-  \#header | [#code"<header>"] | Block
-  \#footer | [#code"<footer>"] | Block
-  \#main | [#code"<main>"] | Block
-  \#article | [#code"<article>"] | Block
-  \#aside | [#code"<aside>"] | Block
-  \#span | [#code"<span>"] | Inline
+  \#div | [#~"<div>"] | Block
+  \#section | [#~"<section>"] | Block
+  \#nav | [#~"<nav>"] | Block
+  \#header | [#~"<header>"] | Block
+  \#footer | [#~"<footer>"] | Block
+  \#main | [#~"<main>"] | Block
+  \#article | [#~"<article>"] | Block
+  \#aside | [#~"<aside>"] | Block
+  \#span | [#~"<span>"] | Inline
 
 Block wrappers render their body children on separate lines within the
 opening and closing tags. The \#span macro is inline and renders its body
@@ -564,13 +578,13 @@ without added newlines.
 
 #---: Document Macros (doc.* Namespace)
 
-All document-level macros live under the [#code"doc.*"] namespace. They produce
-elements in the HTML [#code"<head>"] section, not in [#code"<body>"].
+All document-level macros live under the [#~"doc.*"] namespace. They produce
+elements in the HTML [#~"<head>"] section, not in [#~"<body>"].
 
 #----: \#doc.title
 
-Sets the document [#code"<title>"] in the HTML [#code"<head>"] section. Does
-not produce any output in [#code"<body>"]. Takes body, no parameters.
+Sets the document [#~"<title>"] in the HTML [#~"<head>"] section. Does
+not produce any output in [#~"<body>"]. Takes body, no parameters.
 
 #code: """
     #doc.title: My Document
@@ -578,7 +592,7 @@ not produce any output in [#code"<body>"]. Takes body, no parameters.
 
 #----: \#doc.lang
 
-Sets the lang attribute on the HTML [#code"<html>"] element. Takes body (the
+Sets the lang attribute on the HTML [#~"<html>"] element. Takes body (the
 language code), no parameters.
 
 #code: """
@@ -587,7 +601,7 @@ language code), no parameters.
 
 #----: \#doc.meta
 
-Adds a [#code"<meta>"] tag to the document head. Parameters\:
+Adds a [#~"<meta>"] tag to the document head. Parameters\:
 
 #table:
   Parameter | Required | Description
@@ -604,7 +618,7 @@ No body.
 
 #----: \#doc.link
 
-Adds a [#code"<link>"] tag to the document head. Parameters\:
+Adds a [#~"<link>"] tag to the document head. Parameters\:
 
 #table:
   Parameter | Required | Description
@@ -613,7 +627,7 @@ Adds a [#code"<link>"] tag to the document head. Parameters\:
   type | No | MIME type (e.g. image/png)
   sizes | No | Icon sizes (e.g. 32x32)
 
-No body. The optional [#code"type"] and [#code"sizes"] attributes are only
+No body. The optional [#~"type"] and [#~"sizes"] attributes are only
 included in the output when non-empty.
 
 #code: """
@@ -623,7 +637,7 @@ included in the output when non-empty.
 
 #----: \#doc.script
 
-Adds a [#code"<script>"] element. Parameters\:
+Adds a [#~"<script>"] element. Parameters\:
 
 #table:
   Parameter | Required | Description
@@ -643,7 +657,7 @@ body, not both.
 
 #----: \#doc.author
 
-Convenience macro. Renders as [#code"<meta name=\"author\" content=\"...\">"].
+Convenience macro. Renders as [#~"<meta name=\"author\" content=\"...\">"].
 Takes body (the author name), no parameters.
 
 #code: """
@@ -652,7 +666,7 @@ Takes body (the author name), no parameters.
 
 #----: \#doc.version
 
-Convenience macro. Renders as [#code"<meta name=\"version\" content=\"...\">"].
+Convenience macro. Renders as [#~"<meta name=\"version\" content=\"...\">"].
 Takes body (the version string), no parameters.
 
 #code: """
@@ -661,7 +675,7 @@ Takes body (the version string), no parameters.
 
 #----: \#doc.datecreated
 
-Convenience macro. Renders as [#code"<meta name=\"datecreated\" content=\"...\">"].
+Convenience macro. Renders as [#~"<meta name=\"datecreated\" content=\"...\">"].
 Takes body (the date string), no parameters.
 
 #code: """
@@ -670,7 +684,7 @@ Takes body (the date string), no parameters.
 
 #----: \#doc.datemodified
 
-Convenience macro. Renders as [#code"<meta name=\"datemodified\" content=\"...\">"].
+Convenience macro. Renders as [#~"<meta name=\"datemodified\" content=\"...\">"].
 Takes body (the date string), no parameters.
 
 #code: """
@@ -689,7 +703,7 @@ directive that affects the rendering of body items. Parameters\:
   class | No | CSS class for the wrapper element
   id | No | HTML id for the wrapper element
 
-No body. Only one \#doc.content may appear per document. The [#code"type"]
+No body. Only one \#doc.content may appear per document. The [#~"type"]
 value must be one of\: article, aside, div, footer, header, main, nav,
 section, span.
 
@@ -711,14 +725,14 @@ loose item, preserving source order.
     [#footer : #p: Copyright 2025]
     """
 
-This produces header, then [#code"<main class=\"content\">"] containing the
+This produces header, then [#~"<main class=\"content\">"] containing the
 two paragraphs, then footer.
 
 #----: \#doc.toc
 
 Generates a table of contents from document headings. Unlike other
-[#code"doc.*"] macros, \#doc.toc renders in [#code"<body>"] (not
-[#code"<head>"]). Place it wherever the TOC should appear. Parameters\:
+[#~"doc.*"] macros, \#doc.toc renders in [#~"<body>"] (not
+[#~"<head>"]). Place it wherever the TOC should appear. Parameters\:
 
 #table:
   Parameter | Required | Description
@@ -726,14 +740,14 @@ Generates a table of contents from document headings. Unlike other
   id | No | HTML id for the nav element (default "toc")
   class | No | CSS class for the nav element (omitted when blank)
 
-No body. Renders as a [#code"<nav>"] element containing nested [#code"<ul>"]
-lists with [#code"<a>"] links pointing to heading IDs.
+No body. Renders as a [#~"<nav>"] element containing nested [#~"<ul>"]
+lists with [#~"<a>"] links pointing to heading IDs.
 
-All headings (\#h1 through \#h6) automatically receive an [#code"id"]
+All headings (\#h1 through \#h6) automatically receive an [#~"id"]
 attribute based on their text content. The slug algorithm lowercases the text,
 replaces non-alphanumeric characters with hyphens, collapses consecutive
 hyphens, and strips leading/trailing hyphens. Duplicate heading texts produce
-unique IDs by appending [#code"-2"], [#code"-3"], etc. Heading IDs are always
+unique IDs by appending [#~"-2"], [#~"-3"], etc. Heading IDs are always
 generated, even without \#doc.toc, enabling deep linking.
 
 #code: """
@@ -819,13 +833,13 @@ platforms. Backslashes in the filename are normalized to forward slashes.
     [#include literal=true : code.js]
     """
 
-When [#code"literal=true"] is set, the file contents are included as raw text
+When [#~"literal=true"] is set, the file contents are included as raw text
 without parsing or macro expansion. This is useful for including source code
 or other non-PicoDoc content.
 
 #---: Alias Table
 
-All 12 aliases mapped to their canonical names\:
+All 11 aliases mapped to their canonical names\:
 
 #table:
   Alias | Canonical
@@ -839,7 +853,6 @@ All 12 aliases mapped to their canonical names\:
   \#> | \#link
   \#** | \#b
   \#__ | \#i
-  \#~ | \#code
   \#li | \#*
 
 #--: User-Defined Macros
@@ -864,13 +877,13 @@ Parameters can be\:
 
 [#ul :
   [#* : [#b : Required] (marked with ?, the caller must supply a value)\:
-    [#code"target=?"]]
+    [#~"target=?"]]
   [#* : [#b : With default] (given a default value used when the caller omits
-    the argument)\: [#code"style=default"]]
+    the argument)\: [#~"style=default"]]
 ]
 
-If the macro uses a body parameter, it must be declared as [#code"body=?"]
-(required) or [#code"body=default"] and must be the last parameter.
+If the macro uses a body parameter, it must be declared as [#~"body=?"]
+(required) or [#~"body=default"] and must be the last parameter.
 
 Default values are evaluated during the resolution pass after all definitions
 are collected. A default value may be a macro call, which will be expanded
@@ -972,7 +985,7 @@ if it appeared inline.
 A common pattern is to use includes for shared headers and footers across
 multiple documents.
 
-To include a file as raw text without parsing (e.g. source code), use the [#code"literal"] parameter\:
+To include a file as raw text without parsing (e.g. source code), use the [#~"literal"] parameter\:
 
 #code: """
     [#include literal=true : code.js]
@@ -989,8 +1002,8 @@ Values can be set from three sources (listed in ascending precedence)\:
 
 [#ol :
   [#* : [#b : Config file] \: under the \[env\] section in
-    [#code"picodoc.toml"]]
-  [#* : [#b : CLI arguments] \: using [#code"-e name=value"] (repeatable)]
+    [#~"picodoc.toml"]]
+  [#* : [#b : CLI arguments] \: using [#~"-e name=value"] (repeatable)]
   [#* : [#b : Document-level \#set] \: for example
     \[#set name\=env.mode \: draft\]]
 ]
@@ -1042,7 +1055,7 @@ The converter searches for filter executables in this order\:
 
 [#ol :
   [#* : A filters/ directory alongside the document]
-  [#* : Directories specified via [#code"--filter-path"] or config]
+  [#* : Directories specified via [#~"--filter-path"] or config]
   [#* : The system $PATH]
 ]
 
@@ -1050,14 +1063,14 @@ The executable name maps to the macro name.
 
 #---: Timeout
 
-A configurable timeout (default 5 seconds, set via [#code"--filter-timeout"]
+A configurable timeout (default 5 seconds, set via [#~"--filter-timeout"]
 or config) kills long-running filters. Non-zero exit codes are treated as
 expansion errors with the filter's stderr included in the error message.
 
 #--: Configuration File
 
-Place a [#code"picodoc.toml"] next to your input file (or point to one with
-the [#code"--config"] flag). CLI flags override config values.
+Place a [#~"picodoc.toml"] next to your input file (or point to one with
+the [#~"--config"] flag). CLI flags override config values.
 
 #code: """
     [env]
@@ -1090,16 +1103,16 @@ Usage\:
 
 #table:
   Flag | Description
-  [#code"-o FILE"] | Write output to FILE instead of stdout
-  [#code"-e NAME=VALUE"] | Set an environment variable (repeatable)
-  [#code"--css FILE"] | Inject a CSS file into the head (repeatable)
-  [#code"--js FILE"] | Inject a JS file into the head (repeatable)
-  [#code"--meta NAME=VALUE"] | Add a meta tag (repeatable)
-  [#code"--filter-path DIR"] | Extra filter search directory (repeatable)
-  [#code"--filter-timeout SECS"] | Filter execution timeout (default 5.0)
-  [#code"--config FILE"] | Config file path (auto-discovers picodoc.toml)
-  [#code"--watch"] | Watch for changes and recompile on save
-  [#code"--debug"] | Dump the AST to stderr
+  [#~"-o FILE"] | Write output to FILE instead of stdout
+  [#~"-e NAME=VALUE"] | Set an environment variable (repeatable)
+  [#~"--css FILE"] | Inject a CSS file into the head (repeatable)
+  [#~"--js FILE"] | Inject a JS file into the head (repeatable)
+  [#~"--meta NAME=VALUE"] | Add a meta tag (repeatable)
+  [#~"--filter-path DIR"] | Extra filter search directory (repeatable)
+  [#~"--filter-timeout SECS"] | Filter execution timeout (default 5.0)
+  [#~"--config FILE"] | Config file path (auto-discovers picodoc.toml)
+  [#~"--watch"] | Watch for changes and recompile on save
+  [#~"--debug"] | Dump the AST to stderr
 
 #---: Exit Codes
 

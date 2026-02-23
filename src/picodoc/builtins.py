@@ -17,7 +17,6 @@ ALIASES: dict[str, str] = {
     "**": "b",
     "__": "i",
     "li": "*",
-    "~": "code",
 }
 
 
@@ -66,6 +65,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
 
     # Code / literal
     d("code", (ParamDecl("language", False),), has_body=True)
+    d("~", (ParamDecl("language", False),), has_body=True)
     d("literal", has_body=True)
 
     # Lists
@@ -132,4 +132,13 @@ BUILTINS: dict[str, BuiltinDef] = _make_builtins()
 WRAPPER_TAGS: frozenset[str] = frozenset({
     "div", "section", "span", "nav", "header",
     "footer", "main", "article", "aside",
+})
+
+BLOCK_MACROS: frozenset[str] = frozenset({
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "p", "hr",
+    "ul", "ol",
+    "table",
+    "div", "section", "nav", "header", "footer", "main", "article", "aside",
+    "code",
 })
