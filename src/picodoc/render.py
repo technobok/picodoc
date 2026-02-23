@@ -31,8 +31,6 @@ class _RenderState:
     heading_ids: dict[int, str] = field(default_factory=dict)
     toc_entries: list[tuple[int, str, str]] = field(default_factory=list)
     toc_level: int = 0
-    toc_id: str = "toc"
-    toc_class: str = ""
 
 
 def _slugify(text: str, used: dict[str, int]) -> str:
@@ -77,12 +75,6 @@ def _collect_headings_recursive(
     elif name == "doc.toc":
         level_str = _get_arg_text(node, "level")
         state.toc_level = int(level_str) if level_str else 3
-        toc_id = _get_arg_text(node, "id")
-        if toc_id is not None:
-            state.toc_id = toc_id
-        toc_class = _get_arg_text(node, "class")
-        if toc_class is not None:
-            state.toc_class = toc_class
 
     # Recurse into body children
     if isinstance(node.body, Body):
@@ -337,15 +329,11 @@ def _render_heading(node: MacroCall, level: int, state: _RenderState) -> str:
 
 
 def _render_toc(state: _RenderState) -> str:
-    """Render the table of contents as nested <nav>/<ul> HTML."""
+    """Render the table of contents as a <ul> tree."""
     if not state.toc_entries:
         return ""
 
-    attrs = f' id="{_escape_attr(state.toc_id)}"'
-    if state.toc_class:
-        attrs += f' class="{_escape_attr(state.toc_class)}"'
-
-    parts: list[str] = [f"<nav{attrs}>\n"]
+    parts: list[str] = []
     stack: list[int] = []  # tracks nesting levels
 
     for level, text, slug in state.toc_entries:
@@ -376,7 +364,6 @@ def _render_toc(state: _RenderState) -> str:
         parts.append("</li>\n</ul>\n")
         stack.pop()
 
-    parts.append("</nav>")
     return "".join(parts)
 
 

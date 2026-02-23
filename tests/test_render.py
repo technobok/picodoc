@@ -557,11 +557,12 @@ class TestDocToc:
         )
         result = render(doc)
         body = result.split("<body>")[1].split("</body>")[0]
-        assert '<nav id="toc">' in body
+        assert "<ul>" in body
         assert '<a href="#chapter-one">Chapter One</a>' in body
         assert '<a href="#section-a">Section A</a>' in body
         assert '<a href="#section-b">Section B</a>' in body
-        assert "</nav>" in body
+        assert "</ul>" in body
+        assert "<nav" not in body
 
     def test_toc_in_body_not_head(self) -> None:
         doc = _doc(
@@ -570,33 +571,9 @@ class TestDocToc:
         )
         result = render(doc)
         head = result.split("<head>")[1].split("</head>")[0]
-        assert "<nav" not in head
+        assert "<ul" not in head
         body = result.split("<body>")[1].split("</body>")[0]
-        assert "<nav" in body
-
-    def test_toc_custom_id(self) -> None:
-        doc = _doc(
-            _call("doc.toc", (_arg("id", "my-toc"),)),
-            _call("h1", body=_body(_text("Title"))),
-        )
-        result = render(doc)
-        assert '<nav id="my-toc">' in result
-
-    def test_toc_custom_class(self) -> None:
-        doc = _doc(
-            _call("doc.toc", (_arg("class", "sidebar"),)),
-            _call("h1", body=_body(_text("Title"))),
-        )
-        result = render(doc)
-        assert '<nav id="toc" class="sidebar">' in result
-
-    def test_toc_custom_id_and_class(self) -> None:
-        doc = _doc(
-            _call("doc.toc", (_arg("id", "my-toc"), _arg("class", "sidebar"))),
-            _call("h1", body=_body(_text("Title"))),
-        )
-        result = render(doc)
-        assert '<nav id="my-toc" class="sidebar">' in result
+        assert "<ul>" in body
 
     def test_toc_level_default(self) -> None:
         doc = _doc(
@@ -638,7 +615,7 @@ class TestDocToc:
         result = render(doc)
         body = result.split("<body>")[1].split("</body>")[0]
         # With no headings, TOC renders as empty string
-        assert "<nav" not in body
+        assert "<ul" not in body
 
     def test_toc_nested_structure(self) -> None:
         doc = _doc(
@@ -651,6 +628,25 @@ class TestDocToc:
         # Should have nested <ul> for h2 under h1
         assert "<ul>" in body
         assert "</ul>" in body
+
+    def test_toc_inside_nav_wrapper(self) -> None:
+        """Wrapping #doc.toc in [#nav id=toc : ...] produces <nav id="toc"><ul>...</ul>\n</nav>."""
+        doc = _doc(
+            _call(
+                "nav",
+                (_arg("id", "toc"),),
+                body=_body(
+                    _call("doc.toc"),
+                ),
+                bracketed=True,
+            ),
+            _call("h1", body=_body(_text("Title"))),
+        )
+        result = render(doc)
+        body = result.split("<body>")[1].split("</body>")[0]
+        assert '<nav id="toc">' in body
+        assert "<ul>" in body
+        assert "</nav>" in body
 
     def test_headings_get_ids_without_toc(self) -> None:
         """Headings always get IDs, even without #doc.toc."""

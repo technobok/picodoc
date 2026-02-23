@@ -737,11 +737,16 @@ Generates a table of contents from document headings. Unlike other
 #table:
   Parameter | Required | Description
   level | No | Maximum heading depth to include (default 3)
-  id | No | HTML id for the nav element (default "toc")
-  class | No | CSS class for the nav element (omitted when blank)
 
-No body. Renders as a [#~"<nav>"] element containing nested [#~"<ul>"]
-lists with [#~"<a>"] links pointing to heading IDs.
+No body. Renders as a [#~"<ul>"] tree with nested [#~"<a>"] links
+pointing to heading IDs. Wrap it in a container macro for placement
+control:
+
+#code: """
+    [#nav id=toc class=sidebar-toc :
+      #doc.toc level=3
+    ]
+    """
 
 All headings (\#h1 through \#h6) automatically receive an [#~"id"]
 attribute based on their text content. The slug algorithm lowercases the text,
@@ -751,17 +756,14 @@ unique IDs by appending [#~"-2"], [#~"-3"], etc. Heading IDs are always
 generated, even without \#doc.toc, enabling deep linking.
 
 #code: """
-    #doc.toc level=3 id=toc class=sidebar-toc
-
     #-: Introduction
     #--: Getting Started
     #--: Installation
     """
 
-This produces:
+The TOC for these headings produces:
 
 #code: """
-    <nav id="toc" class="sidebar-toc">
     <ul>
     <li><a href="#introduction">Introduction</a>
     <ul>
@@ -771,6 +773,23 @@ This produces:
     </li>
     </ul>
     </li>
+    </ul>
+    """
+
+Composed with a wrapper:
+
+#code: """
+    [#nav id=toc class=sidebar-toc :
+      #doc.toc level=3
+    ]
+    """
+
+This produces:
+
+#code: """
+    <nav id="toc" class="sidebar-toc">
+    <ul>
+    ...
     </ul>
     </nav>
     """

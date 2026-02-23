@@ -119,14 +119,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
             ParamDecl("id", False),
         ),
     )
-    d(
-        "doc.toc",
-        (
-            ParamDecl("level", False),
-            ParamDecl("id", False),
-            ParamDecl("class", False),
-        ),
-    )
+    d("doc.toc", (ParamDecl("level", False),))
 
     # Expansion-time
     d("comment", has_body=True)

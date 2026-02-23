@@ -466,10 +466,13 @@ Use the [#~"doc.*"] namespace for HTML head elements:
 #h2: Table of Contents
 
 Use [#~"#doc.toc"] to generate a table of contents from your document's
-headings. Place it wherever you want the TOC to appear:
+headings. It renders a [#~"<ul>"] tree, so wrap it in a container macro
+for placement control:
 
 #code: """
-    #doc.toc
+    [#nav id=toc :
+      #doc.toc
+    ]
 
     #-: Introduction
     #--: Getting Started
@@ -477,11 +480,12 @@ headings. Place it wherever you want the TOC to appear:
     """
 
 By default, headings up to level 3 are included. Use the [#~"level"]
-parameter to control depth, and [#~"id"] / [#~"class"] to style the
-generated [#~"<nav>"] element:
+parameter to control depth:
 
 #code: """
-    #doc.toc level=2 id=sidebar-toc class=toc
+    [#nav id=toc :
+      #doc.toc level=2
+    ]
     """
 
 All headings automatically receive [#~"id"] attributes based on their text,
