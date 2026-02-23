@@ -9,7 +9,7 @@
 
 PicoDoc is a macro-based markup language that compiles to HTML. Everything in
 PicoDoc (headings, bold text, links, user-defined templates) is a macro
-call. This single abstraction keeps the language regular and predictable\: once
+call. This single abstraction keeps the language regular and predictable: once
 you learn the macro syntax, you know the entire language.
 
 #h2: Installation
@@ -22,7 +22,7 @@ PicoDoc requires [#b : Python 3.14+] and [#link to="https://docs.astral.sh/uv/" 
     uv sync
     """
 
-Verify the installation\:
+Verify the installation:
 
 #code: """
     uv run picodoc --help
@@ -30,7 +30,7 @@ Verify the installation\:
 
 #h2: Your First Document
 
-Create a file called [#~"hello.pdoc"]\:
+Create a file called [#~"hello.pdoc"]:
 
 #code: """
     #doc.title: Hello, PicoDoc
@@ -39,7 +39,7 @@ Create a file called [#~"hello.pdoc"]\:
     This is my first document.
     """
 
-Compile it to HTML\:
+Compile it to HTML:
 
 #code: """
     uv run picodoc hello.pdoc -o hello.html
@@ -54,7 +54,7 @@ call as an implicit paragraph.
 #h2: Headings and Structure
 
 PicoDoc uses \#doc.title for the document's [#~"<title>"] (shown in the
-browser tab) and separate heading macros for visible headings in the body\:
+browser tab) and separate heading macros for visible headings in the body:
 
 #code: """
     #doc.title: Page Title (in browser tab only)
@@ -66,7 +66,7 @@ browser tab) and separate heading macros for visible headings in the body\:
     #h6: Level 6
     """
 
-All heading levels have dash aliases that are shorter to type\:
+All heading levels have dash aliases that are shorter to type:
 
 #code: """
     #-: Level 1 (same as #h1)
@@ -78,7 +78,7 @@ All heading levels have dash aliases that are shorter to type\:
     """
 
 Use [#~"#hr"] for a horizontal rule and [#~"#//"] (or [#~"#comment"])
-for text that should not appear in the output\:
+for text that should not appear in the output:
 
 #code: """
     #hr
@@ -89,7 +89,7 @@ for text that should not appear in the output\:
 #h2: Paragraphs
 
 Bare text is automatically wrapped in [#~"<p>"] tags. A blank line
-separates paragraphs\:
+separates paragraphs:
 
 #code: """
     This is the first paragraph. It can span
@@ -99,7 +99,7 @@ separates paragraphs\:
     """
 
 You can also use [#~"#p"] explicitly. The paragraph body form lets you
-write the body on the following lines\:
+write the body on the following lines:
 
 #code: """
     #p: An explicit single-line paragraph.
@@ -113,21 +113,21 @@ write the body on the following lines\:
 
 #h3: Bold and Italic
 
-Use \#b (or its alias \#**) for bold and \#i (or \#__) for italic\:
+Use \#b (or its alias \#**) for bold and \#i (or \#__) for italic:
 
 #code: """
     This is #**"bold" text.
     This is #__"italic" text.
     """
 
-For longer spans, use the bracketed form\:
+For longer spans, use the bracketed form:
 
 #code: """
     This is [#b : bold text that spans several words].
     This is [#i : italic text in brackets].
     """
 
-Bold and italic can be nested\:
+Bold and italic can be nested:
 
 #code: """
     This is [#b : bold with [#i : italic inside]].
@@ -136,7 +136,7 @@ Bold and italic can be nested\:
 #h3: Links
 
 Use [#~"#link"] (or its alias [#~"#>"]) with a [#~"to"] argument
-and optional body for the link text\:
+and optional body for the link text:
 
 #code: """
     Visit [#link to="https://example.com" : Example Site] today.
@@ -149,7 +149,7 @@ a fragment reference (e.g. [#~"to=section1"] produces [#~"href=\"#section1\""]).
 
 #h3: Mixed Inline Example
 
-All inline formatting can appear together in a paragraph\:
+All inline formatting can appear together in a paragraph:
 
 #code: """
     A paragraph with #**"bold", #__"italic", and
@@ -160,7 +160,7 @@ All inline formatting can appear together in a paragraph\:
 
 #h3: Unordered Lists
 
-Wrap list items in \#ul. Each item uses \#* (or its alias \#li)\:
+Wrap list items in \#ul. Each item uses \#* (or its alias \#li):
 
 #code: """
     [#ul :
@@ -172,7 +172,7 @@ Wrap list items in \#ul. Each item uses \#* (or its alias \#li)\:
 
 #h3: Ordered Lists
 
-Use [#~"#ol"] instead of [#~"#ul"]\:
+Use [#~"#ol"] instead of [#~"#ul"]:
 
 #code: """
     [#ol :
@@ -184,7 +184,7 @@ Use [#~"#ol"] instead of [#~"#ul"]\:
 
 #h3: Items with Formatting
 
-List items can contain any inline macro\:
+List items can contain any inline macro:
 
 #code: """
     [#ul :
@@ -196,7 +196,7 @@ List items can contain any inline macro\:
 
 #h3: Nested Lists
 
-Use the bracketed form of [#~"#*"] and nest a list inside\:
+Use the bracketed form of [#~"#*"] and nest a list inside:
 
 #code: """
     [#ul :
@@ -214,7 +214,7 @@ Use the bracketed form of [#~"#*"] and nest a list inside\:
 #h2: Tables
 
 The simplest way to make a table is with pipe-delimited rows. The first row
-becomes headers\:
+becomes headers:
 
 #code: """
     #table:
@@ -223,7 +223,7 @@ becomes headers\:
       Bob | 25 | Inactive
     """
 
-Cells can contain inline macros\:
+Cells can contain inline macros:
 
 #code: """
     #table:
@@ -233,7 +233,7 @@ Cells can contain inline macros\:
     """
 
 For full control (colspan, custom structure), use the explicit form with
-\#tr, \#th, and \#td\:
+\#tr, \#th, and \#td:
 
 #code: """
     [#table :
@@ -245,7 +245,7 @@ For full control (colspan, custom structure), use the explicit form with
 
 #h2: Code
 
-For inline code, use [#~"#~"]\:
+For inline code, use [#~"#~"]:
 
 #code: """
     Use the [#~ : print()] function to output text.
@@ -253,7 +253,7 @@ For inline code, use [#~"#~"]\:
     """
 
 For code blocks, use [#~"#code"] with a raw string body and an optional
-[#~"language"] parameter\:
+[#~"language"] parameter:
 
 #code: """"
     [#code language=python : """
@@ -265,7 +265,7 @@ For code blocks, use [#~"#code"] with a raw string body and an optional
 The indentation of the closing [#~"\"\"\""] delimiter determines how much
 leading whitespace is stripped from every line.
 
-To show PicoDoc syntax itself without it being interpreted, use \#literal\:
+To show PicoDoc syntax itself without it being interpreted, use \#literal:
 
 #code: """"
     #literal"""
@@ -279,7 +279,7 @@ To show PicoDoc syntax itself without it being interpreted, use \#literal\:
 #h3: Simple Variables
 
 Define a variable with [#~"#set"]. A macro with no parameters is just a
-named value\:
+named value:
 
 #code: """
     [#set name=version : 1.0]
@@ -289,7 +289,7 @@ named value\:
 #h3: Macros with Arguments
 
 Add parameters to create reusable templates. Mark required parameters with
-? and provide defaults with \=value\:
+? and provide defaults with =value:
 
 #code: """
     [#set name=greeting target=? : Hello, #target!]
@@ -306,7 +306,7 @@ Add parameters to create reusable templates. Mark required parameters with
 #h3: Macros with Body
 
 If your macro accepts a body, declare it as [#~"body=?"] (required) and
-it must be the last parameter\:
+it must be the last parameter:
 
 #code: """
     [#set name=greeting target=? body=? : Dear #target, #body Kind regards.]
@@ -316,7 +316,7 @@ it must be the last parameter\:
 #h3: Out-of-Order Use
 
 Macros can be used before they are defined. PicoDoc collects all definitions
-first, then expands\:
+first, then expands:
 
 #code: """
     #p: The project is #project-name.
@@ -327,7 +327,7 @@ first, then expands\:
 
 PicoDoc provides wrapper macros (\#div, \#section, \#span, \#nav, \#header,
 \#footer, \#main, \#article, \#aside) for grouping content in HTML container
-elements. They accept optional [#~"class"] and [#~"id"] parameters\:
+elements. They accept optional [#~"class"] and [#~"id"] parameters:
 
 #code: """
     [#div class=card :
@@ -337,7 +337,7 @@ elements. They accept optional [#~"class"] and [#~"id"] parameters\:
     """
 
 For page-level layout, use \#doc.content to automatically wrap loose content
-(anything not inside an explicit wrapper) in a container element\:
+(anything not inside an explicit wrapper) in a container element:
 
 #code: """
     #doc.content type=main class=content
@@ -354,7 +354,7 @@ paragraphs and headings are collected inside it.
 
 #h3: Interpreted Strings
 
-Delimited by single double quotes. Escape sequences are processed\:
+Delimited by single double quotes. Escape sequences are processed:
 
 #code: """
     "A simple string."
@@ -362,7 +362,7 @@ Delimited by single double quotes. Escape sequences are processed\:
     "A literal quote: \" inside."
     """
 
-To embed macro calls inside a string, use [#~"\\[...\\]"] (code mode)\:
+To embed macro calls inside a string, use [#~"\\[...\\]"] (code mode):
 
 #code: """
     [#set name=version : 1.0]
@@ -371,7 +371,7 @@ To embed macro calls inside a string, use [#~"\\[...\\]"] (code mode)\:
 
 #h3: Raw Strings
 
-Delimited by three or more double quotes. Nothing inside is processed\:
+Delimited by three or more double quotes. Nothing inside is processed:
 
 #code: """"
     """This is raw: \n is literal, #name is not expanded."""
@@ -381,7 +381,7 @@ Delimited by three or more double quotes. Nothing inside is processed\:
 
 When a string starts on the next line after the delimiter and the closing
 delimiter is on its own line, leading whitespace matching the closing
-delimiter's indentation is stripped from all lines\:
+delimiter's indentation is stripped from all lines:
 
 #code: """
     [#code language=python : """
@@ -394,29 +394,29 @@ The four spaces before each line are stripped, producing clean output.
 
 #h2: Conditionals
 
-PicoDoc provides three conditional macros\:
+PicoDoc provides three conditional macros:
 
-The \#ifeq macro tests string equality\:
+The \#ifeq macro tests string equality:
 
 #code: """
     [#set name=mode : draft]
     [#ifeq lhs=#mode rhs=draft : This document is a draft.]
     """
 
-The \#ifne macro tests string inequality\:
+The \#ifne macro tests string inequality:
 
 #code: """
     [#ifne lhs=#mode rhs=production : Not yet published.]
     """
 
-The \#ifset macro tests if a macro is defined\:
+The \#ifset macro tests if a macro is defined:
 
 #code: """
     [#ifset name=env.author : Written by [#env.author].]
     """
 
 A practical pattern is a draft watermark controlled by an environment
-variable\:
+variable:
 
 #code: """
     [#ifeq lhs=[#env.mode] rhs=draft :
@@ -429,7 +429,7 @@ Then compile with [#~"uv run picodoc -e mode=draft doc.pdoc -o doc.html"].
 #h2: Including Other Files
 
 The [#~"#include"] macro inserts another file at the call site. The
-filename is provided as the body\:
+filename is provided as the body:
 
 #code: """
     [#include : header.pdoc]
@@ -445,7 +445,7 @@ This is the standard pattern for shared headers and footers across a set of
 documents.
 
 To include a file as raw text without parsing, use the [#~"literal"]
-parameter\:
+parameter:
 
 #code: """
     [#include literal=true : code.js]
@@ -453,7 +453,7 @@ parameter\:
 
 #h2: Document Metadata
 
-Use the [#~"doc.*"] namespace for HTML head elements\:
+Use the [#~"doc.*"] namespace for HTML head elements:
 
 #code: """
     #doc.lang: en
@@ -466,7 +466,7 @@ Use the [#~"doc.*"] namespace for HTML head elements\:
 #h2: Table of Contents
 
 Use [#~"#doc.toc"] to generate a table of contents from your document's
-headings. Place it wherever you want the TOC to appear\:
+headings. Place it wherever you want the TOC to appear:
 
 #code: """
     #doc.toc
@@ -478,7 +478,7 @@ headings. Place it wherever you want the TOC to appear\:
 
 By default, headings up to level 3 are included. Use the [#~"level"]
 parameter to control depth, and [#~"id"] / [#~"class"] to style the
-generated [#~"<nav>"] element\:
+generated [#~"<nav>"] element:
 
 #code: """
     #doc.toc level=2 id=sidebar-toc class=toc
@@ -490,15 +490,15 @@ enabling deep linking even without a TOC.
 #h2: Environment Variables
 
 The [#~"env.*"] namespace provides global values. They can be set from
-three sources\:
+three sources:
 
-#p: [#b : CLI]\:
+#p: [#b : CLI]:
 
 #code: """
     uv run picodoc -e mode=draft -e author="Alice" doc.pdoc -o doc.html
     """
 
-#p: [#b : Config file] ([#~"picodoc.toml"])\:
+#p: [#b : Config file] ([#~"picodoc.toml"]):
 
 #code: """
     [env]
@@ -506,7 +506,7 @@ three sources\:
     author = "Alice"
     """
 
-#p: [#b : Document-level \#set]\:
+#p: [#b : Document-level \#set]:
 
 #code: """
     [#set name=env.mode : draft]
@@ -514,7 +514,7 @@ three sources\:
 
 Document-level definitions have the highest precedence, then CLI, then config.
 
-Access environment values as zero-argument macros\:
+Access environment values as zero-argument macros:
 
 #code: """
     [#ifset name=env.author : Written by [#env.author].]
@@ -530,18 +530,18 @@ Access environment values as zero-argument macros\:
   [#~"--js FILE"] | Inject a JS file into the head (repeatable)
   [#~"--meta NAME=VALUE"] | Add a meta tag (repeatable)
   [#~"--filter-path DIR"] | Extra filter search directory (repeatable)
-  [#~"--filter-timeout SECS"] | Filter execution timeout (default\: 5.0)
+  [#~"--filter-timeout SECS"] | Filter execution timeout (default: 5.0)
   [#~"--config FILE"] | Config file path
   [#~"--watch"] | Watch for changes and recompile
   [#~"--debug"] | Dump the AST to stderr
 
-#p: [#b : Watch mode] recompiles automatically whenever the input file changes\:
+#p: [#b : Watch mode] recompiles automatically whenever the input file changes:
 
 #code: """
     uv run picodoc --watch doc.pdoc -o doc.html
     """
 
-#p: [#b : Exit codes]\:
+#p: [#b : Exit codes]:
 
 #table:
   Code | Meaning
@@ -571,10 +571,10 @@ You now know enough to write real documents in PicoDoc. For a complete and
 systematic description of every feature, see the [#b : Language Reference]
 in the file [#~"reference.pdoc"].
 
-Additional topics covered in the reference\:
+Additional topics covered in the reference:
 
 [#ul :
-  [#* : External filters\: extend PicoDoc with programs in any language]
-  [#* : The expansion model\: how multi-pass evaluation works]
-  [#* : Editor support\: Neovim syntax highlighting and LSP diagnostics]
+  [#* : External filters: extend PicoDoc with programs in any language]
+  [#* : The expansion model: how multi-pass evaluation works]
+  [#* : Editor support: Neovim syntax highlighting and LSP diagnostics]
 ]

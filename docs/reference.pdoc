@@ -24,16 +24,16 @@ PicoDoc is a macro-based markup language that compiles to HTML. Every construct
 in the language (headings, bold text, links, user-defined templates) is a macro
 call. This regularity means there is only one syntax to learn.
 
-Design principles\:
+Design principles:
 
 [#ul :
-  [#* : [#b : One abstraction] \: macros are the only construct.]
-  [#* : [#b : Named arguments] \: all arguments are named, eliminating
+  [#* : [#b : One abstraction] : macros are the only construct.]
+  [#* : [#b : Named arguments] : all arguments are named, eliminating
     positional ambiguity.]
-  [#* : [#b : Strict parsing] \: invalid input is rejected with clear error
+  [#* : [#b : Strict parsing] : invalid input is rejected with clear error
     messages rather than silently guessed at.]
-  [#* : [#b : UTF-8 only] \: no encoding detection or fallback.]
-  [#* : [#b : HTML target] \: the primary output format is HTML.]
+  [#* : [#b : UTF-8 only] : no encoding detection or fallback.]
+  [#* : [#b : HTML target] : the primary output format is HTML.]
 ]
 
 The file extension is [#~ : .pdoc].
@@ -43,7 +43,7 @@ The file extension is [#~ : .pdoc].
 #---: Identifiers
 
 An identifier consists of one or more letters, digits, dots, or special
-characters\:
+characters:
 
 [#~ : """
     ! $ % & * + - / < > @ ^ _ ~ |
@@ -58,7 +58,7 @@ as whitespace, colons, quotes, brackets, equals signs, hash, or backslash.
 Backslash is the escape prefix. Backslash followed by any character not on the
 valid list for the current context is a syntax error.
 
-#p: [#b : Prose escapes] (in body text and barewords)\:
+#p: [#b : Prose escapes] (in body text and barewords):
 
 #table:
   Sequence | Produces
@@ -66,12 +66,12 @@ valid list for the current context is a syntax error.
   [#~"\\#"] | Literal \#
   [#~"\\["] | Literal \[
   [#~"\\]"] | Literal \]
-  [#~"\\:"] | Literal \:
-  [#~"\\="] | Literal \=
+  [#~"\\:"] | Literal :
+  [#~"\\="] | Literal =
   [#~"\\xHH"] | Unicode codepoint U+0000 to U+00FF
   [#~"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
 
-#p: [#b : String escapes] (inside interpreted string literals)\:
+#p: [#b : String escapes] (inside interpreted string literals):
 
 #table:
   Sequence | Produces
@@ -83,18 +83,18 @@ valid list for the current context is a syntax error.
   [#~"\\xHH"] | Unicode codepoint U+0000 to U+00FF
   [#~"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
 
-Note that [#~"\\["] has different meaning in the two contexts\: in prose it
+Note that [#~"\\["] has different meaning in the two contexts: in prose it
 produces a literal \[, while in strings it enters code mode.
 
 #---: Comments
 
 The \#comment macro (alias \#//) removes its body from the output entirely.
-Three forms are available\:
+Three forms are available:
 
 [#ol :
-  [#* : [#b : Inline] (colon body to end of line)\: [#~"#//: This text will not appear."]]
-  [#* : [#b : Bracketed] (multi-line)\: [#~"[#// : Multi-line comment here.]"]]
-  [#* : [#b : Paragraph body] (colon + following paragraph)\:]
+  [#* : [#b : Inline] (colon body to end of line): [#~"#//: This text will not appear."]]
+  [#* : [#b : Bracketed] (multi-line): [#~"[#// : Multi-line comment here.]"]]
+  [#* : [#b : Paragraph body] (colon + following paragraph):]
 ]
 
 #code: """
@@ -110,17 +110,17 @@ Three forms are available\:
 
 #--: Macro Calls
 
-There are two forms of macro call\: unbracketed and bracketed. The parser does
+There are two forms of macro call: unbracketed and bracketed. The parser does
 not need to consult macro definitions to parse either form.
 
 #---: Unbracketed Form
 
 A macro call begins with \# followed immediately by the macro identifier.
-After the identifier, the parser examines the next token\:
+After the identifier, the parser examines the next token:
 
 [#ol :
   [#* : If the token matches [#~"identifier="] (no whitespace before
-    the equals sign), it enters argument mode and consumes name\=value pairs.]
+    the equals sign), it enters argument mode and consumes name=value pairs.]
   [#* : If the token is a colon, it enters body mode.]
   [#* : If the token is a string literal opening, it enters body mode
     with the string as body.]
@@ -135,8 +135,8 @@ After the identifier, the parser examines the next token\:
     #p"Explicit paragraph."
     """
 
-In argument mode, the parser consumes name\=value pairs. If the next token is
-not a name\=value pair, a colon, or a string literal, the call is complete and
+In argument mode, the parser consumes name=value pairs. If the next token is
+not a name=value pair, a colon, or a string literal, the call is complete and
 the remaining text on the line is prose. After a colon body (to end of line) or
 a string literal body, the call is also complete and any remaining text is
 prose.
@@ -148,8 +148,8 @@ prose.
 
 #---: Bracketed Form
 
-A macro call enclosed in square brackets\: \[#identifier ...\]. Named
-arguments may appear as name\=value pairs separated by whitespace. A colon or
+A macro call enclosed in square brackets: \[#identifier ...\]. Named
+arguments may appear as name=value pairs separated by whitespace. A colon or
 string literal introduces body content. Everything until the matching closing
 bracket is body, which may span multiple lines and paragraphs.
 
@@ -162,7 +162,7 @@ bracket is body, which may span multiple lines and paragraphs.
         """]
     """
 
-Bare text inside brackets that is not a name\=value pair and not preceded by
+Bare text inside brackets that is not a name=value pair and not preceded by
 a colon or string literal is a syntax error.
 
 #---: Named Arguments
@@ -170,30 +170,30 @@ a colon or string literal is a syntax error.
 Named arguments use the syntax [#~"name=value"] with no whitespace before
 the equals sign. Whitespace after the equals sign is permitted.
 
-Argument values can be\:
+Argument values can be:
 
 [#ul :
-  [#* : [#b : Bareword] (a simple word with no syntactic characters)\:
+  [#* : [#b : Bareword] (a simple word with no syntactic characters):
     [#~"language=python"]]
-  [#* : [#b : String literal] (interpreted or raw)\:
+  [#* : [#b : String literal] (interpreted or raw):
     [#~"to=\"https://example.com\""]]
-  [#* : [#b : Macro reference] (a zero-argument macro)\:
+  [#* : [#b : Macro reference] (a zero-argument macro):
     [#~"to=#site-url"]]
-  [#* : [#b : Bracketed call] (a macro call in brackets)\:
+  [#* : [#b : Bracketed call] (a macro call in brackets):
     [#~"style=[#get-style]"]]
 ]
 
 #---: The Body Argument
 
-Body content is introduced by a colon or by a string literal\:
+Body content is introduced by a colon or by a string literal:
 
-#p: [#b : Colon, inline body]\: text follows the colon on the same line.
+#p: [#b : Colon, inline body]: text follows the colon on the same line.
 
 #code: """
     #-: Document Heading
     """
 
-#p: [#b : Colon, paragraph body]\: nothing follows the colon on the line. The
+#p: [#b : Colon, paragraph body]: nothing follows the colon on the line. The
 next paragraph (contiguous non-blank lines) becomes the body.
 
 #code: """
@@ -202,7 +202,7 @@ next paragraph (contiguous non-blank lines) becomes the body.
     multiple lines.
     """
 
-#p: [#b : String literal body]\: a string literal serves as body. A colon
+#p: [#b : String literal body]: a string literal serves as body. A colon
 before the string is optional.
 
 #code: """
@@ -214,7 +214,7 @@ before the string is optional.
         """]
     """
 
-#p: [#b : Bracketed body]\: in bracketed calls, body extends to the closing
+#p: [#b : Bracketed body]: in bracketed calls, body extends to the closing
 bracket and may span multiple lines and paragraphs.
 
 #code: """
@@ -268,7 +268,7 @@ string is not possible because the opening quotes run into the closing.
 
 #---: Whitespace Stripping
 
-Both interpreted and raw strings apply the same whitespace rules\:
+Both interpreted and raw strings apply the same whitespace rules:
 
 [#ol :
   [#* : If the remainder of the opening delimiter's line is blank (whitespace
@@ -281,7 +281,7 @@ Both interpreted and raw strings apply the same whitespace rules\:
 ]
 
 This allows indenting string content to match the surrounding markup without
-affecting the result\:
+affecting the result:
 
 #code: """
     [#code language=python : """
@@ -307,7 +307,7 @@ PicoDoc has 40 builtin macros in 8 categories, plus 11 aliases.
 
 #----: \#h1
 
-Alias\: \#-. Top-level heading. Renders as [#~"<h1>"] in the document body.
+Alias: \#-. Top-level heading. Renders as [#~"<h1>"] in the document body.
 Takes body, no parameters.
 
 #code: """
@@ -317,27 +317,27 @@ Takes body, no parameters.
 
 #----: \#h2
 
-Alias\: \#--. Section heading. Renders as [#~"<h2>"]. Takes body, no
+Alias: \#--. Section heading. Renders as [#~"<h2>"]. Takes body, no
 parameters.
 
 #----: \#h3
 
-Alias\: \#---. Subsection heading. Renders as [#~"<h3>"]. Takes body, no
+Alias: \#---. Subsection heading. Renders as [#~"<h3>"]. Takes body, no
 parameters.
 
 #----: \#h4
 
-Alias\: \#----. Lower-level heading. Renders as [#~"<h4>"]. Takes body, no
+Alias: \#----. Lower-level heading. Renders as [#~"<h4>"]. Takes body, no
 parameters.
 
 #----: \#h5
 
-Alias\: \#-----. Lower-level heading. Renders as [#~"<h5>"]. Takes body, no
+Alias: \#-----. Lower-level heading. Renders as [#~"<h5>"]. Takes body, no
 parameters.
 
 #----: \#h6
 
-Alias\: \#------. Lower-level heading. Renders as [#~"<h6>"]. Takes body, no
+Alias: \#------. Lower-level heading. Renders as [#~"<h6>"]. Takes body, no
 parameters.
 
 #----: \#p
@@ -359,7 +359,7 @@ Horizontal rule. Renders as [#~"<hr>"]. No parameters, no body.
 
 #----: \#b
 
-Alias\: \#**. Bold text. Renders as [#~"<strong>"]. Takes body, no
+Alias: \#**. Bold text. Renders as [#~"<strong>"]. Takes body, no
 parameters.
 
 #code: """
@@ -369,7 +369,7 @@ parameters.
 
 #----: \#i
 
-Alias\: \#__. Italic text. Renders as [#~"<em>"]. Takes body, no
+Alias: \#__. Italic text. Renders as [#~"<em>"]. Takes body, no
 parameters.
 
 #code: """
@@ -379,7 +379,7 @@ parameters.
 
 #----: \#link
 
-Alias\: \#>. Hyperlink. Renders as [#~"<a>"]. Parameters\:
+Alias: \#>. Hyperlink. Renders as [#~"<a>"]. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -387,7 +387,7 @@ Alias\: \#>. Hyperlink. Renders as [#~"<a>"]. Parameters\:
 
 Takes optional body (the link text). If no body is provided, the [#~ : to] value is used as the link text.
 
-Fragment reference behavior\: if [#~ : to] does not contain [#~"://"]
+Fragment reference behavior: if [#~ : to] does not contain [#~"://"]
 and does not contain [#~"/"], it is treated as a fragment reference and
 \# is prepended (e.g. [#~"to=section1"] produces [#~"href=\"#section1\""]).
 
@@ -402,7 +402,7 @@ and does not contain [#~"/"], it is treated as a fragment reference and
 
 #----: \#code
 
-Block code. Renders as [#~ : <pre><code>]. Parameters\:
+Block code. Renders as [#~ : <pre><code>]. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -420,7 +420,7 @@ of body type. For inline code, use \#~ instead.
 
 #----: \#~
 
-Inline code. Renders as [#~ : <code>]. Parameters\:
+Inline code. Renders as [#~ : <code>]. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -461,7 +461,7 @@ contain only \#* (list item) elements.
 
 #----: \#*
 
-Alias\: \#li. List item. Renders as [#~"<li>"]. Takes body, no parameters.
+Alias: \#li. List item. Renders as [#~"<li>"]. Takes body, no parameters.
 Must appear inside \#ul or \#ol.
 
 #code: """
@@ -487,9 +487,9 @@ Must appear inside \#ul or \#ol.
 #----: \#table
 
 Table container. Renders as [#~"<table>"]. Takes body, no parameters.
-Supports two forms\:
+Supports two forms:
 
-#p: [#b : Pipe-delimited form]\: the body is parsed as pipe-separated rows.
+#p: [#b : Pipe-delimited form]: the body is parsed as pipe-separated rows.
 The first row becomes headers (\#th), subsequent rows become data (\#td).
 
 #code: """
@@ -499,7 +499,7 @@ The first row becomes headers (\#th), subsequent rows become data (\#td).
       Bob | 25 | Inactive
     """
 
-#p: [#b : Explicit form]\: the body contains \#tr, \#th, and \#td calls
+#p: [#b : Explicit form]: the body contains \#tr, \#th, and \#td calls
 directly.
 
 #code: """
@@ -515,7 +515,7 @@ Table row. Renders as [#~"<tr>"]. Takes body, no parameters.
 
 #----: \#td
 
-Table data cell. Renders as [#~"<td>"]. Parameters\:
+Table data cell. Renders as [#~"<td>"]. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -601,7 +601,7 @@ language code), no parameters.
 
 #----: \#doc.meta
 
-Adds a [#~"<meta>"] tag to the document head. Parameters\:
+Adds a [#~"<meta>"] tag to the document head. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -618,7 +618,7 @@ No body.
 
 #----: \#doc.link
 
-Adds a [#~"<link>"] tag to the document head. Parameters\:
+Adds a [#~"<link>"] tag to the document head. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -637,7 +637,7 @@ included in the output when non-empty.
 
 #----: \#doc.script
 
-Adds a [#~"<script>"] element. Parameters\:
+Adds a [#~"<script>"] element. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -695,7 +695,7 @@ Takes body (the date string), no parameters.
 
 Wraps all "loose" top-level content (anything not inside an explicit wrapper
 macro) in a specified HTML container element. This is a document-level
-directive that affects the rendering of body items. Parameters\:
+directive that affects the rendering of body items. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -704,10 +704,10 @@ directive that affects the rendering of body items. Parameters\:
   id | No | HTML id for the wrapper element
 
 No body. Only one \#doc.content may appear per document. The [#~"type"]
-value must be one of\: article, aside, div, footer, header, main, nav,
+value must be one of: article, aside, div, footer, header, main, nav,
 section, span.
 
-Behavior\: during rendering, top-level items whose resolved name is one of the
+Behavior: during rendering, top-level items whose resolved name is one of the
 9 wrapper tags remain outside the content wrapper. All other items (paragraphs,
 headings, lists, tables, etc.) are collected and wrapped in a single element
 of the specified type. The wrapper is placed at the position of the first
@@ -732,7 +732,7 @@ two paragraphs, then footer.
 
 Generates a table of contents from document headings. Unlike other
 [#~"doc.*"] macros, \#doc.toc renders in [#~"<body>"] (not
-[#~"<head>"]). Place it wherever the TOC should appear. Parameters\:
+[#~"<head>"]). Place it wherever the TOC should appear. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -758,7 +758,7 @@ generated, even without \#doc.toc, enabling deep linking.
     #--: Installation
     """
 
-This produces\:
+This produces:
 
 #code: """
     <nav id="toc" class="sidebar-toc">
@@ -789,7 +789,7 @@ below.
 #----: \#ifeq
 
 String equality test. Returns body if lhs equals rhs, empty string
-otherwise. Parameters\:
+otherwise. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -806,7 +806,7 @@ string otherwise. Same parameters as \#ifeq. Takes body.
 #----: \#ifset
 
 Tests whether a macro is defined. Returns body if the named macro exists,
-empty string otherwise. Parameters\:
+empty string otherwise. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -818,7 +818,7 @@ Takes body.
 
 Inserts the contents of another file. The filename is provided as the body of
 the macro call. The included file is parsed and expanded as if its contents
-appeared at the call site. Parameters\:
+appeared at the call site. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -839,7 +839,7 @@ or other non-PicoDoc content.
 
 #---: Alias Table
 
-All 11 aliases mapped to their canonical names\:
+All 11 aliases mapped to their canonical names:
 
 #table:
   Alias | Canonical
@@ -873,13 +873,13 @@ arguments become the macro's parameters.
 
 #---: Parameters
 
-Parameters can be\:
+Parameters can be:
 
 [#ul :
-  [#* : [#b : Required] (marked with ?, the caller must supply a value)\:
+  [#* : [#b : Required] (marked with ?, the caller must supply a value):
     [#~"target=?"]]
   [#* : [#b : With default] (given a default value used when the caller omits
-    the argument)\: [#~"style=default"]]
+    the argument): [#~"style=default"]]
 ]
 
 If the macro uses a body parameter, it must be declared as [#~"body=?"]
@@ -891,7 +891,7 @@ during resolution.
 
 #---: Calling User Macros
 
-User macros are called exactly like builtin macros\:
+User macros are called exactly like builtin macros:
 
 #code: """
     #version
@@ -899,7 +899,7 @@ User macros are called exactly like builtin macros\:
     [#box style=fancy : Content here.]
     """
 
-A macro with no arguments is essentially a variable\:
+A macro with no arguments is essentially a variable:
 
 #code: """
     [#set name=version : 1.0]
@@ -909,7 +909,7 @@ A macro with no arguments is essentially a variable\:
 #---: Out-of-Order Definitions
 
 Macros may be used before they are defined. The compiler collects all \#set
-definitions in a first pass before resolving and expanding\:
+definitions in a first pass before resolving and expanding:
 
 #code: """
     #p: The project is #project-name.
@@ -928,7 +928,7 @@ shadow any definitions outside the macro call with the same name.
 #---: Macro References as Argument Values
 
 A zero-argument macro (variable) can be passed as an argument value using
-the \#identifier form\:
+the \#identifier form:
 
 #code: """
     [#set name=site-url : https://example.com]
@@ -940,25 +940,25 @@ the \#identifier form\:
 PicoDoc has no expression language. Conditions are limited to simple
 comparisons via specialised macros.
 
-The \#ifeq macro returns body if lhs equals rhs\:
+The \#ifeq macro returns body if lhs equals rhs:
 
 #code: """
     [#ifeq lhs=#mode rhs=draft : This document is a draft.]
     """
 
-The \#ifne macro returns body if lhs does not equal rhs\:
+The \#ifne macro returns body if lhs does not equal rhs:
 
 #code: """
     [#ifne lhs=#mode rhs=production : Not yet published.]
     """
 
-The \#ifset macro returns body if the named macro is defined\:
+The \#ifset macro returns body if the named macro is defined:
 
 #code: """
     [#ifset name=env.author : Written by [#env.author].]
     """
 
-Conditionals can be nested\:
+Conditionals can be nested:
 
 #code: """
     [#ifeq lhs=#mode rhs=draft :
@@ -985,7 +985,7 @@ if it appeared inline.
 A common pattern is to use includes for shared headers and footers across
 multiple documents.
 
-To include a file as raw text without parsing (e.g. source code), use the [#~"literal"] parameter\:
+To include a file as raw text without parsing (e.g. source code), use the [#~"literal"] parameter:
 
 #code: """
     [#include literal=true : code.js]
@@ -998,13 +998,13 @@ external filters.
 
 #---: Defining Environment Values
 
-Values can be set from three sources (listed in ascending precedence)\:
+Values can be set from three sources (listed in ascending precedence):
 
 [#ol :
-  [#* : [#b : Config file] \: under the \[env\] section in
+  [#* : [#b : Config file] : under the \[env\] section in
     [#~"picodoc.toml"]]
-  [#* : [#b : CLI arguments] \: using [#~"-e name=value"] (repeatable)]
-  [#* : [#b : Document-level \#set] \: for example
+  [#* : [#b : CLI arguments] : using [#~"-e name=value"] (repeatable)]
+  [#* : [#b : Document-level \#set] : for example
     \[#set name\=env.mode \: draft\]]
 ]
 
@@ -1013,7 +1013,7 @@ has final say.
 
 #---: Accessing Environment Values
 
-Environment values are accessed as zero-argument macros\:
+Environment values are accessed as zero-argument macros:
 
 #code: """
     #env.mode
@@ -1037,7 +1037,7 @@ language.
 #---: Protocol
 
 The filter receives a JSON object on stdin containing all named arguments
-(including body if present) and all env.* values\:
+(including body if present) and all env.* values:
 
 #code: """
     {"arg1": "value1", "body": "the body text", "env": {"mode": "draft"}}
@@ -1051,7 +1051,7 @@ output in \#literal.
 
 #---: Discovery
 
-The converter searches for filter executables in this order\:
+The converter searches for filter executables in this order:
 
 [#ol :
   [#* : A filters/ directory alongside the document]
@@ -1093,7 +1093,7 @@ the [#~"--config"] flag). CLI flags override config values.
 
 #--: Command-Line Interface
 
-Usage\:
+Usage:
 
 #code: """
     uv run picodoc [OPTIONS] INPUT
@@ -1124,23 +1124,23 @@ Usage\:
 
 #--: Expansion Model
 
-PicoDoc processes a document through a pipeline of stages\:
+PicoDoc processes a document through a pipeline of stages:
 
 [#ol :
-  [#* : [#b : Lexing] \: source text is tokenized into a stream of tokens.]
-  [#* : [#b : Parsing] \: tokens are assembled into an AST (abstract syntax
+  [#* : [#b : Lexing] : source text is tokenized into a stream of tokens.]
+  [#* : [#b : Parsing] : tokens are assembled into an AST (abstract syntax
     tree). The parser is definition-independent; it does not need to know which
     macros are defined.]
-  [#* : [#b : Collection] \: all \#set definitions are gathered from the AST
+  [#* : [#b : Collection] : all \#set definitions are gathered from the AST
     without evaluating them.]
-  [#* : [#b : Resolution] \: definitions are resolved and default values are
+  [#* : [#b : Resolution] : definitions are resolved and default values are
     evaluated, which may themselves require expansion passes.]
-  [#* : [#b : Expansion] \: the evaluator walks the AST expanding macro nodes,
+  [#* : [#b : Expansion] : the evaluator walks the AST expanding macro nodes,
     marks fully-expanded nodes as complete, and re-walks until convergence.
     Expansion-time builtins (\#set, \#ifeq, \#include, \#comment, \#table pipe
     form) are resolved and removed. Only text nodes and render-time builtins
     remain.]
-  [#* : [#b : Rendering] \: the renderer maps the expanded AST to HTML,
+  [#* : [#b : Rendering] : the renderer maps the expanded AST to HTML,
     validates nesting, handles HTML escaping, and wraps the output in a
     proper document structure (doctype, head, body).]
 ]
@@ -1160,7 +1160,7 @@ or excessive recursion. Exceeding this limit is an evaluation error.
 #---: Preventing Re-Expansion
 
 The \#literal macro prevents its body from being re-expanded. This is useful
-for\:
+for:
 
 [#ul :
   [#* : Documenting PicoDoc syntax within PicoDoc documents]
