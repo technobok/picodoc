@@ -377,6 +377,47 @@ class TestWrappers:
                 assert f"<{tag}>\n<p>X</p>\n</{tag}>" in result
 
 
+class TestDocBody:
+    def test_body_no_attrs(self) -> None:
+        doc = _doc(_call("p", body=_body(_text("Hello"))))
+        result = render(doc)
+        assert "<body>\n" in result
+
+    def test_body_class(self) -> None:
+        doc = _doc(
+            _call("doc.body", (_arg("class", "dark-theme"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = render(doc)
+        assert '<body class="dark-theme">' in result
+
+    def test_body_id(self) -> None:
+        doc = _doc(
+            _call("doc.body", (_arg("id", "main-body"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = render(doc)
+        assert '<body id="main-body">' in result
+
+    def test_body_class_and_id(self) -> None:
+        doc = _doc(
+            _call("doc.body", (_arg("class", "dark"), _arg("id", "app"))),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = render(doc)
+        assert '<body class="dark" id="app">' in result
+
+    def test_body_not_in_head(self) -> None:
+        doc = _doc(
+            _call("doc.body", (_arg("class", "themed"),)),
+            _call("p", body=_body(_text("Hello"))),
+        )
+        result = render(doc)
+        head = result.split("<head>")[1].split("</head>")[0]
+        assert "doc.body" not in head
+        assert "themed" not in head
+
+
 class TestDocContent:
     def test_loose_items_wrapped(self) -> None:
         doc = _doc(

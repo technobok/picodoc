@@ -119,6 +119,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
             ParamDecl("id", False),
         ),
     )
+    d("doc.body", (ParamDecl("class", False), ParamDecl("id", False)))
     d("doc.toc", (ParamDecl("level", False),))
 
     # Expansion-time

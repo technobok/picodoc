@@ -86,6 +86,8 @@ def _collect_headings_recursive(
 def render(doc: Document) -> str:
     """Render an expanded AST to a complete HTML document."""
     lang: str | None = None
+    body_class: str | None = None
+    body_id: str | None = None
     head_items: list[MacroCall] = []
     body_items: list[MacroCall] = []
     content_type: str | None = None
@@ -98,6 +100,9 @@ def render(doc: Document) -> str:
         name = resolve_name(child.name)
         if name == "doc.lang":
             lang = _body_text(child.body)
+        elif name == "doc.body":
+            body_class = _get_arg_text(child, "class")
+            body_id = _get_arg_text(child, "id")
         elif name == "doc.content":
             content_type = _get_arg_text(child, "type")
             content_class = _get_arg_text(child, "class")
@@ -133,7 +138,12 @@ def render(doc: Document) -> str:
         parts.append(_render_head_item(item, state))
         parts.append("\n")
     parts.append("</head>\n")
-    parts.append("<body>\n")
+    body_attrs = ""
+    if body_class:
+        body_attrs += f' class="{_escape_attr(body_class)}"'
+    if body_id:
+        body_attrs += f' id="{_escape_attr(body_id)}"'
+    parts.append(f"<body{body_attrs}>\n")
     for item in body_items:
         rendered = _render_node(item, state)
         if rendered:

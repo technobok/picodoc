@@ -691,6 +691,23 @@ Takes body (the date string), no parameters.
     #doc.datemodified: 2025-06-15
     """
 
+#----: \#doc.body
+
+Sets attributes on the [#~"<body>"] element. Parameters:
+
+#table:
+  Parameter | Required | Description
+  class | No | CSS class for the body element
+  id | No | HTML id for the body element
+
+No body. This is a document-level directive; it does not render as content.
+
+#code: """
+    #doc.body class=dark-theme id=app
+    """
+
+This produces [#~"<body class=\"dark-theme\" id=\"app\">"].
+
 #----: \#doc.content
 
 Wraps all "loose" top-level content (anything not inside an explicit wrapper

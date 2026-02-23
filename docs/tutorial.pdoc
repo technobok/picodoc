@@ -457,11 +457,15 @@ Use the [#~"doc.*"] namespace for HTML head elements:
 
 #code: """
     #doc.lang: en
+    #doc.body class=dark-theme
     #doc.meta name=viewport content="width=device-width, initial-scale=1"
     #doc.link rel=stylesheet href="style.css"
     #doc.script src="app.js"
     #doc.author: Jane Doe
     """
+
+Use [#~"#doc.body"] to set [#~"class"] and [#~"id"] attributes on the
+[#~"<body>"] element.
 
 #h2: Table of Contents
 
