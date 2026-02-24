@@ -44,7 +44,10 @@ syn match picodocStructural /#\*\>/
 syn match picodocStructural /#li\>/
 
 " --- Comments (defined last to take priority) -------------------------------
-syn region picodocComment start=/#\%(comment\|\/\/\)\s*:/ end=/$/ contains=@NoSpell
+" Single-line: text after colon on same line, ends at EOL
+syn region picodocComment start=/#\%(comment\|\/\/\)\s*:\s*\S/ end=/$/ contains=@NoSpell
+" Paragraph: nothing after colon, body continues until blank line
+syn region picodocComment start=/#\%(comment\|\/\/\)\s*:\s*$/ skip=/\n\s*\S/ end=/\n\|\%$/ contains=@NoSpell
 syn region picodocComment start=/\[#\%(comment\|\/\/\)\>/ end=/\]/ contains=@NoSpell
 
 " --- Highlight links --------------------------------------------------------
