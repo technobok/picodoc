@@ -31,6 +31,9 @@ class _RenderState:
     heading_ids: dict[int, str] = field(default_factory=dict)
     toc_entries: list[tuple[int, str, str]] = field(default_factory=list)
     toc_level: int = 0
+    heading_number_level: int = 0
+    heading_anchor_level: int = 0
+    heading_counters: list[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0])
 
 
 def _slugify(text: str, used: dict[str, int]) -> str:
@@ -93,6 +96,8 @@ def render(doc: Document) -> str:
     content_type: str | None = None
     content_class: str | None = None
     content_id: str | None = None
+    heading_number_level = 0
+    heading_anchor_level = 0
 
     for child in doc.children:
         if not isinstance(child, MacroCall):
@@ -109,6 +114,10 @@ def render(doc: Document) -> str:
             content_id = _get_arg_text(child, "id")
         elif name == "doc.toc":
             body_items.append(child)
+        elif name == "doc.heading.number":
+            heading_number_level = int(_get_arg_text(child, "level") or "3")
+        elif name == "doc.heading.anchor":
+            heading_anchor_level = int(_get_arg_text(child, "level") or "3")
         elif name.startswith("doc."):
             head_items.append(child)
         else:
@@ -126,6 +135,8 @@ def render(doc: Document) -> str:
     # Pre-pass: collect headings and TOC configuration
     state = _RenderState()
     _collect_headings(doc.children, state)
+    state.heading_number_level = heading_number_level
+    state.heading_anchor_level = heading_anchor_level
 
     parts: list[str] = ["<!DOCTYPE html>\n"]
     if lang:
@@ -328,9 +339,23 @@ def _arg_value_text(value: Text | InterpString | RawString | object) -> str:
 def _render_heading(node: MacroCall, level: int, state: _RenderState) -> str:
     body_html = _render_body(node.body, state)
     slug = state.heading_ids.get(id(node), "")
+
+    anchor = ""
+    if state.heading_anchor_level > 0 and level <= state.heading_anchor_level and slug:
+        anchor = f'<a class="anchor" href="#{_escape_attr(slug)}"></a>'
+
+    prefix = ""
+    if state.heading_number_level > 0 and level <= state.heading_number_level:
+        state.heading_counters[level - 1] += 1
+        for i in range(level, 6):
+            state.heading_counters[i] = 0
+        number = ".".join(str(state.heading_counters[i]) for i in range(level))
+        prefix = f"{number}. "
+
+    content = f"{anchor}{prefix}{body_html}"
     if slug:
-        return f'<h{level} id="{_escape_attr(slug)}">{body_html}</h{level}>'
-    return f"<h{level}>{body_html}</h{level}>"
+        return f'<h{level} id="{_escape_attr(slug)}">{content}</h{level}>'
+    return f"<h{level}>{content}</h{level}>"
 
 
 # ---------------------------------------------------------------------------

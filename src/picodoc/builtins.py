@@ -121,6 +121,8 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     )
     d("doc.body", (ParamDecl("class", False), ParamDecl("id", False)))
     d("doc.toc", (ParamDecl("level", False),))
+    d("doc.heading.number", (ParamDecl("level", False),))
+    d("doc.heading.anchor", (ParamDecl("level", False),))
 
     # Expansion-time
     d("comment", has_body=True)

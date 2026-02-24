@@ -303,7 +303,7 @@ This prevents a mismatched quote from silently cascading through the file.
 
 #--: Builtin Macros
 
-PicoDoc has 40 builtin macros in 8 categories, plus 11 aliases.
+PicoDoc has 42 builtin macros in 8 categories, plus 11 aliases.
 
 #---: Structural Macros
 
@@ -812,6 +812,69 @@ This produces:
     </ul>
     </nav>
     """
+
+#----: \#doc.heading.number
+
+Document-level directive that prepends section numbers to headings. Numbers
+track section coordinates (1., 1.1., 1.1.1., etc.) starting at 1, resetting
+deeper counters when a higher-level heading increments. Headings beyond the
+configured level render without numbers. Parameters:
+
+#table:
+  Parameter | Required | Description
+  level | No | Maximum heading depth to number (default 3)
+
+No body.
+
+#code: """
+    #doc.heading.number level=3
+
+    #-: Introduction
+    #--: Background
+    #---: Details
+    #--: Motivation
+    #-: Methods
+    """
+
+This produces:
+
+#code: """
+    <h1 id="introduction">1. Introduction</h1>
+    <h2 id="background">1.1. Background</h2>
+    <h3 id="details">1.1.1. Details</h3>
+    <h2 id="motivation">1.2. Motivation</h2>
+    <h1 id="methods">2. Methods</h1>
+    """
+
+#----: \#doc.heading.anchor
+
+Document-level directive that adds anchor links inside headings for external
+deep-linking. A § symbol appears on hover (styled by CSS). Only headings up
+to the configured level receive anchors. Parameters:
+
+#table:
+  Parameter | Required | Description
+  level | No | Maximum heading depth to add anchors (default 3)
+
+No body.
+
+#code: """
+    #doc.heading.anchor level=3
+    #doc.heading.number
+
+    #-: Introduction
+    #--: Background
+    """
+
+This produces:
+
+#code: """
+    <h1 id="introduction"><a class="anchor" href="#introduction"></a>1. Introduction</h1>
+    <h2 id="background"><a class="anchor" href="#background"></a>1.1. Background</h2>
+    """
+
+Inside each heading, the element order is: anchor link first, then section
+number (if \#doc.heading.number is also active), then body text.
 
 #---: Expansion-Time Macros
 
