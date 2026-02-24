@@ -236,7 +236,7 @@ class TestTables:
         tr1 = _call("tr", body=_body(th))
         tr2 = _call("tr", body=_body(td))
         result = render(_doc(_call("table", body=_body(tr1, tr2))))
-        assert "<table>\n<tr><th>Name</th></tr>\n<tr><td>Alice</td></tr>\n</table>" in result
+        assert "<table>\n<thead>\n<tr><th>Name</th></tr>\n</thead>\n<tbody>\n<tr><td>Alice</td></tr>\n</tbody>\n</table>" in result
 
     def test_colspan(self) -> None:
         td = _call("td", (_arg("span", "2"),), _body(_text("Wide")))

@@ -513,13 +513,38 @@ def _render_li(node: MacroCall, state: _RenderState) -> str:
     return f"<li>{inline_html}</li>"
 
 
+def _is_header_row(node: MacroCall) -> bool:
+    """Return True if every cell in a #tr is a #th."""
+    if not isinstance(node.body, Body):
+        return False
+    cells = [c for c in node.body.children if isinstance(c, MacroCall)]
+    return bool(cells) and all(c.name == "th" for c in cells)
+
+
 def _render_table(node: MacroCall, state: _RenderState) -> str:
     parts: list[str] = ["<table>\n"]
     if isinstance(node.body, Body):
-        for child in node.body.children:
-            if isinstance(child, MacroCall):
-                parts.append(_render_node(child, state))
+        rows = [c for c in node.body.children if isinstance(c, MacroCall)]
+        # Split leading header rows from body rows.
+        head: list[MacroCall] = []
+        body: list[MacroCall] = []
+        for i, row in enumerate(rows):
+            if not body and _is_header_row(row):
+                head.append(row)
+            else:
+                body.append(row)
+        if head:
+            parts.append("<thead>\n")
+            for row in head:
+                parts.append(_render_node(row, state))
                 parts.append("\n")
+            parts.append("</thead>\n")
+        if body:
+            parts.append("<tbody>\n")
+            for row in body:
+                parts.append(_render_node(row, state))
+                parts.append("\n")
+            parts.append("</tbody>\n")
     parts.append("</table>")
     return "".join(parts)
 

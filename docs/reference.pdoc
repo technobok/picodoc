@@ -10,15 +10,13 @@
 #//: #doc.script type=text/javascript: [#include literal=true: style/init.js]
 #doc.script src=style/init.js
 
-#doc.body class="article toc2"
+#doc.body class=toc-sidebar
 #nav id=nav: [#include literal=true: style/nav.html]
 
-#//: #include literal=true: style/theme_preload.js
-
-#header: 
+#header:
   #-: PicoDoc Language Reference
 
-#nav id=toc class=toc2:
+#nav id=toc class=toc-sidebar:
   #div id=tocfile: Table of Contents
   #doc.toc
 
