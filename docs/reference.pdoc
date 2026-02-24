@@ -19,7 +19,9 @@
   #div id=tocfile: Table of Contents
   #doc.toc
 
-#-: PicoDoc Language Reference
+#header: 
+  #-: PicoDoc Language Reference
+
 
 #--: Overview
 
