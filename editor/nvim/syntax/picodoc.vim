@@ -32,7 +32,7 @@ syn match picodocMacroHash /#/ contained containedin=picodocStructural,picodocCo
 syn match picodocMacroName /#[A-Za-z!$%&*+\-/<>@^_~|.][A-Za-z0-9!$%&*+\-/<>@^_~|.]*/
 
 " --- Bracketed calls [#...] ------------------------------------------------
-syn region picodocBracketCall matchgroup=picodocBracket start=/\[#/ end=/\]/ transparent contains=TOP
+syn region picodocBracketCall matchgroup=picodocBracket start=/\[\ze#/ end=/\]/ transparent contains=TOP
 
 " --- Arguments: name=value --------------------------------------------------
 syn match picodocEquals /=/ contained containedin=picodocArgAssign
