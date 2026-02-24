@@ -19,11 +19,11 @@ syn match picodocProseEscape /\\U\x\{8}/
 
 " --- Macro calls: # prefix + name ------------------------------------------
 " Structural macros
-syn match picodocStructural /#\%(h[1-6]\|-\{1,6}\|p\|hr\|div\|section\|span\|nav\|header\|footer\|main\|article\|aside\)\>/
+syn match picodocStructural /#\%(h[1-6]\|-\{1,6}\|p\|hr\|ul\|ol\|table\|tr\|td\|th\|code\|div\|section\|span\|nav\|header\|footer\|main\|article\|aside\)\>/
 " Conditional / expansion-time macros
 syn match picodocConditional /#\%(set\|ifeq\|ifne\|ifset\|include\)\>/
 " Inline macros
-syn match picodocInline /#\%(\*\*\|__\|b\|i\|link\|>\)\>/
+syn match picodocInline /#\%(\*\*\|__\|b\|i\|link\|>\|\~\|literal\)\>/
 " Environment variable pattern and doc.* namespace
 syn match picodocEnv /#\%(env\|doc\)\.[A-Za-z0-9._\-]*/
 " Comment macro (hash form — region below handles the full extent)
