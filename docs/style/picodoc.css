@@ -6,22 +6,22 @@
   font-family: 'Nunito';
   font-style: normal;
   font-weight: 400;
-  src: local('Nunito Regular'), local('Nunito-Regular'),
-       /* url('/style/nunito-v12-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */ */
-       url('style/nunito-v12-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       /* url('/style/nunito-v12-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */ */
-       url('style/nunito-v12-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+  src: 
+      local('Nunito Regular'), 
+      local('Nunito-Regular'),
+      url('nunito-v12-latin-regular.woff2') format('woff2'),
+      url('nunito-v12-latin-regular.woff') format('woff');
 }
 /* source-code-pro-regular - latin */
 @font-face {
-  font-family: 'Source Code Pro';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Source Code Pro Regular'), local('SourceCodePro-Regular'),
-       /* url('/style/source-code-pro-v11-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */ */
-       url('style/source-code-pro-v11-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
-       /* url('/style/source-code-pro-v11-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */ */
-       url('style/source-code-pro-v11-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+    font-family: 'Source Code Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: 
+        local('Source Code Pro Regular'), 
+        local('SourceCodePro-Regular'),
+        url('source-code-pro-v11-latin-regular.woff2') format('woff2'),
+        url('source-code-pro-v11-latin-regular.woff') format('woff');
 }
 
 :root {
@@ -41,32 +41,6 @@
   --mode-moon-translatey: 2px; /* both un/checked (invisible when unchecked) */
   --mode-moon-translatex: 3px; /* both unchecked (invisible when unchecked) */
   --mode-moon-translatex-checked: 40px; /* both checked (invisible when unchecked) */
-
-  /* OLD
-   -- light-mode -- 
-  --bg-color: #ffffff;
-  --text-color: #222;
-  --text-color-details: #999;
-  --bg-color-highlight: #f5f5f5;
-  --bg-color-edge: #ccc;
-  --separator-color: #efefed;
-  --link-color: #1d4b8f;
-  --heading-color: #567f94;
-  --text-color-toc-active: #7a2518;
-
-  -- One Light theme 
-  --code-color-string: #50a14f;
-  --code-color-comment: #a0a1a7;
-  --code-color-keyword: #a626a4;
-  --code-color-numeric: #986801;
-  --code-color-label: #e45649;
-  --code-color-predefined-identifier: #4078f2;
-  --code-color-variable: #986801;
-  -- --code-color-variable: #383a42;
-  --code-color-path: #c18401;
-  */
-
-  /* from here: https://github.com/yosukes-dev/one-dark-windows-terminal */
 
   /* name: One Light */
   --color-background: #F9F9F9;
@@ -114,32 +88,6 @@
   --code-color-path: var(--color-chalky);
   --code-color-punctuation: var(--color-white);
 }
-
-/* OLD
-.dark-mode {
-  -- dark-mode (default) --
-  --bg-color: #121212;
-  --text-color: #eee;
-  --text-color-details: #aaa;
-  --bg-color-highlight: #2d2d2d;
-  --bg-color-edge: #555;
-  --separator-color: #565656;
-  --link-color: #50b7e0;
-  --heading-color: #567f94;
-  --text-color-toc-active: #eee;
-
-  -- One Dark theme
-  --code-color-string: #98c379;
-  --code-color-comment: #5c6370;
-  --code-color-keyword: #c678dd;
-  --code-color-numeric: #d19a66;
-  --code-color-label: #e06c75;
-  --code-color-predefined-identifier: #61aeee;
-  --code-color-variable: #d19a66;
-  -- --code-color-variable: #abb2bf;
-  --code-color-path: #e6c07b;
-}
-*/
 
 .dark-mode {
   /* from here: https://github.com/yosukes-dev/one-dark-windows-terminal */
@@ -191,10 +139,6 @@
 }
 
 
-
-
-/* Remove comment around @import statement below when using as a custom stylesheet */
-/*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
 article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
 audio,canvas,video{display:inline-block}
 audio:not([controls]){display:none;height:0}
