@@ -26,21 +26,21 @@
 
 :root {
   /* dark mode / light mode */
-  --mode-slot-width: 4.5em;  /* 20 */
-  --mode-slot-height: 2em; /* 10 */
-  --mode-button-size: 1.8em; /* 6.5 */
+  --mode-slot-width: 68px;
+  --mode-slot-height: 28px;
+  --mode-button-size: 24px;
   
-  --mode-button-translatey: 0.1em; /* both checked and unchecked */
-  --mode-button-translatex: 2.5em;
-  --mode-button-translatex-checked: 0.2em;
+  --mode-button-translatey: 2px; /* both checked and unchecked */
+  --mode-button-translatex: 40px;
+  --mode-button-translatex-checked: 3px;
   
-  --mode-sun-translatey: 0.1em; /* both un/checked (invisible when checked) */
-  --mode-sun-translatex: 0.2em; /* both unchecked (invisible when checked) */
-  --mode-sun-translatex-checked: 2.5em; /* both checked (invisible when checked) */
+  --mode-sun-translatey: 2px; /* both un/checked (invisible when checked) */
+  --mode-sun-translatex: 3px; /* both unchecked (invisible when checked) */
+  --mode-sun-translatex-checked: 40px; /* both checked (invisible when checked) */
   
-  --mode-moon-translatey: 0.1em; /* both un/checked (invisible when unchecked) */
-  --mode-moon-translatex: 0.2em; /* both unchecked (invisible when unchecked) */
-  --mode-moon-translatex-checked: 2.5em; /* both checked (invisible when unchecked) */
+  --mode-moon-translatey: 2px; /* both un/checked (invisible when unchecked) */
+  --mode-moon-translatex: 3px; /* both unchecked (invisible when unchecked) */
+  --mode-moon-translatex-checked: 40px; /* both checked (invisible when unchecked) */
 
   /* OLD
    -- light-mode -- 
@@ -763,7 +763,7 @@ table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-ch
   position: relative;
   height: var(--mode-slot-height);
   width: var(--mode-slot-width);
-  border: 5px solid #e4e7ec;
+  border: 2px solid #e4e7ec;
   border-radius: 10em;
   background-color: white;
   box-shadow: 1px 2px 5px #eeeeef;

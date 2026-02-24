@@ -6,22 +6,21 @@
 #doc.title: PicoDoc Language Reference
 #doc.content type=main id=content
 #doc.link rel=stylesheet href=style/picodoc.css 
-#doc.script type=text/javascript src=style/tocbot.min.js
+#doc.script src=style/tocbot.min.js
 #//: #doc.script type=text/javascript: [#include literal=true: style/init.js]
-#doc.script type=text/javascript src=style/init.js
+#doc.script src=style/init.js
 
 #doc.body class="article toc2"
 #nav id=nav: [#include literal=true: style/nav.html]
 
-#include literal=true: style/theme_preload.js
-
-#nav id=toc class=toc2:
-  #div id=tocfile: Table of Contents
-  #doc.toc
+#//: #include literal=true: style/theme_preload.js
 
 #header: 
   #-: PicoDoc Language Reference
 
+#nav id=toc class=toc2:
+  #div id=tocfile: Table of Contents
+  #doc.toc
 
 #--: Overview
 
