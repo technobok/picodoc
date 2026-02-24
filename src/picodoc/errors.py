@@ -89,6 +89,14 @@ class ParseError(Exception):
         )
 
 
+class RenderError(Exception):
+    """Raised on rendering errors (e.g. broken internal links)."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(f"error: {message}")
+
+
 class EvalError(Exception):
     """Raised on evaluation errors, with span and source context."""
 

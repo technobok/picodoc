@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from picodoc.errors import EvalError, LexError, ParseError
+from picodoc.errors import EvalError, LexError, ParseError, RenderError
 
 
 @dataclass(frozen=True, slots=True)
@@ -253,7 +253,7 @@ def watch_loop(options: CliOptions) -> None:
                         sys.stdout.write(html)
                         sys.stdout.flush()
                     print(f"Compiled {options.input_file}", file=sys.stderr)
-                except (LexError, ParseError, EvalError) as exc:
+                except (LexError, ParseError, EvalError, RenderError) as exc:
                     print(str(exc), file=sys.stderr)
             time.sleep(0.5)
     except KeyboardInterrupt:
@@ -280,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     except (LexError, ParseError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    except EvalError as exc:
+    except (EvalError, RenderError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
 

@@ -17,6 +17,7 @@ from picodoc.ast import (
     Text,
 )
 from picodoc.builtins import WRAPPER_TAGS, resolve_name
+from picodoc.errors import RenderError
 from picodoc.tokens import Span
 
 _HEADING_NAMES: frozenset[str] = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
@@ -29,6 +30,7 @@ _COLLAPSE_RE = re.compile(r"-{2,}")
 @dataclass
 class _RenderState:
     heading_ids: dict[int, str] = field(default_factory=dict)
+    heading_texts: dict[str, str] = field(default_factory=dict)
     toc_entries: list[tuple[int, str, str]] = field(default_factory=list)
     toc_level: int = 0
     heading_number_level: int = 0
@@ -73,6 +75,7 @@ def _collect_headings_recursive(
         text = _body_text(node.body)
         slug = _slugify(text, used)
         state.heading_ids[id(node)] = slug
+        state.heading_texts[slug] = text
         if state.toc_level == 0 or level <= state.toc_level:
             state.toc_entries.append((level, text, slug))
     elif name == "doc.toc":
@@ -471,8 +474,18 @@ def _render_link(node: MacroCall, state: _RenderState) -> str:
     to = _get_arg_text(node, "to") or ""
 
     # Determine href: if no "://" and no "/", treat as fragment reference
-    href = f"#{to}" if "://" not in to and "/" not in to else to
-    body_html = _render_body(node.body, state) if node.body is not None else _escape_html(to)
+    is_fragment = "://" not in to and "/" not in to
+    href = f"#{to}" if is_fragment else to
+
+    if is_fragment and to:
+        if to not in state.heading_texts:
+            raise RenderError(f"broken internal link: #{to} — no heading with this anchor exists")
+        if node.body is None:
+            body_html = _escape_html(state.heading_texts[to])
+        else:
+            body_html = _render_body(node.body, state)
+    else:
+        body_html = _render_body(node.body, state) if node.body is not None else _escape_html(to)
 
     return f'<a href="{_escape_attr(href)}">{body_html}</a>'
 

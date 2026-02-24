@@ -389,16 +389,28 @@ Alias: \#>. Hyperlink. Renders as [#~"<a>"]. Parameters:
   Parameter | Required | Description
   to | Yes | Link target (URL, path, or fragment name)
 
-Takes optional body (the link text). If no body is provided, the [#~ : to] value is used as the link text.
+Takes optional body (the link text). For external links, if no body is
+provided the [#~ : to] value is used as the link text.
 
 Fragment reference behavior: if [#~ : to] does not contain [#~"://"]
 and does not contain [#~"/"], it is treated as a fragment reference and
 \# is prepended (e.g. [#~"to=section1"] produces [#~"href=\"#section1\""]).
 
+For fragment references, two additional rules apply:
+
+[#ul :
+  [#* : [#b : Auto-text] : if no body is provided, the link text defaults
+    to the heading text of the target anchor. The text is always the plain
+    heading text without section numbers.]
+  [#* : [#b : Validation] : the target must match a heading anchor in the
+    document. A broken internal link is a render error.]
+]
+
 #code: """
     [#link to="https://example.com" : Click here]
     [#> to="https://example.com" : Alias form]
     [#link to=section1 : Jump to section]
+    [#link to=section1]
     [#link to=page/about : About page]
     """
 

@@ -151,7 +151,12 @@ class TestLink:
     def test_fragment_reference(self) -> None:
         args = (_iarg("to", "section1"),)
         link = _call("link", args, _body(_text("go")))
-        result = render(_doc(_call("p", body=_body(link))))
+        result = render(
+            _doc(
+                _call("h2", body=_body(_text("Section1"))),
+                _call("p", body=_body(link)),
+            )
+        )
         assert '<a href="#section1">go</a>' in result
 
     def test_path_with_slash_no_fragment(self) -> None:
@@ -805,3 +810,74 @@ class TestHeadingFeatures:
         # Beyond configured level: no number, no anchor
         assert '<h3 id="deep">Deep</h3>' in result
         assert '<h4 id="deeper">Deeper</h4>' in result
+
+
+class TestSmartInternalLinks:
+    def test_auto_text_from_heading(self) -> None:
+        """Fragment link with no body uses heading text."""
+        link = _call("link", (_iarg("to", "background"),))
+        doc = _doc(
+            _call("h2", body=_body(_text("Background"))),
+            _call("p", body=_body(link)),
+        )
+        result = render(doc)
+        assert '<a href="#background">Background</a>' in result
+
+    def test_auto_text_excludes_numbers(self) -> None:
+        """Auto-resolved text uses plain heading text, not numbered."""
+        link = _call("link", (_iarg("to", "background"),))
+        doc = _doc(
+            _call("doc.heading.number"),
+            _call("h2", body=_body(_text("Background"))),
+            _call("p", body=_body(link)),
+        )
+        result = render(doc)
+        # Heading itself gets "1. Background" but link text is plain
+        assert "1. Background" in result
+        assert '<a href="#background">Background</a>' in result
+
+    def test_explicit_body_preserved(self) -> None:
+        """Fragment link with body keeps the provided text."""
+        link = _call("link", (_iarg("to", "background"),), _body(_text("see here")))
+        doc = _doc(
+            _call("h2", body=_body(_text("Background"))),
+            _call("p", body=_body(link)),
+        )
+        result = render(doc)
+        assert '<a href="#background">see here</a>' in result
+
+    def test_broken_link_raises(self) -> None:
+        """Fragment link to non-existent anchor raises RenderError."""
+        import pytest
+
+        from picodoc.errors import RenderError
+
+        link = _call("link", (_iarg("to", "nonexistent"),), _body(_text("click")))
+        doc = _doc(_call("p", body=_body(link)))
+        with pytest.raises(RenderError, match="broken internal link"):
+            render(doc)
+
+    def test_broken_link_no_body_raises(self) -> None:
+        """Fragment link with no body to non-existent anchor raises RenderError."""
+        import pytest
+
+        from picodoc.errors import RenderError
+
+        link = _call("link", (_iarg("to", "missing"),))
+        doc = _doc(_call("p", body=_body(link)))
+        with pytest.raises(RenderError, match="broken internal link"):
+            render(doc)
+
+    def test_external_link_not_validated(self) -> None:
+        """External links are not subject to anchor validation."""
+        link = _call("link", (_iarg("to", "https://example.com"),))
+        doc = _doc(_call("p", body=_body(link)))
+        result = render(doc)
+        assert '<a href="https://example.com">https://example.com</a>' in result
+
+    def test_path_link_not_validated(self) -> None:
+        """Path links (with /) are not subject to anchor validation."""
+        link = _call("link", (_iarg("to", "page/about"),))
+        doc = _doc(_call("p", body=_body(link)))
+        result = render(doc)
+        assert '<a href="page/about">page/about</a>' in result
