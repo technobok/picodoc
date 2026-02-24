@@ -323,27 +323,15 @@ header .details {
 
 /* ---- 8. Heading anchors ---- */
 
-h1 > a.anchor, h2 > a.anchor, h3 > a.anchor,
-h4 > a.anchor, h5 > a.anchor, h6 > a.anchor {
-  position: absolute;
-  width: 1.5ex;
-  margin-left: -1.5ex;
+h1 > a, h2 > a, h3 > a,
+h4 > a, h5 > a, h6 > a {
+  color: inherit;
   text-decoration: none;
-  visibility: hidden;
-  text-align: center;
-  font-weight: 400;
 }
 
-h1 > a.anchor::before, h2 > a.anchor::before, h3 > a.anchor::before,
-h4 > a.anchor::before, h5 > a.anchor::before, h6 > a.anchor::before {
-  content: "\00A7";
-  font-size: 0.85em;
-  display: block;
-}
-
-h1:hover > a.anchor, h2:hover > a.anchor, h3:hover > a.anchor,
-h4:hover > a.anchor, h5:hover > a.anchor, h6:hover > a.anchor {
-  visibility: visible;
+h1 > a:hover, h2 > a:hover, h3 > a:hover,
+h4 > a:hover, h5 > a:hover, h6 > a:hover {
+  color: var(--link-color);
 }
 
 /* ---- 9. TOC ---- */

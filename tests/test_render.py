@@ -709,23 +709,25 @@ class TestHeadingFeatures:
             _call("h3", body=_body(_text("Details"))),
         )
         result = render(doc)
-        assert '<h1 id="intro">1. Intro</h1>' in result
-        assert '<h2 id="background">1.1. Background</h2>' in result
-        assert '<h3 id="details">1.1.1. Details</h3>' in result
+        # h1 never gets a number
+        assert '<h1 id="intro">Intro</h1>' in result
+        assert '<h2 id="background">1. Background</h2>' in result
+        assert '<h3 id="details">1.1. Details</h3>' in result
 
     def test_heading_number_counter_reset(self) -> None:
         doc = _doc(
             _call("doc.heading.number"),
-            _call("h1", body=_body(_text("First"))),
             _call("h2", body=_body(_text("Sub A"))),
-            _call("h1", body=_body(_text("Second"))),
+            _call("h3", body=_body(_text("Detail"))),
             _call("h2", body=_body(_text("Sub B"))),
+            _call("h3", body=_body(_text("Detail 2"))),
         )
         result = render(doc)
-        assert '<h1 id="first">1. First</h1>' in result
-        assert '<h2 id="sub-a">1.1. Sub A</h2>' in result
-        assert '<h1 id="second">2. Second</h1>' in result
-        assert '<h2 id="sub-b">2.1. Sub B</h2>' in result
+        assert '<h2 id="sub-a">1. Sub A</h2>' in result
+        assert '<h3 id="detail">1.1. Detail</h3>' in result
+        assert '<h2 id="sub-b">2. Sub B</h2>' in result
+        # h3 counter resets when h2 increments
+        assert '<h3 id="detail-2">2.1. Detail 2</h3>' in result
 
     def test_heading_number_level_param(self) -> None:
         doc = _doc(
@@ -735,8 +737,9 @@ class TestHeadingFeatures:
             _call("h3", body=_body(_text("Deep"))),
         )
         result = render(doc)
-        assert '<h1 id="top">1. Top</h1>' in result
-        assert '<h2 id="mid">1.1. Mid</h2>' in result
+        # h1 always skipped from numbering
+        assert '<h1 id="top">Top</h1>' in result
+        assert '<h2 id="mid">1. Mid</h2>' in result
         # h3 beyond level=2, no number
         assert '<h3 id="deep">Deep</h3>' in result
 
@@ -749,10 +752,10 @@ class TestHeadingFeatures:
             _call("h4", body=_body(_text("D"))),
         )
         result = render(doc)
-        # Default level=3: h1-h3 get numbers, h4 does not
-        assert "1. A" in result
-        assert "1.1. B" in result
-        assert "1.1.1. C" in result
+        # h1 skipped, default level=3: h2-h3 get numbers, h4 does not
+        assert '<h1 id="a">A</h1>' in result
+        assert "1. B" in result
+        assert "1.1. C" in result
         assert '<h4 id="d">D</h4>' in result
 
     def test_heading_anchor_basic(self) -> None:
@@ -762,8 +765,8 @@ class TestHeadingFeatures:
             _call("h2", body=_body(_text("Section"))),
         )
         result = render(doc)
-        assert '<h1 id="title"><a class="anchor" href="#title"></a>Title</h1>' in result
-        assert '<h2 id="section"><a class="anchor" href="#section"></a>Section</h2>' in result
+        assert '<h1 id="title"><a href="#title">Title</a></h1>' in result
+        assert '<h2 id="section"><a href="#section">Section</a></h2>' in result
 
     def test_heading_anchor_level_param(self) -> None:
         doc = _doc(
@@ -773,8 +776,8 @@ class TestHeadingFeatures:
             _call("h3", body=_body(_text("Deep"))),
         )
         result = render(doc)
-        assert '<a class="anchor" href="#top"></a>Top' in result
-        assert '<a class="anchor" href="#mid"></a>Mid' in result
+        assert '<a href="#top">Top</a>' in result
+        assert '<a href="#mid">Mid</a>' in result
         # h3 beyond level=2, no anchor
         assert '<h3 id="deep">Deep</h3>' in result
 
@@ -786,9 +789,10 @@ class TestHeadingFeatures:
             _call("h2", body=_body(_text("Background"))),
         )
         result = render(doc)
-        # anchor before number before body
-        assert '<h1 id="intro"><a class="anchor" href="#intro"></a>1. Intro</h1>' in result
-        assert '<h2 id="background"><a class="anchor" href="#background"></a>1.1. Background</h2>' in result
+        # h1: anchor wraps body (no number)
+        assert '<h1 id="intro"><a href="#intro">Intro</a></h1>' in result
+        # h2: number inside anchor wrapper
+        assert '<h2 id="background"><a href="#background">1. Background</a></h2>' in result
 
     def test_heading_beyond_level_unchanged(self) -> None:
         doc = _doc(

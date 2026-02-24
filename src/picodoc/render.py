@@ -340,19 +340,19 @@ def _render_heading(node: MacroCall, level: int, state: _RenderState) -> str:
     body_html = _render_body(node.body, state)
     slug = state.heading_ids.get(id(node), "")
 
-    anchor = ""
-    if state.heading_anchor_level > 0 and level <= state.heading_anchor_level and slug:
-        anchor = f'<a class="anchor" href="#{_escape_attr(slug)}"></a>'
-
     prefix = ""
-    if state.heading_number_level > 0 and level <= state.heading_number_level:
-        state.heading_counters[level - 1] += 1
-        for i in range(level, 6):
+    if state.heading_number_level > 0 and level >= 2 and level <= state.heading_number_level:
+        adj = level - 2
+        state.heading_counters[adj] += 1
+        for i in range(adj + 1, 6):
             state.heading_counters[i] = 0
-        number = ".".join(str(state.heading_counters[i]) for i in range(level))
+        number = ".".join(str(state.heading_counters[i]) for i in range(adj + 1))
         prefix = f"{number}. "
 
-    content = f"{anchor}{prefix}{body_html}"
+    content = f"{prefix}{body_html}"
+    if state.heading_anchor_level > 0 and level <= state.heading_anchor_level and slug:
+        content = f'<a href="#{_escape_attr(slug)}">{content}</a>'
+
     if slug:
         return f'<h{level} id="{_escape_attr(slug)}">{content}</h{level}>'
     return f"<h{level}>{content}</h{level}>"

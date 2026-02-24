@@ -816,9 +816,10 @@ This produces:
 #----: \#doc.heading.number
 
 Document-level directive that prepends section numbers to headings. Numbers
-track section coordinates (1., 1.1., 1.1.1., etc.) starting at 1, resetting
-deeper counters when a higher-level heading increments. Headings beyond the
-configured level render without numbers. Parameters:
+track section coordinates (1., 1.1., etc.) starting at h2. Heading level 1
+is always skipped from numbering (HTML recommends a single h1 as the document
+title). Deeper counters reset when a higher-level heading increments.
+Headings beyond the configured level render without numbers. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -839,18 +840,18 @@ No body.
 This produces:
 
 #code: """
-    <h1 id="introduction">1. Introduction</h1>
-    <h2 id="background">1.1. Background</h2>
-    <h3 id="details">1.1.1. Details</h3>
-    <h2 id="motivation">1.2. Motivation</h2>
-    <h1 id="methods">2. Methods</h1>
+    <h1 id="introduction">Introduction</h1>
+    <h2 id="background">1. Background</h2>
+    <h3 id="details">1.1. Details</h3>
+    <h2 id="motivation">2. Motivation</h2>
+    <h1 id="methods">Methods</h1>
     """
 
 #----: \#doc.heading.anchor
 
-Document-level directive that adds anchor links inside headings for external
-deep-linking. A § symbol appears on hover (styled by CSS). Only headings up
-to the configured level receive anchors. Parameters:
+Document-level directive that wraps heading content in an anchor link for
+deep-linking. The heading text is highlighted on hover (styled by CSS). Only
+headings up to the configured level receive anchors. Parameters:
 
 #table:
   Parameter | Required | Description
@@ -869,12 +870,12 @@ No body.
 This produces:
 
 #code: """
-    <h1 id="introduction"><a class="anchor" href="#introduction"></a>1. Introduction</h1>
-    <h2 id="background"><a class="anchor" href="#background"></a>1.1. Background</h2>
+    <h1 id="introduction"><a href="#introduction">Introduction</a></h1>
+    <h2 id="background"><a href="#background">1. Background</a></h2>
     """
 
-Inside each heading, the element order is: anchor link first, then section
-number (if \#doc.heading.number is also active), then body text.
+The anchor wraps the full heading content, including the section number
+when \#doc.heading.number is also active.
 
 #---: Expansion-Time Macros
 
