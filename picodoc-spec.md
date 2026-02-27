@@ -58,7 +58,7 @@
   character not on the valid list for the current context is a syntax error.
   There are two escape contexts with different valid sets:
 - in prose/body text, the valid escapes are:
-  \\ \# \[ \] \: \= \xHH \UHHHHHHHH
+  \\ \# \[ \] \xHH \UHHHHHHHH
 - in interpreted string literals, the valid escapes are:
   \\ \" \[ \n \t \xHH \UHHHHHHHH
   Note: \[ inside interpreted strings enters code mode (macro expansion),

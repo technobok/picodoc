@@ -396,8 +396,6 @@ ended and body began). The new design:
   `#macro name = value` is treated as a no-arg, no-body call followed by
   prose. The bracketed form `[#macro name = value]` catches this as a syntax
   error. This trade-off is accepted to keep the parser definition-independent.
-- **`\=` added to valid escape sequences** for the rare case where `=` appears
-  in bareword values inside brackets.
 - **`body` remains the parameter name** in `#set` definitions (`body=?` for
   required, `body=default` for optional). The `:` syntax is call-site sugar.
 

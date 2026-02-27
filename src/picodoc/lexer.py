@@ -227,7 +227,7 @@ class Lexer:
 
         ch = self._peek()
 
-        if ch in "\\#[]:=":
+        if ch in "\\#[]":
             self._advance()
             self._emit(TokenType.ESCAPE, ch, f"\\{ch}", start)
             return

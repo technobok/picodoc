@@ -30,15 +30,6 @@ class TestProseEscapes:
         assert_types(tokens, [TokenType.ESCAPE])
         assert tokens[0].value == "]"
 
-    def test_colon(self, lex):
-        tokens = lex("\\:")
-        assert_types(tokens, [TokenType.ESCAPE])
-        assert tokens[0].value == ":"
-
-    def test_equals(self, lex):
-        tokens = lex("\\=")
-        assert_types(tokens, [TokenType.ESCAPE])
-        assert tokens[0].value == "="
 
 
 class TestHexEscapes:
@@ -136,6 +127,14 @@ class TestInvalidEscapes:
     def test_prose_escape_t_is_invalid(self, lex):
         with pytest.raises(LexError, match="invalid escape sequence"):
             lex("\\t")
+
+    def test_prose_escape_colon_is_invalid(self, lex):
+        with pytest.raises(LexError, match="invalid escape sequence"):
+            lex("\\:")
+
+    def test_prose_escape_equals_is_invalid(self, lex):
+        with pytest.raises(LexError, match="invalid escape sequence"):
+            lex("\\=")
 
     def test_prose_escape_quote_is_invalid(self, lex):
         with pytest.raises(LexError, match="invalid escape sequence"):

@@ -18,7 +18,7 @@ code. Changing the grammar after implementation begins is expensive.
 - [x] Two-form call model: colon always required before body in both forms.
       `name=value` requires no whitespace before `=` (one-token lookahead)
 - [x] Two escape contexts with separate valid sets:
-      Prose: `\\ \# \[ \] \: \= \xHH \UHHHHHHHH`
+      Prose: `\\ \# \[ \] \xHH \UHHHHHHHH`
       Strings: `\\ \" \[ \n \t \xHH \UHHHHHHHH`
       (`\[` enters code mode in strings, literal `[` in prose)
 - [x] Define macro expansion order: recursive multi-pass AST walking with

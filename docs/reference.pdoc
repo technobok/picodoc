@@ -70,8 +70,6 @@ valid list for the current context is a syntax error.
   [#~"\\#"] | Literal \#
   [#~"\\["] | Literal \[
   [#~"\\]"] | Literal \]
-  [#~"\\:"] | Literal :
-  [#~"\\="] | Literal =
   [#~"\\xHH"] | Unicode codepoint U+0000 to U+00FF
   [#~"\\UHHHHHHHH"] | Unicode codepoint (8 hex digits)
 

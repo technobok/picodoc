@@ -6,10 +6,6 @@
 
 #p: A literal closing bracket: \] in text.
 
-#p: A literal colon: \: not a body separator.
-
-#p: A literal equals: \= not an argument.
-
 #p: A literal backslash: \\ stands alone.
 
 #h2: Unicode Escapes in Prose
