@@ -49,7 +49,7 @@ The file extension is [#~ : .pdoc].
 An identifier consists of one or more letters, digits, dots, or special
 characters:
 
-[#~ : """
+[#code : """
     ! $ % & * + - / < > @ ^ _ ~ |
     """]
 
@@ -157,14 +157,14 @@ arguments may appear as name=value pairs separated by whitespace. A colon or
 string literal introduces body content. Everything until the matching closing
 bracket is body, which may span multiple lines and paragraphs.
 
-#code: """
+#code: """"
     [#b : bold text]
     [#link to="https://example.com" : Click here]
     [#code language=python : """
         def hello():
             print("world")
         """]
-    """
+    """"
 
 Bare text inside brackets that is not a name=value pair and not preceded by
 a colon or string literal is a syntax error.
@@ -197,8 +197,9 @@ Body content is introduced by a colon or by a string literal:
     #-: Document Heading
     """
 
-#p: [#b : Colon, paragraph body]: nothing follows the colon on the line. The
-next paragraph (contiguous non-blank lines) becomes the body.
+#p: [#b : Colon, paragraph body]: 
+nothing follows the colon on the line. The next paragraph (contiguous non-blank
+lines) becomes the body.
 
 #code: """
     #p:
@@ -206,20 +207,21 @@ next paragraph (contiguous non-blank lines) becomes the body.
     multiple lines.
     """
 
-#p: [#b : String literal body]: a string literal serves as body. A colon
-before the string is optional.
+#p: [#b : String literal body]: 
+a string literal serves as body. A colon before the string is optional.
 
-#code: """
+#code: """"
     #p"A string literal paragraph."
     #**"bold text"
     [#code language=python """
         def hello():
             pass
         """]
-    """
+    """"
 
-#p: [#b : Bracketed body]: in bracketed calls, body extends to the closing
-bracket and may span multiple lines and paragraphs.
+#p: [#b : Bracketed body]: 
+in bracketed calls, body extends to the closing bracket and may span multiple
+lines and paragraphs.
 
 #code: """
     [#ul :
@@ -427,12 +429,12 @@ Block code. Renders as [#~ : <pre><code>]. Parameters:
 Takes body. Always renders as a block [#~ : <pre><code>] element regardless
 of body type. For inline code, use \#~ instead.
 
-#code: """
+#code: """"
     [#code language=python : """
         def hello():
             print("world")
         """]
-    """
+    """"
 
 #----: \#~
 
@@ -1284,3 +1286,11 @@ for:
   [#* : Any situation where text containing \# or \[ should be treated as
     literal output]
 ]
+
+#footer:
+  #p: Version 0.1 2026-02-27
+  #p: Last updated:
+
+
+
+

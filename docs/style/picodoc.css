@@ -282,12 +282,21 @@ table th, table td {
   padding-right: 0.9375em;
 }
 
-header, #content {
+header, #content, footer {
   width: 100%;
   max-width: var(--content-max-width);
   margin: 0 auto;
   padding-left: 0.9375em;
   padding-right: 0.9375em;
+}
+
+footer {
+
+  color: var(--text-color-details);
+  background: var(--bg-color-highlight);
+  border-top: 1px solid var(--bg-color-edge);
+  padding-top: 0.5em;
+  padding-bottom: 0.1em;
 }
 
 #content {
