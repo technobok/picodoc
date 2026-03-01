@@ -3,14 +3,19 @@ if exists('b:current_syntax')
   finish
 endif
 
-" --- Raw strings (triple-quoted, no escapes) --------------------------------
-syn region picodocRawString start=/"""/ end=/"""/
-
 " --- Interpreted strings with escapes ---------------------------------------
 syn region picodocString start=/"/ skip=/\\"/ end=/"/ contains=picodocStringEscape
 syn match picodocStringEscape /\\[\\"\[\]nt]/ contained
 syn match picodocStringEscape /\\x\x\{2}/ contained
 syn match picodocStringEscape /\\U\x\{8}/ contained
+
+" --- Raw strings (N-quoted, no escapes) ------------------------------------
+" Defined after picodocString so they take priority at the same position.
+" Longer delimiters defined last so they win over shorter ones.
+syn region picodocRawString start=/"""/ end=/"""/
+syn region picodocRawString start=/""""/ end=/""""/
+syn region picodocRawString start=/"""""/ end=/"""""/
+syn region picodocRawString start=/""""""/ end=/""""""/
 
 " --- Prose escapes (outside strings) ----------------------------------------
 syn match picodocProseEscape /\\[\\#\[\]:=]/
