@@ -87,10 +87,9 @@ class TestArgParsing:
         assert ns.js == ["a.js"]
         assert ns.meta == ["k=v"]
 
-    def test_watch_and_debug(self) -> None:
+    def test_debug(self) -> None:
         p = build_parser()
-        ns = p.parse_args(["doc.pdoc", "--watch", "--debug"])
-        assert ns.watch is True
+        ns = p.parse_args(["doc.pdoc", "--debug"])
         assert ns.debug is True
 
     def test_filter_path_and_timeout(self) -> None:
@@ -205,7 +204,6 @@ class TestCompileFile:
             meta_tags=[],
             filter_paths=[],
             filter_timeout=5.0,
-            watch=False,
             debug=False,
         )
         html = compile_file(opts)
