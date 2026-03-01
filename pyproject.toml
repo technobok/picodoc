@@ -14,6 +14,10 @@ picodoc-lsp = "picodoc.lsp:main"
 
 [project.optional-dependencies]
 lsp = ["pygls>=2.0"]
+highlighting = ["pygments>=2.0"]
+
+[project.entry-points."pygments.lexers"]
+picodoc = "picodoc.pygments_lexer:PicoDocLexer"
 
 [dependency-groups]
 dev = ["pytest", "pytest-cov", "ruff", "picodoc[lsp]"]
