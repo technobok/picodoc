@@ -1041,6 +1041,50 @@ Duplicate macro definitions at the same scope are an immediate error.
 Macro invocation creates a new scope at the call site. Local argument names
 shadow any definitions outside the macro call with the same name.
 
+#---: Overriding Builtin Macros
+
+User-defined macros can shadow render-time builtins such as \#p, \#b, \#code,
+\#link, headings, lists, wrappers, and table cells. This lets you customise
+how standard elements are rendered without losing access to the original
+behaviour.
+
+Expansion-time builtins (\#set, \#ifeq, \#ifne, \#ifset, \#include,
+\#comment, \#table) cannot be overridden. They are resolved before user macros
+and any attempt to shadow them is silently ignored.
+
+#code: """
+    [#set name=p body=? : [#builtin.p : [#b : #body]]]
+    #p: Every paragraph is now bold.
+    """
+
+#----: The \#builtin.* Prefix
+
+Inside a user macro definition (or anywhere else), use \#builtin.name to call
+the original builtin, bypassing the user-defined override. Alias resolution
+applies after the prefix, so [#~"#builtin.**"] resolves to the builtin \#b.
+
+#code: """
+    [#set name=code body=? :
+      [#div class=code-wrapper :
+        [#builtin.code : #body]
+      ]
+    ]
+    [#code language=python : """
+        print("hello")
+        """]
+    """
+
+The \#builtin.* namespace is reserved. Defining a macro whose name starts
+with [#~"builtin."] is an error:
+
+#code: """
+    [#set name=builtin.foo : bar]
+    [#//: Error: reserved namespace: cannot define 'builtin.foo']
+    """
+
+If the name after [#~"builtin."] does not match any builtin macro (after
+alias resolution), an evaluation error is raised.
+
 #---: Macro References as Argument Values
 
 A zero-argument macro (variable) can be passed as an argument value using

@@ -40,13 +40,20 @@ class BuiltinDef:
     name: str
     params: tuple[ParamDecl, ...]
     has_body: bool
+    expansion_time: bool = False  # True = cannot be shadowed by user macros
 
 
 def _make_builtins() -> dict[str, BuiltinDef]:
     defs: dict[str, BuiltinDef] = {}
 
-    def d(name: str, params: tuple[ParamDecl, ...] = (), *, has_body: bool = False) -> None:
-        defs[name] = BuiltinDef(name, params, has_body)
+    def d(
+        name: str,
+        params: tuple[ParamDecl, ...] = (),
+        *,
+        has_body: bool = False,
+        expansion_time: bool = False,
+    ) -> None:
+        defs[name] = BuiltinDef(name, params, has_body, expansion_time)
 
     # Structural
     d("h1", has_body=True)
@@ -74,7 +81,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("*", has_body=True)
 
     # Tables
-    d("table", has_body=True)
+    d("table", has_body=True, expansion_time=True)
     d("tr", has_body=True)
     d("td", (ParamDecl("span", False),), has_body=True)
     d("th", (ParamDecl("span", False),), has_body=True)
@@ -125,12 +132,12 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("doc.heading.anchor", (ParamDecl("level", False),))
 
     # Expansion-time
-    d("comment", has_body=True)
-    d("set", (ParamDecl("name", True),), has_body=True)
-    d("ifeq", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True)
-    d("ifne", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True)
-    d("ifset", (ParamDecl("name", True),), has_body=True)
-    d("include", (ParamDecl("literal", False),), has_body=True)
+    d("comment", has_body=True, expansion_time=True)
+    d("set", (ParamDecl("name", True),), has_body=True, expansion_time=True)
+    d("ifeq", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True, expansion_time=True)
+    d("ifne", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True, expansion_time=True)
+    d("ifset", (ParamDecl("name", True),), has_body=True, expansion_time=True)
+    d("include", (ParamDecl("literal", False),), has_body=True, expansion_time=True)
 
     return defs
 

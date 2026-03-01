@@ -323,6 +323,35 @@ first, then expands:
     [#set name=project-name : PicoDoc]
     """
 
+#h2: Overriding Builtin Macros
+
+You can redefine render-time builtins like \#p, \#b, \#code, and \#link to
+customise how standard elements are rendered. Use the \#builtin.name prefix
+to call the original builtin from inside your override:
+
+#code: """
+    [#set name=p body=? : [#builtin.p : [#b : #body]]]
+    This paragraph will be bold.
+    """
+
+Here the user-defined \#p wraps every paragraph body in bold, delegating to
+the real \#p via \#builtin.p. This works for any render-time builtin:
+
+#code: """
+    [#set name=code body=? :
+      [#div class=code-block :
+        [#builtin.code : #body]
+      ]
+    ]
+    [#code : print("hello")]
+    """
+
+Expansion-time builtins (\#set, \#ifeq, \#ifne, \#ifset, \#include,
+\#comment, \#table) cannot be overridden.
+
+The [#~"builtin.*"] namespace is reserved. You cannot define a macro whose
+name starts with [#~"builtin."].
+
 #h2: Content Wrappers
 
 PicoDoc provides wrapper macros (\#div, \#section, \#span, \#nav, \#header,

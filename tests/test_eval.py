@@ -973,3 +973,124 @@ class TestNestingValidation:
         doc = _doc(_call("p", body=_body(_call("~", body=_body(_text("ok"))))))
         result = evaluate(doc)
         assert len(result.children) == 1
+
+
+class TestBuiltinOverride:
+    def test_override_render_builtin(self) -> None:
+        """User macro shadows #p, #builtin.p delegates to original."""
+        source = (
+            "[#set name=p body=? : [#builtin.p : [#b : #body]]]\n"
+            "#p: hello\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        # Should produce a #p containing #b containing "hello"
+        assert len(result.children) == 1
+        p = result.children[0]
+        assert isinstance(p, MacroCall) and p.name == "p"
+        assert isinstance(p.body, Body)
+        b = next(c for c in p.body.children if isinstance(c, MacroCall))
+        assert b.name == "b"
+        assert isinstance(b.body, Body)
+        text = "".join(c.value for c in b.body.children if isinstance(c, (Text, Escape)))
+        assert text == "hello"
+
+    def test_override_code_builtin(self) -> None:
+        """User macro shadows #code, #builtin.code produces real code block."""
+        source = (
+            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n"
+            "[#code : x=1]\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        div = result.children[0]
+        assert isinstance(div, MacroCall) and div.name == "div"
+        assert isinstance(div.body, Body)
+        code = next(c for c in div.body.children if isinstance(c, MacroCall))
+        assert code.name == "code"
+
+    def test_builtin_prefix_direct(self) -> None:
+        """#builtin.p works without any #set override."""
+        source = "[#builtin.p : hello]\n"
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        p = result.children[0]
+        assert isinstance(p, MacroCall) and p.name == "p"
+
+    def test_builtin_prefix_alias(self) -> None:
+        """Alias resolution works through #builtin. prefix."""
+        source = "[#builtin.** : bold]\n"
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        b = result.children[0]
+        assert isinstance(b, MacroCall) and b.name == "b"
+
+    def test_builtin_prefix_unknown(self) -> None:
+        """Error for unknown builtin via #builtin. prefix."""
+        source = "[#builtin.nonexistent : x]\n"
+        doc = parse(source)
+        with pytest.raises(EvalError, match="unknown builtin"):
+            evaluate(doc)
+
+    def test_reserved_namespace(self) -> None:
+        """#set name=builtin.* is an error."""
+        source = "[#set name=builtin.foo : bar]\n"
+        doc = parse(source)
+        with pytest.raises(EvalError, match="reserved namespace"):
+            evaluate(doc)
+
+    def test_expansion_builtin_not_overridable(self) -> None:
+        """#set still works as expansion-time builtin even when 'shadowed'."""
+        source = (
+            "[#set name=set : NOPE]\n"
+            "[#set name=x : hello]\n"
+            "#p: #x\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        assert _body_text(result.children[0]) == "hello"
+
+    def test_ifeq_not_overridable(self) -> None:
+        """#ifeq still works as expansion-time builtin even when 'shadowed'."""
+        source = (
+            "[#set name=ifeq : NOPE]\n"
+            "[#ifeq lhs=a rhs=a : [#p : match]]\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        assert _body_text(result.children[0]) == "match"
+
+    def test_override_trailing_dot(self) -> None:
+        """Trailing dot works with user macro that shadows a render-time builtin."""
+        # Override #b to wrap in uppercase marker, then use #b. (trailing dot)
+        source = (
+            "[#set name=b body=? : BOLD(#body)]\n"
+            "#p: this is [#b. : text]\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+        assert len(result.children) == 1
+        text = _body_text(result.children[0])
+        assert "BOLD(text)" in text
+        assert text.endswith(".")
+
+    def test_override_with_render(self) -> None:
+        """End-to-end: override #code, render HTML, verify wrapper."""
+        source = (
+            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n"
+            "[#code : x=1]\n"
+        )
+        doc = parse(source)
+        result = evaluate(doc)
+
+        from picodoc.render import render
+
+        html = render(result)
+        assert '<div class="cb">' in html
+        assert "<pre><code>" in html
+        assert "x=1" in html

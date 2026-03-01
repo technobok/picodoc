@@ -201,6 +201,13 @@ def _collect_definitions(
         if name_val is None:
             continue
         def_name = _resolve_value(name_val, ctx)
+        if def_name.startswith("builtin."):
+            raise EvalError(
+                f"reserved namespace: cannot define '{def_name}'",
+                child.span,
+                ctx.source,
+                filename=ctx.filename,
+            )
         if def_name in ctx.definitions:
             raise EvalError(
                 f"duplicate definition: {def_name}",
@@ -267,7 +274,23 @@ def _expand_macro(
 ) -> list[MacroCall | Text | Escape]:
     name = resolve_name(node.name)
 
-    _validate_builtin_args(node, name, ctx)
+    # Handle #builtin. prefix — force builtin dispatch
+    force_builtin = False
+    if name.startswith("builtin."):
+        name = resolve_name(name[8:])
+        if name not in BUILTINS:
+            raise EvalError(
+                f"unknown builtin '{name}'",
+                node.span,
+                ctx.source,
+                filename=ctx.filename,
+            )
+        force_builtin = True
+
+    # Conditionalize builtin arg validation: skip when a user macro shadows
+    user_has_def = name in ctx.definitions
+    if force_builtin or not user_has_def:
+        _validate_builtin_args(node, name, ctx)
 
     if name.startswith("env."):
         env_key = name[4:]
@@ -296,15 +319,20 @@ def _expand_macro(
     if name == "table":
         return _expand_table(node, ctx)
 
-    # User macro expansion
-    if name in ctx.definitions and name not in BUILTINS:
-        return _expand_user_macro(node, name, ctx)
+    # User macro expansion — allow shadowing render-time builtins
+    if not force_builtin and name in ctx.definitions:
+        builtin = BUILTINS.get(name)
+        if builtin is None or not builtin.expansion_time:
+            return _expand_user_macro(node, name, ctx)
 
     # Trailing dot: #version. → expand "version" + Text(".")
-    if name.endswith(".") and name[:-1] in ctx.definitions and name[:-1] not in BUILTINS:
-        expanded = _expand_user_macro(node, name[:-1], ctx)
-        expanded.append(Text(".", node.span))
-        return expanded
+    if name.endswith(".") and name[:-1] in ctx.definitions:
+        base = name[:-1]
+        builtin = BUILTINS.get(base)
+        if builtin is None or not builtin.expansion_time:
+            expanded = _expand_user_macro(node, base, ctx)
+            expanded.append(Text(".", node.span))
+            return expanded
 
     # External filter dispatch
     if ctx.filters is not None:
@@ -315,7 +343,8 @@ def _expand_macro(
     # Render-time macro: resolve args and recurse into body
     new_args = _resolve_macro_args(node.args, ctx)
     new_body = _recurse_body(node.body, ctx)
-    return [MacroCall(node.name, new_args, new_body, node.bracketed, node.span)]
+    out_name = name if force_builtin else node.name
+    return [MacroCall(out_name, new_args, new_body, node.bracketed, node.span)]
 
 
 def _recurse_body(
