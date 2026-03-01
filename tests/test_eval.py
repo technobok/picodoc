@@ -1043,27 +1043,25 @@ class TestBuiltinOverride:
             evaluate(doc)
 
     def test_expansion_builtin_not_overridable(self) -> None:
-        """#set still works as expansion-time builtin even when 'shadowed'."""
+        """Attempting to shadow an expansion-time builtin is an error."""
         source = (
             "[#set name=set : NOPE]\n"
             "[#set name=x : hello]\n"
             "#p: #x\n"
         )
         doc = parse(source)
-        result = evaluate(doc)
-        assert len(result.children) == 1
-        assert _body_text(result.children[0]) == "hello"
+        with pytest.raises(EvalError, match="cannot override"):
+            evaluate(doc)
 
     def test_ifeq_not_overridable(self) -> None:
-        """#ifeq still works as expansion-time builtin even when 'shadowed'."""
+        """Attempting to shadow #ifeq is an error."""
         source = (
             "[#set name=ifeq : NOPE]\n"
             "[#ifeq lhs=a rhs=a : [#p : match]]\n"
         )
         doc = parse(source)
-        result = evaluate(doc)
-        assert len(result.children) == 1
-        assert _body_text(result.children[0]) == "match"
+        with pytest.raises(EvalError, match="cannot override"):
+            evaluate(doc)
 
     def test_override_trailing_dot(self) -> None:
         """Trailing dot works with user macro that shadows a render-time builtin."""

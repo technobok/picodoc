@@ -208,6 +208,14 @@ def _collect_definitions(
                 ctx.source,
                 filename=ctx.filename,
             )
+        builtin = BUILTINS.get(resolve_name(def_name))
+        if builtin is not None and builtin.expansion_time:
+            raise EvalError(
+                f"cannot override expansion-time builtin '#{def_name}'",
+                child.span,
+                ctx.source,
+                filename=ctx.filename,
+            )
         if def_name in ctx.definitions:
             raise EvalError(
                 f"duplicate definition: {def_name}",
@@ -321,18 +329,14 @@ def _expand_macro(
 
     # User macro expansion — allow shadowing render-time builtins
     if not force_builtin and name in ctx.definitions:
-        builtin = BUILTINS.get(name)
-        if builtin is None or not builtin.expansion_time:
-            return _expand_user_macro(node, name, ctx)
+        return _expand_user_macro(node, name, ctx)
 
     # Trailing dot: #version. → expand "version" + Text(".")
     if name.endswith(".") and name[:-1] in ctx.definitions:
         base = name[:-1]
-        builtin = BUILTINS.get(base)
-        if builtin is None or not builtin.expansion_time:
-            expanded = _expand_user_macro(node, base, ctx)
-            expanded.append(Text(".", node.span))
-            return expanded
+        expanded = _expand_user_macro(node, base, ctx)
+        expanded.append(Text(".", node.span))
+        return expanded
 
     # External filter dispatch
     if ctx.filters is not None:
