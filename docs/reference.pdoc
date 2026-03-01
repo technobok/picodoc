@@ -1165,7 +1165,7 @@ Values can be set from three sources (listed in ascending precedence):
     [#~"picodoc.toml"]]
   [#* : [#b : CLI arguments] : using [#~"-e name=value"] (repeatable)]
   [#* : [#b : Document-level \#set] : for example
-    \[#set name\=env.mode \: draft\]]
+    [#~"[#set name=env.mode : draft]"]]
 ]
 
 Document-level definitions have the highest precedence. The document author
