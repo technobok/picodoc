@@ -90,18 +90,10 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def parse_env_arg(s: str) -> tuple[str, str]:
+def parse_kv_arg(label: str, s: str) -> tuple[str, str]:
     """Parse a NAME=VALUE string into (name, value)."""
     if "=" not in s:
-        raise argparse.ArgumentTypeError(f"invalid env format (expected NAME=VALUE): {s}")
-    name, _, value = s.partition("=")
-    return name, value
-
-
-def parse_meta_arg(s: str) -> tuple[str, str]:
-    """Parse a NAME=VALUE string into (name, value) for meta tags."""
-    if "=" not in s:
-        raise argparse.ArgumentTypeError(f"invalid meta format (expected NAME=VALUE): {s}")
+        raise argparse.ArgumentTypeError(f"invalid {label} format (expected NAME=VALUE): {s}")
     name, _, value = s.partition("=")
     return name, value
 
@@ -137,7 +129,7 @@ def resolve_options(args: argparse.Namespace) -> CliOptions:
         for k, v in cfg_env.items():
             env[str(k)] = str(v)
     for raw in args.env:
-        name, value = parse_env_arg(raw)
+        name, value = parse_kv_arg("env", raw)
         env[name] = value
 
     # CSS files: config < CLI
@@ -165,7 +157,7 @@ def resolve_options(args: argparse.Namespace) -> CliOptions:
         for k, v in cfg_meta.items():
             meta_tags.append((str(k), str(v)))
     for raw in args.meta:
-        meta_tags.append(parse_meta_arg(raw))
+        meta_tags.append(parse_kv_arg("meta", raw))
 
     # Filter paths: config < CLI
     filter_paths: list[Path] = []

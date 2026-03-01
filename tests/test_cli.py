@@ -11,8 +11,7 @@ from picodoc.cli import (
     build_parser,
     compile_file,
     main,
-    parse_env_arg,
-    parse_meta_arg,
+    parse_kv_arg,
 )
 
 # ---------------------------------------------------------------------------
@@ -21,32 +20,32 @@ from picodoc.cli import (
 
 
 class TestParseHelpers:
-    def test_parse_env_arg_simple(self) -> None:
-        assert parse_env_arg("mode=draft") == ("mode", "draft")
+    def test_parse_kv_arg_simple(self) -> None:
+        assert parse_kv_arg("env", "mode=draft") == ("mode", "draft")
 
-    def test_parse_env_arg_with_equals_in_value(self) -> None:
-        assert parse_env_arg("x=a=b") == ("x", "a=b")
+    def test_parse_kv_arg_with_equals_in_value(self) -> None:
+        assert parse_kv_arg("env", "x=a=b") == ("x", "a=b")
 
-    def test_parse_env_arg_empty_value(self) -> None:
-        assert parse_env_arg("key=") == ("key", "")
+    def test_parse_kv_arg_empty_value(self) -> None:
+        assert parse_kv_arg("env", "key=") == ("key", "")
 
-    def test_parse_env_arg_no_equals_raises(self) -> None:
+    def test_parse_kv_arg_no_equals_raises(self) -> None:
         import argparse
 
         with pytest.raises(argparse.ArgumentTypeError):
-            parse_env_arg("noequals")
+            parse_kv_arg("env", "noequals")
 
-    def test_parse_meta_arg_simple(self) -> None:
-        assert parse_meta_arg("viewport=width=device-width") == (
+    def test_parse_kv_arg_meta(self) -> None:
+        assert parse_kv_arg("meta", "viewport=width=device-width") == (
             "viewport",
             "width=device-width",
         )
 
-    def test_parse_meta_arg_no_equals_raises(self) -> None:
+    def test_parse_kv_arg_meta_no_equals_raises(self) -> None:
         import argparse
 
         with pytest.raises(argparse.ArgumentTypeError):
-            parse_meta_arg("noequals")
+            parse_kv_arg("meta", "noequals")
 
 
 # ---------------------------------------------------------------------------

@@ -220,23 +220,23 @@ optional dependency. The CSS class framework is already partially in place
 (section 13 of `picodoc.css` has Pygments-compatible short class selectors
 scoped to `pre.rouge` — these need their selector prefix updated).
 
-- [ ] Add Pygments as optional dependency: `picodoc[highlight]` in pyproject.toml
-- [ ] Implement graceful feature detection (`_has_pygments()` helper)
-- [ ] Modify `_render_block_code` in `render.py`: when a `language` argument is
+- [x] Add Pygments as optional dependency: `picodoc[highlight]` in pyproject.toml
+- [x] Implement graceful feature detection (`_has_pygments()` helper)
+- [x] Modify `_render_block_code` in `render.py`: when a `language` argument is
       present and Pygments is available, use `HtmlFormatter(nowrap=True)` to
       produce bare `<span class="...">` fragments inside picodoc's own
       `<pre><code>` wrapper. Pygments handles HTML escaping, so avoid
       double-escaping. Fall back to plain escaped output when Pygments is
       absent or the language is unrecognised
-- [ ] Update CSS selectors in section 13 of `picodoc.css` from `pre.rouge .xx`
+- [x] Update CSS selectors in section 13 of `picodoc.css` from `pre.rouge .xx`
       to match the actual rendered output (e.g. `pre code .k`, `pre code .s`)
-- [ ] Ship a default syntax theme CSS file (generated via
+- [x] Ship a default syntax theme CSS file (generated via
       `HtmlFormatter(style="...").get_style_defs(...)`)
-- [ ] Add `doc.highlight` document-level directive to control highlighting
+- [x] Add `doc.highlight` document-level directive to control highlighting
       behaviour (enable/disable, default language, theme)
-- [ ] Test suite: highlighted output, fallback when Pygments absent, unknown
+- [x] Test suite: highlighted output, fallback when Pygments absent, unknown
       language handling
-- [ ] Update reference documentation
+- [x] Update reference documentation
 
 **Exit criteria:** Code blocks with a `language` argument render with
 syntax-highlighted spans when Pygments is installed. Documents render
@@ -276,7 +276,7 @@ rendered documentation to a public URL.
 - [ ] Remove dead CSS in section 13 of `picodoc.css` (`pre.rouge` selectors
       that match nothing in current output) — or update them as part of
       Phase 9
-- [ ] Consolidate `parse_env_arg()` and `parse_meta_arg()` in `cli.py` into a
+- [x] Consolidate `parse_env_arg()` and `parse_meta_arg()` in `cli.py` into a
       single `parse_kv_arg(label, s)` helper (they are identical)
 - [ ] Review `_escape_attr` vs `_escape_html` in `render.py` — currently
       identical; consider merging or differentiating (e.g. escape single

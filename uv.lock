@@ -105,6 +105,9 @@ version = "0.1.0"
 source = { editable = "." }
 
 [package.optional-dependencies]
+highlighting = [
+    { name = "pygments" },
+]
 lsp = [
     { name = "pygls" },
 ]
@@ -118,8 +121,11 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pygls", marker = "extra == 'lsp'", specifier = ">=2.0" }]
-provides-extras = ["lsp"]
+requires-dist = [
+    { name = "pygls", marker = "extra == 'lsp'", specifier = ">=2.0" },
+    { name = "pygments", marker = "extra == 'highlighting'", specifier = ">=2.0" },
+]
+provides-extras = ["lsp", "highlighting"]
 
 [package.metadata.requires-dev]
 dev = [
