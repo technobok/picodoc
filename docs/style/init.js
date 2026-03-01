@@ -47,10 +47,6 @@
           }
         });
 
-        window.addEventListener('load', () => {
-          if (localStorage.getItem('theme') === 'dark') {
-            toggleCheckbox.checked = true;
-            document.documentElement.classList.add('dark-mode');
-          }
-        });
+        // Sync checkbox to the dark-mode class already applied by the IIFE
+        toggleCheckbox.checked = document.documentElement.classList.contains('dark-mode');
     });
