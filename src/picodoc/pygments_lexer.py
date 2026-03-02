@@ -10,7 +10,10 @@ class PicoDocLexer(RegexLexer):
     tokens = {
         "root": [
             (r"#//.*$", Comment.Single),
-            (r'"{3,}', String, "rawstring"),
+            (r'""""""', String, "rawstring6"),
+            (r'"""""', String, "rawstring5"),
+            (r'""""', String, "rawstring4"),
+            (r'"""', String, "rawstring3"),
             (r'"', String, "string"),
             (r'\\(?:[#\[\]\\"]|x[0-9a-fA-F]{2}|U[0-9a-fA-F]{8}|[nt])', Escape),
             (r"\[#[\w.*!@~-]+", Keyword, "bracket_macro"),
@@ -26,10 +29,25 @@ class PicoDocLexer(RegexLexer):
             (r'"', String, "#pop"),
             (r'[^"\\]+', String),
         ],
-        "rawstring": [
-            (r'"{3,}', String, "#pop"),
+        "rawstring3": [
+            (r'"""', String, "#pop"),
             (r'[^"]+', String),
-            (r'"', String),
+            (r'"{1,2}', String),
+        ],
+        "rawstring4": [
+            (r'""""', String, "#pop"),
+            (r'[^"]+', String),
+            (r'"{1,3}', String),
+        ],
+        "rawstring5": [
+            (r'"""""', String, "#pop"),
+            (r'[^"]+', String),
+            (r'"{1,4}', String),
+        ],
+        "rawstring6": [
+            (r'""""""', String, "#pop"),
+            (r'[^"]+', String),
+            (r'"{1,5}', String),
         ],
         "bracket_macro": [
             (r"", Text, "#pop"),
