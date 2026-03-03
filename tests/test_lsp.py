@@ -288,7 +288,7 @@ class TestHover:
 
         assert result is not None
         assert "to" in result.contents.value
-        assert "required" in result.contents.value
+        assert "optional" in result.contents.value
 
     def test_hover_alias(self, lsp_env) -> None:
         ls, _, put = lsp_env

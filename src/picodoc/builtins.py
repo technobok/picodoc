@@ -68,7 +68,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     # Inline
     d("b", has_body=True)
     d("i", has_body=True)
-    d("link", (ParamDecl("to", True),), has_body=True)
+    d("link", (ParamDecl("to", False),), has_body=True)
 
     # Code / literal
     d("code", (ParamDecl("language", False),), has_body=True)

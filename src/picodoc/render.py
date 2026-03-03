@@ -471,7 +471,13 @@ def _render_node(node: MacroCall, state: _RenderState) -> str:
 
 
 def _render_link(node: MacroCall, state: _RenderState) -> str:
+    to_from_body = False
     to = _get_arg_text(node, "to") or ""
+    if not to:
+        if node.body is None:
+            raise RenderError("missing link target: provide 'to' argument or body")
+        to = _body_text(node.body)
+        to_from_body = True
 
     # Determine href: if no "://" and no "/", treat as fragment reference
     is_fragment = "://" not in to and "/" not in to
@@ -480,7 +486,7 @@ def _render_link(node: MacroCall, state: _RenderState) -> str:
     if is_fragment and to:
         if to not in state.heading_texts:
             raise RenderError(f"broken internal link: #{to} — no heading with this anchor exists")
-        if node.body is None:
+        if node.body is None or to_from_body:
             body_html = _escape_html(state.heading_texts[to])
         else:
             body_html = _render_body(node.body, state)

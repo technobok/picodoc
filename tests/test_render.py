@@ -171,6 +171,36 @@ class TestLink:
         result = render(_doc(_call("p", body=_body(link))))
         assert '<a href="https://example.com">Click</a>' in result
 
+    def test_body_as_to_external(self) -> None:
+        link = _call("link", (), _body(_text("https://example.com")))
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="https://example.com">https://example.com</a>' in result
+
+    def test_body_as_to_fragment(self) -> None:
+        link = _call("link", (), _body(_text("section")))
+        result = render(
+            _doc(
+                _call("h2", body=_body(_text("Section"))),
+                _call("p", body=_body(link)),
+            )
+        )
+        assert '<a href="#section">Section</a>' in result
+
+    def test_no_to_no_body_error(self) -> None:
+        import pytest
+
+        from picodoc.errors import RenderError
+
+        link = _call("link")
+        doc = _doc(_call("p", body=_body(link)))
+        with pytest.raises(RenderError, match="missing link target"):
+            render(doc)
+
+    def test_alias_body_as_to(self) -> None:
+        link = _call(">", (), _body(_text("https://example.com")))
+        result = render(_doc(_call("p", body=_body(link))))
+        assert '<a href="https://example.com">https://example.com</a>' in result
+
 
 class TestCode:
     def test_block_with_body(self) -> None:
@@ -885,3 +915,21 @@ class TestSmartInternalLinks:
         doc = _doc(_call("p", body=_body(link)))
         result = render(doc)
         assert '<a href="page/about">page/about</a>' in result
+
+    def test_body_as_to_fragment(self) -> None:
+        """Body text used as fragment target gets heading text replacement."""
+        link = _call("link", (), _body(_text("section1")))
+        doc = _doc(
+            _call("h2", body=_body(_text("Section1"))),
+            _call("p", body=_body(link)),
+        )
+        result = render(doc)
+        assert '<a href="#section1">Section1</a>' in result
+
+    def test_body_as_to_fragment_compile(self, compile_source) -> None:
+        """Integration test: body-as-to fragment via compile_source."""
+        result = compile_source(
+            "#--: Section\n\n"
+            "#p: [#link : section]\n"
+        )
+        assert '<a href="#section">Section</a>' in result
