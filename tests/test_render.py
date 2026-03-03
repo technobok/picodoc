@@ -195,6 +195,10 @@ class TestCode:
         result = render(_doc(code))
         assert "<pre><code>&lt;div&gt;</code></pre>" in result
 
+    def test_bracketed_no_leading_newline(self, compile_source) -> None:
+        result = compile_source("[#code:\nint x;\n]\n")
+        assert "<pre><code>int x;\n</code></pre>" in result
+
 
 class TestLiteral:
     def test_raw_passthrough(self) -> None:

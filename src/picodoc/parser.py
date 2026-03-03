@@ -316,6 +316,10 @@ class Parser:
         if self._at(TokenType.RAW_STRING):
             return self._parse_raw_string()
 
+        # Skip leading newline (matches unbracketed body behavior)
+        if self._at(TokenType.NEWLINE):
+            self._advance()
+
         # Inline content to matching ]
         start = self._peek().span.start
         children = self._parse_inline_content(_STOP_RBRACKET_EOF)
