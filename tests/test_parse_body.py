@@ -141,6 +141,25 @@ class TestStringBody:
         assert call.body.parts == ()
 
 
+class TestBodyDedent:
+    def test_paragraph_body_dedent(self, parse_source):
+        doc = parse_source("#p:\n    line1\n    line2\n\n")
+        assert body_text(doc.children[0]) == "line1\nline2"
+
+    def test_bracket_body_dedent(self, parse_source):
+        doc = parse_source("[#p:\n    line1\n    line2\n]\n")
+        # Trailing \n before ] is part of body text
+        assert body_text(doc.children[0]) == "line1\nline2\n"
+
+    def test_code_block_relative_indent(self, parse_source):
+        doc = parse_source("#code:\n    def f():\n        pass\n\n")
+        assert body_text(doc.children[0]) == "def f():\n    pass"
+
+    def test_inline_body_no_dedent(self, parse_source):
+        doc = parse_source("#p: Hello\n")
+        assert body_text(doc.children[0]) == "Hello"
+
+
 class TestBodySpans:
     def test_inline_body_span(self, parse_source):
         doc = parse_source("#doc.title: Hello\n")

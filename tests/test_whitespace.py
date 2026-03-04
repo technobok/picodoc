@@ -1,6 +1,8 @@
-"""Test strip_string_whitespace() in isolation."""
+"""Test strip_string_whitespace() and dedent_body_children() in isolation."""
 
-from picodoc.strings import strip_string_whitespace
+from picodoc.ast import Escape, Text
+from picodoc.strings import dedent_body_children, strip_string_whitespace
+from picodoc.tokens import Position, Span
 
 
 class TestNoStripping:
@@ -80,3 +82,61 @@ class TestMixedScenarios:
         """Just blank first + blank last line."""
         result = strip_string_whitespace("\n    ")
         assert result == ""
+
+
+# --- dedent_body_children tests ---
+
+_DUMMY_SPAN = Span(Position(1, 1, 0), Position(1, 1, 0))
+
+
+def _text(value: str) -> Text:
+    return Text(value, _DUMMY_SPAN)
+
+
+def _escape(value: str) -> Escape:
+    return Escape(value, _DUMMY_SPAN)
+
+
+class TestDedentBodyChildren:
+    def test_basic(self):
+        result = dedent_body_children((_text("    hello\n    world"),))
+        assert result[0].value == "hello\nworld"
+
+    def test_relative_indent_preserved(self):
+        result = dedent_body_children((_text("    hello\n        world"),))
+        assert result[0].value == "hello\n    world"
+
+    def test_no_common_prefix(self):
+        result = dedent_body_children((_text("hello\nworld"),))
+        assert result[0].value == "hello\nworld"
+
+    def test_blank_interior_lines(self):
+        result = dedent_body_children((_text("    hello\n\n    world"),))
+        assert result[0].value == "hello\n\nworld"
+
+    def test_single_line(self):
+        result = dedent_body_children((_text("    hello"),))
+        assert result[0].value == "hello"
+
+    def test_tabs(self):
+        result = dedent_body_children((_text("\thello\n\tworld"),))
+        assert result[0].value == "hello\nworld"
+
+    def test_no_text_nodes(self):
+        result = dedent_body_children((_escape("#"),))
+        assert result[0].value == "#"
+
+    def test_mixed_content(self):
+        children = (_text("    Hello "), _escape("#"), _text(" world\n    More text"))
+        result = dedent_body_children(children)
+        assert result[0].value == "Hello "
+        assert result[1].value == "#"
+        assert result[2].value == " world\nMore text"
+
+    def test_empty(self):
+        result = dedent_body_children(())
+        assert result == ()
+
+    def test_whitespace_only_lines(self):
+        result = dedent_body_children((_text("    hello\n  \n    world"),))
+        assert result[0].value == "hello\n  \nworld"

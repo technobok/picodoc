@@ -17,6 +17,7 @@ from picodoc.ast import (
 )
 from picodoc.errors import ParseError
 from picodoc.lexer import tokenize
+from picodoc.strings import dedent_body_children
 from picodoc.tokens import Position, Span, Token, TokenType
 
 
@@ -324,8 +325,9 @@ class Parser:
         start = self._peek().span.start
         children = self._parse_inline_content(_STOP_RBRACKET_EOF)
         children = _coalesce_text(children)
-        end = children[-1].span.end if children else start
-        return Body(tuple(children), Span(start, end))
+        dedented = dedent_body_children(tuple(children))
+        end = dedented[-1].span.end if dedented else start
+        return Body(dedented, Span(start, end))
 
     def _parse_string_body(self) -> InterpString | RawString:
         if self._at(TokenType.STRING_START):
@@ -352,8 +354,9 @@ class Parser:
                 break
 
         children = _coalesce_text(children)
-        end = children[-1].span.end if children else start
-        return Body(tuple(children), Span(start, end))
+        dedented = dedent_body_children(tuple(children))
+        end = dedented[-1].span.end if dedented else start
+        return Body(dedented, Span(start, end))
 
     # ------------------------------------------------------------------
     # Inline content
