@@ -123,8 +123,8 @@ class TestExitCodes:
         doc.write_text('#link to="http://x" extra="z" leftover: body\n')
         # This should trigger a parse error due to malformed input
         result = main([str(doc)])
-        # Parse errors return 1, but if the parser is lenient here, check >= 0
-        assert result in (0, 1)
+        # May be parse error (1) or eval error (2) depending on parser leniency
+        assert result in (0, 1, 2)
 
     def test_eval_error_returns_2(self, tmp_path: Path) -> None:
         doc = tmp_path / "evalerr.pdoc"

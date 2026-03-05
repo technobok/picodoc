@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from picodoc.ast import Paragraph
 from picodoc.errors import ParseError
 from picodoc.parser import parse
 
@@ -37,13 +38,16 @@ class TestMissingParts:
 
 
 class TestTrailingText:
-    def test_text_after_macro_block(self):
-        with pytest.raises(ParseError, match="unexpected text after macro call"):
-            parse("#hr extra\n")
+    def test_macro_with_trailing_text_is_paragraph(self):
+        """Macro with trailing text falls back to paragraph parsing."""
+        doc = parse("#hr extra\n")
+        assert len(doc.children) == 1
+        assert isinstance(doc.children[0], Paragraph)
 
-    def test_text_after_bracketed_block(self):
-        with pytest.raises(ParseError, match="unexpected text after macro call"):
-            parse("[#set name=x] extra\n")
+    def test_bracketed_with_trailing_text_is_paragraph(self):
+        doc = parse("[#set name=x] extra\n")
+        assert len(doc.children) == 1
+        assert isinstance(doc.children[0], Paragraph)
 
 
 class TestBracketedErrors:

@@ -104,23 +104,35 @@ class Parser:
 
         return self._parse_paragraph()
 
-    def _parse_macro_block(self) -> MacroCall:
+    def _parse_macro_block(self) -> MacroCall | Paragraph:
         if self._at(TokenType.LBRACKET):
             call = self._parse_bracketed_call()
         else:
             call = self._parse_unbracketed_call()
 
-        # Skip optional trailing whitespace
         self._skip_ws()
 
-        # Expect end of line or end of file
-        if not self._at(TokenType.NEWLINE, TokenType.EOF):
-            raise self._error("unexpected text after macro call", self._peek().span)
+        if self._at(TokenType.NEWLINE, TokenType.EOF):
+            if self._at(TokenType.NEWLINE):
+                self._advance()
+            return call
 
-        if self._at(TokenType.NEWLINE):
-            self._advance()
+        # Trailing text — the call is inline; build a paragraph around it.
+        children: list[Text | Escape | MacroCall] = [call]
+        start = call.span.start
 
-        return call
+        children.extend(self._parse_inline_content(_STOP_NEWLINE_EOF))
+
+        while self._at(TokenType.NEWLINE):
+            nl_tok = self._advance()
+            if self._at_eof() or self._is_blank_line():
+                break
+            children.append(Text("\n", nl_tok.span))
+            children.extend(self._parse_inline_content(_STOP_NEWLINE_EOF))
+
+        children = _coalesce_text(children)
+        end = children[-1].span.end if children else start
+        return Paragraph(tuple(children), Span(start, end))
 
     def _parse_paragraph(self) -> Paragraph:
         children: list[Text | Escape | MacroCall] = []
