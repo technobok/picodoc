@@ -126,3 +126,27 @@ class TestArgsWithBody:
         doc = parse_source("#code language=python : print()\n")
         call = doc.children[0]
         assert_call(call, "code", num_args=1, has_body=True, bracketed=False)
+
+
+class TestArgsAcrossNewlines:
+    def test_args_across_newlines(self, parse_source):
+        doc = parse_source("[#set name=foo\nbody=?]\n")
+        call = doc.children[0]
+        assert_call(call, "set", num_args=2, bracketed=True)
+        assert isinstance(call.args[0].value, Text)
+        assert isinstance(call.args[1].value, RequiredMarker)
+
+    def test_args_across_newlines_with_body(self, parse_source):
+        doc = parse_source("[#set name=greeting\ntarget=?\n: Hello #target!]\n")
+        call = doc.children[0]
+        assert_call(call, "set", num_args=2, has_body=True, bracketed=True)
+
+    def test_args_across_newlines_indented(self, parse_source):
+        doc = parse_source("[#set\n  name=foo\n  body=?\n  : text]\n")
+        call = doc.children[0]
+        assert_call(call, "set", num_args=2, has_body=True, bracketed=True)
+
+    def test_bare_macro_newline_before_close(self, parse_source):
+        doc = parse_source("[#hr\n]\n")
+        call = doc.children[0]
+        assert_call(call, "hr", bracketed=True)

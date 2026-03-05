@@ -238,8 +238,15 @@ class Parser:
 
     def _parse_named_args(self) -> list[NamedArg]:
         args = [self._parse_named_arg()]
-        while self._at(TokenType.WS):
-            self._advance()  # consume WS
+        while True:
+            if self._at(TokenType.WS):
+                self._advance()  # consume WS
+            elif self._bracket_depth > 0 and self._at(TokenType.NEWLINE):
+                self._advance()  # consume NEWLINE inside brackets
+                while self._at(TokenType.WS, TokenType.NEWLINE):
+                    self._advance()
+            else:
+                break
             if self._is_named_arg_start():
                 args.append(self._parse_named_arg())
             else:
