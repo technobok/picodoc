@@ -200,12 +200,17 @@ class Parser:
             body = self._parse_string_body()
         elif self._at(TokenType.COLON):
             body = self._parse_colon_bracket_body()
-        elif self._at(TokenType.WS):
-            self._advance()  # consume WS
+        elif self._at(TokenType.WS, TokenType.NEWLINE):
+            self._advance()  # consume WS or NEWLINE
+            # After a newline, skip further whitespace/newlines
+            while self._at(TokenType.WS, TokenType.NEWLINE):
+                self._advance()
 
             if self._is_named_arg_start():
                 args = tuple(self._parse_named_args())
-                # After args, WS consumed by arg loop — check for body
+                # Skip whitespace/newlines between args and body
+                while self._at(TokenType.WS, TokenType.NEWLINE):
+                    self._advance()
                 if self._at(TokenType.COLON):
                     body = self._parse_colon_bracket_body()
                 elif self._at(TokenType.STRING_START, TokenType.RAW_STRING):

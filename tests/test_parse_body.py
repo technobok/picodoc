@@ -160,6 +160,26 @@ class TestBodyDedent:
         assert body_text(doc.children[0]) == "Hello"
 
 
+class TestBracketedStringBodyNextLine:
+    def test_interp_string_next_line(self, parse_source):
+        doc = parse_source('[#p\n"hello"]\n')
+        call = doc.children[0]
+        assert isinstance(call.body, InterpString)
+        assert call.body.parts[0].value == "hello"
+
+    def test_raw_string_next_line(self, parse_source):
+        doc = parse_source('[#p\n"""raw hello"""]\n')
+        call = doc.children[0]
+        assert isinstance(call.body, RawString)
+        assert call.body.value == "raw hello"
+
+    def test_args_then_string_next_line(self, parse_source):
+        doc = parse_source('[#code language=python\n"""def f(): pass"""]\n')
+        call = doc.children[0]
+        assert isinstance(call.body, RawString)
+        assert call.body.value == "def f(): pass"
+
+
 class TestBodySpans:
     def test_inline_body_span(self, parse_source):
         doc = parse_source("#doc.title: Hello\n")
