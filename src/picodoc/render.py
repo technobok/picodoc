@@ -433,6 +433,10 @@ def _render_node(node: MacroCall, state: _RenderState) -> str:
             return f"<strong>{_render_body(node.body, state)}</strong>"
         case "i":
             return f"<em>{_render_body(node.body, state)}</em>"
+        case "*_":
+            return f"<strong><em>{_render_body(node.body, state)}</em></strong>"
+        case "_*":
+            return f"<em><strong>{_render_body(node.body, state)}</strong></em>"
         case "link":
             return _render_link(node, state)
         case "code":

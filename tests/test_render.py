@@ -135,6 +135,16 @@ class TestItalic:
         assert "<em>italic</em>" in result
 
 
+class TestBoldItalic:
+    def test_strong_em(self) -> None:
+        result = render(_doc(_call("p", body=_body(_call("*_", body=_body(_text("both")))))))
+        assert "<strong><em>both</em></strong>" in result
+
+    def test_em_strong(self) -> None:
+        result = render(_doc(_call("p", body=_body(_call("_*", body=_body(_text("both")))))))
+        assert "<em><strong>both</strong></em>" in result
+
+
 class TestLink:
     def test_with_body(self) -> None:
         args = (_iarg("to", "https://example.com"),)
