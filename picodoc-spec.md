@@ -323,7 +323,7 @@
 ## Lists
 
 - unordered lists use #ul, ordered lists use #ol
-- list items use #* (alias #li)
+- list items use #* (also #li)
 - list macros validate at evaluation time that their body contains only
   list item elements
 - nested lists are expressed by nesting #ul/#ol inside a bracketed #* call
@@ -469,9 +469,9 @@ Examples:
 
 #title: Title to end of line
 
-#-: Title using dash alias
+#-: Title using dash form
 
-#--: Section heading using dash alias
+#--: Section heading
 
 this is #**"bold this"
 

@@ -29,7 +29,7 @@ from lsprotocol.types import (
 from pygls.lsp.server import LanguageServer
 
 from picodoc.ast import Document, MacroCall, Paragraph, RequiredMarker
-from picodoc.builtins import ALIASES, BUILTINS, resolve_name
+from picodoc.builtins import ALTERNATES, BUILTINS, resolve_name
 from picodoc.errors import EvalError, LexError, ParseError
 from picodoc.eval import evaluate
 from picodoc.parser import parse
@@ -159,11 +159,11 @@ def _format_builtin_hover(name: str) -> str:
     defn = BUILTINS[name]
     lines: list[str] = [f"**#{defn.name}** (builtin)"]
 
-    # Show aliases
-    aliases = [alias for alias, canonical in ALIASES.items() if canonical == name]
-    if aliases:
-        alias_str = ", ".join(f"`#{a}`" for a in sorted(aliases))
-        lines.append(f"\nAliases: {alias_str}")
+    # Show alternate forms
+    alts = [alt for alt, canonical in ALTERNATES.items() if canonical == name]
+    if alts:
+        alt_str = ", ".join(f"`#{a}`" for a in sorted(alts))
+        lines.append(f"\nAlso: {alt_str}")
 
     # Parameters
     if defn.params:
@@ -397,13 +397,13 @@ def completion(ls: LanguageServer, params: TextDocumentPositionParams) -> Comple
             )
         )
 
-    # Aliases
-    for alias, canonical in sorted(ALIASES.items()):
+    # Alternate forms
+    for alt, canonical in sorted(ALTERNATES.items()):
         items.append(
             CompletionItem(
-                label=f"#{alias}",
+                label=f"#{alt}",
                 kind=CompletionItemKind.Reference,
-                detail=f"alias for #{canonical}",
+                detail=f"same as #{canonical}",
             )
         )
 

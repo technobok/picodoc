@@ -290,15 +290,15 @@ class TestHover:
         assert "to" in result.contents.value
         assert "optional" in result.contents.value
 
-    def test_hover_alias(self, lsp_env) -> None:
+    def test_hover_alternate(self, lsp_env) -> None:
         ls, _, put = lsp_env
-        # #- is alias for #h1
-        put("#-: Hello")
+        # #h1 is alternate form of #-
+        put("#h1: Hello")
         params = _make_params(0, 0)
         result = hover(ls, params)
 
         assert result is not None
-        assert "#h1" in result.contents.value
+        assert "#-" in result.contents.value
         assert "builtin" in result.contents.value
 
     def test_hover_user_macro(self, lsp_env) -> None:
@@ -342,23 +342,23 @@ class TestCompletion:
 
         labels = [item.label for item in result.items]
         assert "#doc.title" in labels
-        assert "#b" in labels
+        assert "#**" in labels
         assert "#set" in labels
 
-    def test_includes_aliases(self, lsp_env) -> None:
+    def test_includes_alternates(self, lsp_env) -> None:
         ls, _, put = lsp_env
         put("#")
         params = _make_params(0, 1)
         result = completion(ls, params)
 
         labels = [item.label for item in result.items]
-        assert "#-" in labels  # alias for h1
-        assert "#**" in labels  # alias for b
+        assert "#h1" in labels  # alternate for #-
+        assert "#b" in labels  # alternate for #**
 
-        # Check alias detail
-        alias_items = [i for i in result.items if i.label == "#-"]
-        assert len(alias_items) == 1
-        assert "alias for #h1" in alias_items[0].detail
+        # Check alternate detail
+        alt_items = [i for i in result.items if i.label == "#h1"]
+        assert len(alt_items) == 1
+        assert "same as #-" in alt_items[0].detail
 
     def test_includes_user_macros(self, lsp_env) -> None:
         ls, _, put = lsp_env
@@ -379,7 +379,7 @@ class TestCompletion:
         params = _make_params(0, 1)
         result = completion(ls, params)
 
-        link_items = [i for i in result.items if i.label == "#link"]
+        link_items = [i for i in result.items if i.label == "#>"]
         assert len(link_items) == 1
         assert "to" in link_items[0].detail
         assert "builtin" in link_items[0].detail

@@ -21,12 +21,9 @@ messages, and a regular syntax inspired by (but simpler than) AsciiDoc.
 
 ```
 # Headings (colon introduces body content)
-#title: Document Title
-#- : Document Title (alias for #title / #h1)
-#h2: Section Heading
-#-- : Section Heading (alias for #h2)
-#h3: Subsection Heading
-#--- : Subsection Heading (alias for #h3)
+#- : Document Title (also #h1)
+#-- : Section Heading (also #h2)
+#--- : Subsection Heading (also #h3)
 
 # Inline formatting (string literal body, no colon needed)
 This is #**"bold text" and #__"italic text".
@@ -281,13 +278,14 @@ aims for the same expressive power with a more regular grammar.
 
 The following issues were identified during evaluation and have been resolved.
 
-**1. Heading aliases: `#-`, `#--`, `#---`**
+**1. Heading commands: `#-`, `#--`, `#---`**
 
 The original spec proposed `##` for h2 and `###` for h3, but `#` is not a
-valid identifier character. The aliases now use dashes: `#-` (h1/title), `#--`
+valid identifier character. The heading commands use dashes: `#-` (h1), `#--`
 (h2), `#---` (h3), and so on. These are regular macro identifiers composed
 of `-` characters, consistent with the grammar. The visual indentation of
-repeated characters pushes lower heading levels to the right. The clash with
+repeated characters pushes lower heading levels to the right. The longer
+forms `#h1`, `#h2`, etc. are available as alternate forms. The clash with
 `---` being a horizontal rule in other markup languages is accepted.
 
 **2. `\` removed from identifier characters.**

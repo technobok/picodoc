@@ -945,7 +945,7 @@ class TestNestingValidation:
             )
         )
         with pytest.raises(
-            EvalError, match=r"block element #h2 cannot appear inside inline element #b"
+            EvalError, match=r"block element #h2 cannot appear inside inline element #\*\*"
         ):
             evaluate(doc)
 
@@ -1028,14 +1028,14 @@ class TestBuiltinOverride:
         p = result.children[0]
         assert isinstance(p, MacroCall) and p.name == "p"
 
-    def test_builtin_prefix_alias(self) -> None:
-        """Alias resolution works through #builtin. prefix."""
+    def test_builtin_prefix_alternate(self) -> None:
+        """Alternate form resolution works through #builtin. prefix."""
         source = "[#builtin.** : bold]\n"
         doc = parse(source)
         result = evaluate(doc)
         assert len(result.children) == 1
         b = result.children[0]
-        assert isinstance(b, MacroCall) and b.name == "b"
+        assert isinstance(b, MacroCall) and b.name == "**"
 
     def test_builtin_prefix_unknown(self) -> None:
         """Error for unknown builtin via #builtin. prefix."""

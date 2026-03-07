@@ -20,8 +20,8 @@ from picodoc.builtins import WRAPPER_TAGS, resolve_name
 from picodoc.errors import RenderError
 from picodoc.tokens import Span
 
-_HEADING_NAMES: frozenset[str] = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
-_HEADING_LEVEL: dict[str, int] = {f"h{i}": i for i in range(1, 7)}
+_HEADING_NAMES: frozenset[str] = frozenset({"-", "--", "---", "----", "-----", "------"})
+_HEADING_LEVEL: dict[str, int] = {"-" * i: i for i in range(1, 7)}
 
 _SLUG_RE = re.compile(r"[^a-z0-9]")
 _COLLAPSE_RE = re.compile(r"-{2,}")
@@ -413,31 +413,31 @@ def _render_toc(state: _RenderState) -> str:
 def _render_node(node: MacroCall, state: _RenderState) -> str:
     name = resolve_name(node.name)
     match name:
-        case "h1":
+        case "-":
             return _render_heading(node, 1, state)
-        case "h2":
+        case "--":
             return _render_heading(node, 2, state)
-        case "h3":
+        case "---":
             return _render_heading(node, 3, state)
-        case "h4":
+        case "----":
             return _render_heading(node, 4, state)
-        case "h5":
+        case "-----":
             return _render_heading(node, 5, state)
-        case "h6":
+        case "------":
             return _render_heading(node, 6, state)
         case "p":
             return f"<p>{_render_body(node.body, state)}</p>"
         case "hr":
             return "<hr>"
-        case "b":
+        case "**":
             return f"<strong>{_render_body(node.body, state)}</strong>"
-        case "i":
+        case "__":
             return f"<em>{_render_body(node.body, state)}</em>"
         case "*_":
             return f"<strong><em>{_render_body(node.body, state)}</em></strong>"
         case "_*":
             return f"<em><strong>{_render_body(node.body, state)}</strong></em>"
-        case "link":
+        case ">":
             return _render_link(node, state)
         case "code":
             return _render_block_code(node, state)

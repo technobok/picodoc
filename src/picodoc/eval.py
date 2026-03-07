@@ -139,9 +139,9 @@ _NESTING_RULES: dict[str, set[str]] = {
 _INLINE_CONTEXT: frozenset[str] = frozenset(
     {
         "p",
-        "b",
-        "i",
-        "link",
+        "**",
+        "__",
+        ">",
         "~",
         "span",
         "literal",
@@ -306,7 +306,7 @@ def _expand_macro(
             return [Text(ctx.env[env_key], node.span)]
         return []
 
-    if name == "comment":
+    if name == "//":
         return []
 
     if name == "set":

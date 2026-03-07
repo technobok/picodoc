@@ -1,28 +1,28 @@
-"""Builtin macro registry — alias resolution and parameter declarations."""
+"""Builtin macro registry — name resolution and parameter declarations."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Alias map: alternate name -> canonical name
-ALIASES: dict[str, str] = {
-    "-": "h1",
-    "--": "h2",
-    "---": "h3",
-    "----": "h4",
-    "-----": "h5",
-    "------": "h6",
-    "//": "comment",
-    ">": "link",
-    "**": "b",
-    "__": "i",
+# Alternate forms: longer name -> canonical short form
+ALTERNATES: dict[str, str] = {
+    "h1": "-",
+    "h2": "--",
+    "h3": "---",
+    "h4": "----",
+    "h5": "-----",
+    "h6": "------",
+    "comment": "//",
+    "link": ">",
+    "b": "**",
+    "i": "__",
     "li": "*",
 }
 
 
 def resolve_name(name: str) -> str:
-    """Resolve an alias to its canonical name."""
-    return ALIASES.get(name, name)
+    """Resolve an alternate form to its canonical name."""
+    return ALTERNATES.get(name, name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,21 +56,21 @@ def _make_builtins() -> dict[str, BuiltinDef]:
         defs[name] = BuiltinDef(name, params, has_body, expansion_time)
 
     # Structural
-    d("h1", has_body=True)
-    d("h2", has_body=True)
-    d("h3", has_body=True)
-    d("h4", has_body=True)
-    d("h5", has_body=True)
-    d("h6", has_body=True)
+    d("-", has_body=True)
+    d("--", has_body=True)
+    d("---", has_body=True)
+    d("----", has_body=True)
+    d("-----", has_body=True)
+    d("------", has_body=True)
     d("p", has_body=True)
     d("hr")
 
     # Inline
-    d("b", has_body=True)
-    d("i", has_body=True)
+    d("**", has_body=True)
+    d("__", has_body=True)
     d("*_", has_body=True)
     d("_*", has_body=True)
-    d("link", (ParamDecl("to", False),), has_body=True)
+    d(">", (ParamDecl("to", False),), has_body=True)
 
     # Code / literal
     d("code", (ParamDecl("language", False),), has_body=True)
@@ -134,7 +134,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("doc.heading.anchor", (ParamDecl("level", False),))
 
     # Expansion-time
-    d("comment", has_body=True, expansion_time=True)
+    d("//", has_body=True, expansion_time=True)
     d("set", (ParamDecl("name", True),), has_body=True, expansion_time=True)
     d("ifeq", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True, expansion_time=True)
     d("ifne", (ParamDecl("lhs", True), ParamDecl("rhs", True)), has_body=True, expansion_time=True)
@@ -162,12 +162,12 @@ WRAPPER_TAGS: frozenset[str] = frozenset(
 
 BLOCK_MACROS: frozenset[str] = frozenset(
     {
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
+        "-",
+        "--",
+        "---",
+        "----",
+        "-----",
+        "------",
         "p",
         "hr",
         "ul",
