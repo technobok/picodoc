@@ -561,6 +561,37 @@ def _render_li(node: MacroCall, state: _RenderState) -> str:
     return f"<li>{inline_html}</li>"
 
 
+@dataclass(frozen=True, slots=True)
+class _ColSpec:
+    width: int
+    align: str  # "" = default, ">" = right, "<" = left
+
+
+def _parse_cols(cols_str: str | None) -> list[_ColSpec] | None:
+    """Parse a cols string like '1 >2 1' into a list of ColSpec."""
+    if not cols_str:
+        return None
+    specs: list[_ColSpec] = []
+    for token in cols_str.split():
+        if not token:
+            continue
+        align = ""
+        if token[0] in (">", "<"):
+            align = token[0]
+            token = token[1:]
+        width = int(token) if token else 1
+        if width == 0:
+            width = 1
+        specs.append(_ColSpec(width, align))
+    return specs if specs else None
+
+
+def _count_row_cells(node: MacroCall) -> int:
+    if not isinstance(node.body, Body):
+        return 0
+    return sum(1 for c in node.body.children if isinstance(c, MacroCall))
+
+
 def _is_header_row(node: MacroCall) -> bool:
     """Return True if every cell in a #tr is a #th."""
     if not isinstance(node.body, Body):
@@ -571,8 +602,35 @@ def _is_header_row(node: MacroCall) -> bool:
 
 def _render_table(node: MacroCall, state: _RenderState) -> str:
     parts: list[str] = ["<table>\n"]
+
+    # Parse optional cols spec
+    cols_str = _get_arg_text(node, "cols")
+    col_specs = _parse_cols(cols_str)
+
+    # Emit <colgroup> if cols specified
+    if col_specs:
+        total = sum(s.width for s in col_specs)
+        parts.append("<colgroup>\n")
+        for spec in col_specs:
+            pct = spec.width * 100 // total
+            if spec.align == ">":
+                parts.append(f'<col style="width: {pct}%; text-align: right">\n')
+            else:
+                parts.append(f'<col style="width: {pct}%">\n')
+        parts.append("</colgroup>\n")
+
     if isinstance(node.body, Body):
         rows = [c for c in node.body.children if isinstance(c, MacroCall)]
+
+        # Validate cell counts against cols
+        if col_specs:
+            for i, row in enumerate(rows):
+                cells = _count_row_cells(row)
+                if cells != len(col_specs):
+                    raise RenderError(
+                        f"cols specifies {len(col_specs)} columns but row {i + 1} has {cells} cells"
+                    )
+
         # Split leading header rows from body rows.
         head: list[MacroCall] = []
         body: list[MacroCall] = []

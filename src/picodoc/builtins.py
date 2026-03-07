@@ -83,7 +83,7 @@ def _make_builtins() -> dict[str, BuiltinDef]:
     d("*", has_body=True)
 
     # Tables
-    d("table", has_body=True, expansion_time=True)
+    d("table", (ParamDecl("cols", False),), has_body=True, expansion_time=True)
     d("tr", has_body=True)
     d("td", (ParamDecl("span", False),), has_body=True)
     d("th", (ParamDecl("span", False),), has_body=True)

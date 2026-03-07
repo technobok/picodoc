@@ -344,6 +344,15 @@ class TestTableExpansion:
         has_bold = any(isinstance(c, MacroCall) and c.name == "**" for c in cell2_children)
         assert has_bold
 
+    def test_pipe_table_preserves_cols(self) -> None:
+        source = '[#table cols="1 2 1" :\n  A | B | C\n  1 | 2 | 3\n]\n'
+        doc = parse(source)
+        result = evaluate(doc)
+
+        table = result.children[0]
+        assert isinstance(table, MacroCall) and table.name == "table"
+        assert any(arg.name == "cols" for arg in table.args)
+
 
 class TestParagraphWrapping:
     def test_paragraph_becomes_p(self) -> None:

@@ -300,6 +300,82 @@ class TestTables:
         assert '<th colspan="3">Header</th>' in result
 
 
+class TestTableCols:
+    def test_cols_basic(self) -> None:
+        th1 = _call("th", body=_body(_text("A")))
+        th2 = _call("th", body=_body(_text("B")))
+        th3 = _call("th", body=_body(_text("C")))
+        td1 = _call("td", body=_body(_text("1")))
+        td2 = _call("td", body=_body(_text("2")))
+        td3 = _call("td", body=_body(_text("3")))
+        tr1 = _call("tr", body=_body(th1, th2, th3))
+        tr2 = _call("tr", body=_body(td1, td2, td3))
+        table = _call("table", (_arg("cols", "1 2 1"),), _body(tr1, tr2))
+        result = render(_doc(table))
+        assert "<colgroup>" in result
+        assert "</colgroup>" in result
+        assert '<col style="width: 25%">' in result
+        assert '<col style="width: 50%">' in result
+
+    def test_cols_right_align(self) -> None:
+        th1 = _call("th", body=_body(_text("A")))
+        th2 = _call("th", body=_body(_text("B")))
+        th3 = _call("th", body=_body(_text("C")))
+        td1 = _call("td", body=_body(_text("1")))
+        td2 = _call("td", body=_body(_text("2")))
+        td3 = _call("td", body=_body(_text("3")))
+        tr1 = _call("tr", body=_body(th1, th2, th3))
+        tr2 = _call("tr", body=_body(td1, td2, td3))
+        table = _call("table", (_arg("cols", "1 >2 1"),), _body(tr1, tr2))
+        result = render(_doc(table))
+        assert '<col style="width: 50%; text-align: right">' in result
+
+    def test_cols_left_align_explicit(self) -> None:
+        th1 = _call("th", body=_body(_text("A")))
+        th2 = _call("th", body=_body(_text("B")))
+        td1 = _call("td", body=_body(_text("1")))
+        td2 = _call("td", body=_body(_text("2")))
+        tr1 = _call("tr", body=_body(th1, th2))
+        tr2 = _call("tr", body=_body(td1, td2))
+        table = _call("table", (_arg("cols", "<1 2"),), _body(tr1, tr2))
+        result = render(_doc(table))
+        assert '<col style="width: 33%">' in result
+        assert "text-align" not in result
+
+    def test_cols_mismatch_error(self) -> None:
+        import pytest
+
+        from picodoc.errors import RenderError
+
+        th1 = _call("th", body=_body(_text("A")))
+        th2 = _call("th", body=_body(_text("B")))
+        th3 = _call("th", body=_body(_text("C")))
+        tr1 = _call("tr", body=_body(th1, th2, th3))
+        table = _call("table", (_arg("cols", "1 2"),), _body(tr1))
+        with pytest.raises(RenderError, match="cols specifies 2 columns but row 1 has 3 cells"):
+            render(_doc(table))
+
+    def test_cols_explicit_form(self) -> None:
+        th1 = _call("th", body=_body(_text("Name")))
+        th2 = _call("th", body=_body(_text("Age")))
+        td1 = _call("td", body=_body(_text("Alice")))
+        td2 = _call("td", body=_body(_text("30")))
+        tr1 = _call("tr", body=_body(th1, th2))
+        tr2 = _call("tr", body=_body(td1, td2))
+        table = _call("table", (_arg("cols", "1 >1"),), _body(tr1, tr2))
+        result = render(_doc(table))
+        assert "<colgroup>" in result
+        assert '<col style="width: 50%">' in result
+        assert '<col style="width: 50%; text-align: right">' in result
+
+    def test_no_cols_unchanged(self) -> None:
+        th = _call("th", body=_body(_text("A")))
+        tr = _call("tr", body=_body(th))
+        table = _call("table", body=_body(tr))
+        result = render(_doc(table))
+        assert "<colgroup>" not in result
+
+
 class TestDocumentMeta:
     def test_meta_name(self) -> None:
         meta = _call(

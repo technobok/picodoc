@@ -833,7 +833,7 @@ def _expand_table(
         tr_nodes.append(MacroCall("tr", (), tr_body, True, node.span))
 
     table_body = Body(tuple(tr_nodes), node.span)
-    return [MacroCall("table", (), table_body, node.bracketed, node.span)]
+    return [MacroCall("table", node.args, table_body, node.bracketed, node.span)]
 
 
 def _parse_pipe_rows(
