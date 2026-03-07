@@ -9,7 +9,9 @@ class PicoDocLexer(RegexLexer):
 
     tokens = {
         "root": [
-            (r"#//.*$", Comment.Single),
+            (r"\[#(?:comment\b|//)", Comment, "bracket_comment"),
+            (r"#(?:comment\b|//)[ \t]*:[ \t]*$", Comment, "paragraph_comment"),
+            (r"#(?:comment\b|//).*$", Comment.Single),
             (r'""""""', String, "rawstring6"),
             (r'"""""', String, "rawstring5"),
             (r'""""', String, "rawstring4"),
@@ -51,5 +53,14 @@ class PicoDocLexer(RegexLexer):
         ],
         "bracket_macro": [
             (r"", Text, "#pop"),
+        ],
+        "bracket_comment": [
+            (r"\]", Comment, "#pop"),
+            (r"[^\]]+", Comment),
+        ],
+        "paragraph_comment": [
+            (r"\n[ \t]*\n", Text, "#pop"),
+            (r"\n", Comment),
+            (r"[^\n]+", Comment),
         ],
     }
