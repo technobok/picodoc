@@ -4,7 +4,11 @@ if exists('b:current_syntax')
 endif
 
 " --- Interpreted strings with escapes ---------------------------------------
-syn region picodocString start=/"/ skip=/\\"/ end=/"/ contains=picodocStringEscape
+" Only match in value positions (after = or : with optional whitespace,
+" or directly after a macro-name character for #name"body" shorthand).
+" A bare " in prose is now literal and should not start a string region.
+syn region picodocString start=/[=:]\s*\zs"/ skip=/\\"/ end=/"/ contains=picodocStringEscape
+syn region picodocString start=/[A-Za-z0-9!$%&*+\-/<>@^_~|.]\zs"/ skip=/\\"/ end=/"/ contains=picodocStringEscape
 syn match picodocStringEscape /\\[\\"\[\]nt]/ contained
 syn match picodocStringEscape /\\x\x\{2}/ contained
 syn match picodocStringEscape /\\U\x\{8}/ contained
@@ -18,7 +22,7 @@ syn region picodocRawString start=/"""""/ end=/"""""/
 syn region picodocRawString start=/""""""/ end=/""""""/
 
 " --- Prose escapes (outside strings) ----------------------------------------
-syn match picodocProseEscape /\\[\\#\[\]:=]/
+syn match picodocProseEscape /\\[\\#\[\]:="]/
 syn match picodocProseEscape /\\x\x\{2}/
 syn match picodocProseEscape /\\U\x\{8}/
 
