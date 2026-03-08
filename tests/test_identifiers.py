@@ -87,10 +87,12 @@ class TestIdentifierLexing:
         assert_types(tokens, [TokenType.IDENTIFIER, TokenType.RBRACKET])
 
     def test_identifier_ends_at_quote(self, lex):
-        tokens = lex('name"value"')
+        """In macro head context, identifier + quote opens a string body."""
+        tokens = lex('#name"value"')
         types = [t.type for t in tokens]
-        assert types[0] == TokenType.IDENTIFIER
-        assert types[1] == TokenType.STRING_START
+        assert types[0] == TokenType.HASH
+        assert types[1] == TokenType.IDENTIFIER
+        assert types[2] == TokenType.STRING_START
 
 
 class TestIdentifierPositions:

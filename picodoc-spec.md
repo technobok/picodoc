@@ -58,7 +58,7 @@
   character not on the valid list for the current context is a syntax error.
   There are two escape contexts with different valid sets:
 - in prose/body text, the valid escapes are:
-  \\ \# \[ \] \xHH \UHHHHHHHH
+  \\ \# \[ \] \" \xHH \UHHHHHHHH
 - in interpreted string literals, the valid escapes are:
   \\ \" \[ \n \t \xHH \UHHHHHHHH
   Note: \[ inside interpreted strings enters code mode (macro expansion),
@@ -134,6 +134,11 @@
 ## String literals
 
 - string literals may be used to express argument values in calls
+- string literals are only recognised in value positions: after '=' (argument
+  value), directly after a macro name with no whitespace (inline body), or
+  after ':' (colon body). A double quote in any other position is literal
+  prose text. Use \" in prose when a body must begin with a literal double
+  quote character
 - there are 2 forms of string literal: interpreted string literals and raw
   string literals
 - interpreted string literals start with a single double quote (") and end with

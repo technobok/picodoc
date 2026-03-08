@@ -169,7 +169,7 @@ class Lexer:
             as_string = False
             if self._tokens:
                 last = self._tokens[-1].type
-                if last in (TokenType.EQUALS, TokenType.IDENTIFIER):
+                if last == TokenType.EQUALS:
                     as_string = True
                 else:
                     for tok in reversed(self._tokens):
