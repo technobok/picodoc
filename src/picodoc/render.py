@@ -36,6 +36,8 @@ class _RenderState:
     heading_number_level: int = 0
     heading_anchor_level: int = 0
     heading_counters: list[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0])
+    col_aligns: list[_ColSpec] | None = None
+    col_idx: int = 0
 
 
 def _slugify(text: str, used: dict[str, int]) -> str:
@@ -607,17 +609,17 @@ def _render_table(node: MacroCall, state: _RenderState) -> str:
     cols_str = _get_arg_text(node, "cols")
     col_specs = _parse_cols(cols_str)
 
-    # Emit <colgroup> if cols specified
+    # Emit <colgroup> if cols specified (width only; alignment goes on cells)
     if col_specs:
         total = sum(s.width for s in col_specs)
         parts.append("<colgroup>\n")
         for spec in col_specs:
             pct = spec.width * 100 // total
-            if spec.align == ">":
-                parts.append(f'<col style="width: {pct}%; text-align: right">\n')
-            else:
-                parts.append(f'<col style="width: {pct}%">\n')
+            parts.append(f'<col style="width: {pct}%">\n')
         parts.append("</colgroup>\n")
+
+    # Store col specs so td/th renderers can apply alignment
+    state.col_aligns = col_specs
 
     if isinstance(node.body, Body):
         rows = [c for c in node.body.children if isinstance(c, MacroCall)]
@@ -651,12 +653,14 @@ def _render_table(node: MacroCall, state: _RenderState) -> str:
                 parts.append(_render_node(row, state))
                 parts.append("\n")
             parts.append("</tbody>\n")
+    state.col_aligns = None
     parts.append("</table>")
     return "".join(parts)
 
 
 def _render_tr(node: MacroCall, state: _RenderState) -> str:
     parts: list[str] = ["<tr>"]
+    state.col_idx = 0
     if isinstance(node.body, Body):
         for child in node.body.children:
             if isinstance(child, MacroCall):
@@ -665,20 +669,39 @@ def _render_tr(node: MacroCall, state: _RenderState) -> str:
     return "".join(parts)
 
 
+def _current_col_align(state: _RenderState) -> str:
+    """Get the alignment for the current column, or '' if none."""
+    if state.col_aligns and state.col_idx < len(state.col_aligns):
+        return state.col_aligns[state.col_idx].align
+    return ""
+
+
 def _render_td(node: MacroCall, state: _RenderState) -> str:
     span = _get_arg_text(node, "span")
+    align = _current_col_align(state)
+    state.col_idx += 1
     body_html = _render_body(node.body, state)
+    attrs = ""
     if span:
-        return f'<td colspan="{_escape_attr(span)}">{body_html}</td>'
-    return f"<td>{body_html}</td>"
+        attrs += f' colspan="{_escape_attr(span)}"'
+    if align == ">":
+        attrs += ' style="text-align: right"'
+    return f"<td{attrs}>{body_html}</td>"
 
 
 def _render_th(node: MacroCall, state: _RenderState) -> str:
     span = _get_arg_text(node, "span")
+    align = _current_col_align(state)
+    state.col_idx += 1
     body_html = _render_body(node.body, state)
+    # th defaults to center in browsers; use left to match td,
+    # or right if the cols spec says so.
+    text_align = "right" if align == ">" else "left"
+    attrs = ""
     if span:
-        return f'<th colspan="{_escape_attr(span)}">{body_html}</th>'
-    return f"<th>{body_html}</th>"
+        attrs += f' colspan="{_escape_attr(span)}"'
+    attrs += f' style="text-align: {text_align}"'
+    return f"<th{attrs}>{body_html}</th>"
 
 
 def _render_wrapper(node: MacroCall, tag: str, state: _RenderState, *, block: bool = True) -> str:

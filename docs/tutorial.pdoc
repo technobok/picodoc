@@ -430,12 +430,12 @@ When a string starts on the next line after the delimiter and the closing
 delimiter is on its own line, leading whitespace matching the closing
 delimiter's indentation is stripped from all lines:
 
-#code: """
+#code: """"
     [#code language=python : """
         def hello():
             print("world")
         """]
-    """
+    """"
 
 The four spaces before each line are stripped, producing clean output.
 

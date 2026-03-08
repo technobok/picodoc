@@ -285,7 +285,7 @@ class TestTables:
         tr1 = _call("tr", body=_body(th))
         tr2 = _call("tr", body=_body(td))
         result = render(_doc(_call("table", body=_body(tr1, tr2))))
-        assert "<table>\n<thead>\n<tr><th>Name</th></tr>\n</thead>\n<tbody>\n<tr><td>Alice</td></tr>\n</tbody>\n</table>" in result
+        assert '<table>\n<thead>\n<tr><th style="text-align: left">Name</th></tr>\n</thead>\n<tbody>\n<tr><td>Alice</td></tr>\n</tbody>\n</table>' in result
 
     def test_colspan(self) -> None:
         td = _call("td", (_arg("span", "2"),), _body(_text("Wide")))
@@ -297,7 +297,7 @@ class TestTables:
         th = _call("th", (_arg("span", "3"),), _body(_text("Header")))
         tr = _call("tr", body=_body(th))
         result = render(_doc(_call("table", body=_body(tr))))
-        assert '<th colspan="3">Header</th>' in result
+        assert '<th colspan="3" style="text-align: left">Header</th>' in result
 
 
 class TestTableCols:
@@ -328,7 +328,9 @@ class TestTableCols:
         tr2 = _call("tr", body=_body(td1, td2, td3))
         table = _call("table", (_arg("cols", "1 >2 1"),), _body(tr1, tr2))
         result = render(_doc(table))
-        assert '<col style="width: 50%; text-align: right">' in result
+        assert '<col style="width: 50%">' in result
+        assert '<th style="text-align: right">B</th>' in result
+        assert '<td style="text-align: right">2</td>' in result
 
     def test_cols_left_align_explicit(self) -> None:
         th1 = _call("th", body=_body(_text("A")))
@@ -340,7 +342,8 @@ class TestTableCols:
         table = _call("table", (_arg("cols", "<1 2"),), _body(tr1, tr2))
         result = render(_doc(table))
         assert '<col style="width: 33%">' in result
-        assert "text-align" not in result
+        assert '<th style="text-align: left">A</th>' in result
+        assert "text-align: right" not in result
 
     def test_cols_mismatch_error(self) -> None:
         import pytest
@@ -366,7 +369,9 @@ class TestTableCols:
         result = render(_doc(table))
         assert "<colgroup>" in result
         assert '<col style="width: 50%">' in result
-        assert '<col style="width: 50%; text-align: right">' in result
+        assert '<th style="text-align: left">Name</th>' in result
+        assert '<th style="text-align: right">Age</th>' in result
+        assert '<td style="text-align: right">30</td>' in result
 
     def test_no_cols_unchanged(self) -> None:
         th = _call("th", body=_body(_text("A")))
