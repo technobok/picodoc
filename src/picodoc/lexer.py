@@ -29,6 +29,7 @@ class Lexer:
         self._state_stack: list[tuple[_State, int]] = []  # (state, bracket_depth)
         self._state = _State.NORMAL
         self._bracket_depth = 0
+        self._string_start: Position | None = None  # where the current interpreted string opened
 
     def tokenize(self) -> list[Token]:
         """Tokenize the full source and return the token list."""
@@ -46,7 +47,9 @@ class Lexer:
 
         # Check for unclosed states at EOF
         if self._state == _State.INTERP_STRING:
-            raise self._error("unterminated interpreted string")
+            ss = self._string_start
+            hint = f" (opened at {ss.line}:{ss.column})" if ss else ""
+            raise self._error(f"unterminated interpreted string{hint}")
         if self._state == _State.CODE_MODE:
             raise self._error("unterminated code mode in string")
 
@@ -280,6 +283,7 @@ class Lexer:
         if quote_count == 1:
             # Interpreted string
             self._emit(TokenType.STRING_START, '"', '"', start)
+            self._string_start = start
             self._push_state(_State.INTERP_STRING)
             return
 
@@ -367,7 +371,9 @@ class Lexer:
             self._emit(TokenType.STRING_ESCAPE, value, raw, start)
             return
 
-        raise self._error(f"invalid string escape sequence '\\{ch}'", start)
+        ss = self._string_start
+        hint = f" (string opened at {ss.line}:{ss.column})" if ss else ""
+        raise self._error(f"invalid string escape sequence '\\{ch}'{hint}", start)
 
     # ------------------------------------------------------------------
     # Code mode (inside \[...] within an interpreted string)
