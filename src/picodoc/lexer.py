@@ -162,7 +162,63 @@ class Lexer:
             return
 
         if ch == '"':
-            self._lex_string_open()
+            # Only parse as string in value/body-introduction positions:
+            #   after '=' (argument value)
+            #   after identifier with no whitespace (inline body: #name"body")
+            #   after ':' with optional whitespace (colon body)
+            as_string = False
+            if self._tokens:
+                last = self._tokens[-1].type
+                if last in (TokenType.EQUALS, TokenType.IDENTIFIER):
+                    as_string = True
+                else:
+                    for tok in reversed(self._tokens):
+                        if tok.type in (TokenType.WS, TokenType.NEWLINE):
+                            continue
+                        if tok.type in (TokenType.COLON, TokenType.EQUALS):
+                            as_string = True
+                        break
+                if not as_string:
+                    # Check if we're in a macro head (after # but before :
+                    # or newline) — string is valid as body.
+                    # Only break on NEWLINE if we've seen content tokens
+                    # so that [#p\n"hello"] still works.
+                    depth = 0
+                    seen_content = False
+                    for tok in reversed(self._tokens):
+                        t = tok.type
+                        if t == TokenType.RBRACKET:
+                            depth += 1
+                            seen_content = True
+                        elif t == TokenType.LBRACKET:
+                            if depth > 0:
+                                depth -= 1
+                                seen_content = True
+                            else:
+                                # Enclosing bracket — check for [#
+                                idx = self._tokens.index(tok)
+                                as_string = (
+                                    idx + 1 < len(self._tokens)
+                                    and self._tokens[idx + 1].type == TokenType.HASH
+                                )
+                                break
+                        elif t == TokenType.COLON and depth == 0:
+                            break
+                        elif t == TokenType.HASH and depth == 0:
+                            as_string = True
+                            break
+                        elif t == TokenType.NEWLINE and depth == 0:
+                            if seen_content:
+                                break
+                        elif t != TokenType.WS:
+                            seen_content = True
+            if as_string:
+                self._lex_string_open()
+                return
+            # Literal double quote in prose
+            start = self._current_pos()
+            self._advance()
+            self._emit(TokenType.TEXT, '"', '"', start)
             return
 
         if ch == "\n":
@@ -230,7 +286,7 @@ class Lexer:
 
         ch = self._peek()
 
-        if ch in "\\#[]":
+        if ch in '\\#[]"':
             self._advance()
             self._emit(TokenType.ESCAPE, ch, f"\\{ch}", start)
             return

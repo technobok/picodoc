@@ -54,13 +54,13 @@ class TestHexEscapes:
         assert tokens[0].value == "A"
 
     def test_string_hex(self, lex):
-        tokens = lex('"\\xA9"')
+        tokens = lex('x="\\xA9"')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert len(escape_tokens) == 1
         assert escape_tokens[0].value == "\u00a9"
 
     def test_string_unicode(self, lex):
-        tokens = lex('"\\U00002014"')
+        tokens = lex('x="\\U00002014"')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert len(escape_tokens) == 1
         assert escape_tokens[0].value == "\u2014"
@@ -68,24 +68,24 @@ class TestHexEscapes:
 
 class TestStringEscapes:
     def test_backslash_in_string(self, lex):
-        tokens = lex('"\\\\"')
+        tokens = lex('x="\\\\"')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert len(escape_tokens) == 1
         assert escape_tokens[0].value == "\\"
 
     def test_quote_in_string(self, lex):
-        tokens = lex('"\\""')
+        tokens = lex('x="\\""')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert len(escape_tokens) == 1
         assert escape_tokens[0].value == '"'
 
     def test_newline_in_string(self, lex):
-        tokens = lex('"\\n"')
+        tokens = lex('x="\\n"')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert escape_tokens[0].value == "\n"
 
     def test_tab_in_string(self, lex):
-        tokens = lex('"\\t"')
+        tokens = lex('x="\\t"')
         escape_tokens = [t for t in tokens if t.type == TokenType.STRING_ESCAPE]
         assert escape_tokens[0].value == "\t"
 
@@ -97,7 +97,7 @@ class TestInvalidEscapes:
 
     def test_invalid_string_escape(self, lex):
         with pytest.raises(LexError, match="invalid string escape sequence"):
-            lex('"\\q"')
+            lex('x="\\q"')
 
     def test_incomplete_hex(self, lex):
         with pytest.raises(LexError, match="incomplete escape"):
@@ -117,7 +117,7 @@ class TestInvalidEscapes:
 
     def test_backslash_at_eof_in_string(self, lex):
         with pytest.raises(LexError, match="unexpected end of input"):
-            lex('"\\')
+            lex('x="\\')
 
     def test_prose_escape_n_is_invalid(self, lex):
         """\\n is not valid in prose context (only in strings)."""
@@ -136,6 +136,8 @@ class TestInvalidEscapes:
         with pytest.raises(LexError, match="invalid escape sequence"):
             lex("\\=")
 
-    def test_prose_escape_quote_is_invalid(self, lex):
-        with pytest.raises(LexError, match="invalid escape sequence"):
-            lex('\\"')
+    def test_prose_escape_quote(self, lex):
+        """\\\" is a valid prose escape producing a literal double-quote."""
+        tokens = lex('\\"')
+        assert_types(tokens, [TokenType.ESCAPE])
+        assert tokens[0].value == '"'
