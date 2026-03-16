@@ -110,7 +110,9 @@ class Parser:
         else:
             call = self._parse_unbracketed_call()
 
-        self._skip_ws()
+        ws_tok = None
+        if self._at(TokenType.WS):
+            ws_tok = self._advance()
 
         if self._at(TokenType.NEWLINE, TokenType.EOF):
             if self._at(TokenType.NEWLINE):
@@ -120,6 +122,10 @@ class Parser:
         # Trailing text — the call is inline; build a paragraph around it.
         children: list[Text | Escape | MacroCall] = [call]
         start = call.span.start
+
+        # Preserve the whitespace between the macro and trailing text.
+        if ws_tok:
+            children.append(Text(" ", ws_tok.span))
 
         children.extend(self._parse_inline_content(_STOP_NEWLINE_EOF))
 

@@ -1024,3 +1024,30 @@ class TestSmartInternalLinks:
             "#p: [#link : section]\n"
         )
         assert '<a href="#section">Section</a>' in result
+
+    def test_macro_block_trailing_ws_string(self, compile_source) -> None:
+        """Whitespace after a macro with string body must be preserved."""
+        result = compile_source(
+            '[#link to="https://example.com"] more text\n'
+        )
+        assert (
+            '<a href="https://example.com">https://example.com</a> more text'
+            in result
+        )
+
+    def test_macro_block_trailing_ws_bracketed(self, compile_source) -> None:
+        """Whitespace after a macro with bracketed body must be preserved."""
+        result = compile_source(
+            '[#link to="https://example.com" : Click] more text\n'
+        )
+        assert '<a href="https://example.com">Click</a> more text' in result
+
+    def test_macro_block_trailing_ws_unbracketed(self, compile_source) -> None:
+        """Whitespace after an unbracketed macro with string body must be preserved."""
+        result = compile_source(
+            '#link"https://example.com" more text\n'
+        )
+        assert (
+            '<a href="https://example.com">https://example.com</a> more text'
+            in result
+        )
