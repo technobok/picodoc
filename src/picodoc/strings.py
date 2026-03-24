@@ -89,10 +89,12 @@ def dedent_body_children(
                 line_end = nl_pos if nl_pos >= 0 else len(val)
                 line = val[p:line_end]
 
-                if _is_blank(line):
-                    # Skip blank lines
-                    p = line_end + 1 if nl_pos >= 0 else len(val)
-                    at_line_start = nl_pos >= 0
+                if _is_blank(line) and nl_pos >= 0:
+                    # Skip blank lines (only newline-terminated ones;
+                    # unterminated ws means the line continues in the
+                    # next non-Text node and is NOT blank)
+                    p = nl_pos + 1
+                    at_line_start = True
                     continue
 
                 # Measure leading whitespace
@@ -149,15 +151,13 @@ def dedent_body_children(
                 line_end = nl_pos if nl_pos >= 0 else len(val)
                 line = val[p:line_end]
 
-                if _is_blank(line):
-                    # Copy blank line as-is
+                if _is_blank(line) and nl_pos >= 0:
+                    # Copy blank line as-is (only newline-terminated;
+                    # unterminated ws continues in the next node)
                     parts.append(line)
-                    if nl_pos >= 0:
-                        parts.append("\n")
-                        p = nl_pos + 1
-                        ls = True
-                    else:
-                        p = len(val)
+                    parts.append("\n")
+                    p = nl_pos + 1
+                    ls = True
                     continue
 
                 # Non-blank line: skip prefix

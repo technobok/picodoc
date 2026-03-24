@@ -140,3 +140,21 @@ class TestDedentBodyChildren:
     def test_whitespace_only_lines(self):
         result = dedent_body_children((_text("    hello\n  \n    world"),))
         assert result[0].value == "hello\n  \nworld"
+
+    def test_non_text_node_at_line_start(self):
+        # When a line starts with whitespace followed by a non-text node
+        # (e.g. code_section from \[), the whitespace-only text before
+        # it must NOT be treated as a blank line — it should be dedented.
+        children = (
+            _text("    line1\n    "),
+            _escape("["),
+            _text("code"),
+            _escape("]"),
+            _text("\n    line3"),
+        )
+        result = dedent_body_children(children)
+        assert result[0].value == "line1\n"
+        assert result[1].value == "["
+        assert result[2].value == "code"
+        assert result[3].value == "]"
+        assert result[4].value == "\nline3"
