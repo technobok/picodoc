@@ -243,6 +243,30 @@ def _expand_top_level(
     return result
 
 
+_STRUCTURAL_MACROS: frozenset[str] = frozenset(
+    {"set", "//", "include", "ifeq", "ifne", "ifset", "table", "literal"}
+)
+
+
+def _is_block_or_structural(name: str) -> bool:
+    resolved = resolve_name(name)
+    if resolved.startswith("builtin."):
+        resolved = resolve_name(resolved[8:])
+    if resolved in BLOCK_MACROS or resolved in _STRUCTURAL_MACROS:
+        return True
+    if resolved.startswith(("doc.", "env.")):
+        return True
+    return False
+
+
+def _expanded_has_block(nodes: list[MacroCall | Text | Escape]) -> bool:
+    for node in nodes:
+        if isinstance(node, MacroCall):
+            if resolve_name(node.name) in BLOCK_MACROS:
+                return True
+    return False
+
+
 def _expand_top_node(
     node: MacroCall | Paragraph,
     ctx: EvalContext,
@@ -250,7 +274,12 @@ def _expand_top_node(
     if isinstance(node, Paragraph):
         expanded = _expand_body_children(node.body, ctx)
         return [MacroCall("p", (), Body(tuple(expanded), node.span), False, node.span)]
-    return _expand_macro(node, ctx)
+    if _is_block_or_structural(node.name):
+        return _expand_macro(node, ctx)
+    expanded = _expand_macro(node, ctx)
+    if _expanded_has_block(expanded):
+        return expanded
+    return [MacroCall("p", (), Body(tuple(expanded), node.span), False, node.span)]
 
 
 # ---------------------------------------------------------------------------

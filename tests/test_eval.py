@@ -1034,7 +1034,9 @@ class TestBuiltinOverride:
         doc = parse(source)
         result = evaluate(doc)
         assert len(result.children) == 1
-        b = result.children[0]
+        p = result.children[0]
+        assert isinstance(p, MacroCall) and p.name == "p"
+        b = p.body.children[0]
         assert isinstance(b, MacroCall) and b.name == "**"
 
     def test_builtin_prefix_unknown(self) -> None:
