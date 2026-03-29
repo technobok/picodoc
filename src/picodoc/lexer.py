@@ -187,6 +187,10 @@ class Lexer:
                     seen_content = False
                     for tok in reversed(self._tokens):
                         t = tok.type
+                        # stop at CODE_OPEN — don't scan past code mode boundary
+                        # into the enclosing string's token context
+                        if t == TokenType.CODE_OPEN:
+                            break
                         if t == TokenType.RBRACKET:
                             depth += 1
                             seen_content = True
@@ -456,7 +460,7 @@ class Lexer:
                 self._emit(TokenType.RBRACKET, "]", "]", start)
             return
 
-        # Everything else dispatches like Normal mode (including nested strings)
+        # Everything else dispatches like Normal mode
         self._lex_normal()
 
     # ------------------------------------------------------------------
