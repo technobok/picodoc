@@ -176,9 +176,18 @@ def _validate_node(node: MacroCall, parent_name: str | None, source: str, filena
             filename=filename,
         )
     if isinstance(node.body, Body):
+        is_list = name in ("ol", "ul")
         for child in node.body.children:
             if isinstance(child, MacroCall):
                 _validate_node(child, parent_name=name, source=source, filename=filename)
+            elif is_list and isinstance(child, Text) and child.value.strip():
+                raise EvalError(
+                    f"text content inside #{node.name} will be ignored"
+                    " — use [#*: ...] brackets for multiline list items",
+                    child.span,
+                    source,
+                    filename=filename,
+                )
 
 
 # ---------------------------------------------------------------------------
