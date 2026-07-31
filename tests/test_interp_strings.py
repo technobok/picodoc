@@ -13,15 +13,22 @@ class TestBasicInterpString:
         tokens = lex('x="hello"')
         assert_types(
             tokens,
-            [TokenType.IDENTIFIER, TokenType.EQUALS,
-             TokenType.STRING_START, TokenType.STRING_TEXT, TokenType.STRING_END],
+            [
+                TokenType.IDENTIFIER,
+                TokenType.EQUALS,
+                TokenType.STRING_START,
+                TokenType.STRING_TEXT,
+                TokenType.STRING_END,
+            ],
         )
         assert tokens[3].value == "hello"
 
     def test_empty_string(self, lex):
         tokens = lex('x=""')
-        assert_types(tokens, [TokenType.IDENTIFIER, TokenType.EQUALS,
-                               TokenType.STRING_START, TokenType.STRING_END])
+        assert_types(
+            tokens,
+            [TokenType.IDENTIFIER, TokenType.EQUALS, TokenType.STRING_START, TokenType.STRING_END],
+        )
 
     def test_string_with_escape(self, lex):
         tokens = lex('x="hello\\nworld"')
@@ -45,8 +52,13 @@ class TestBasicInterpString:
         tokens = lex('x="\\t"')
         assert_types(
             tokens,
-            [TokenType.IDENTIFIER, TokenType.EQUALS,
-             TokenType.STRING_START, TokenType.STRING_ESCAPE, TokenType.STRING_END],
+            [
+                TokenType.IDENTIFIER,
+                TokenType.EQUALS,
+                TokenType.STRING_START,
+                TokenType.STRING_ESCAPE,
+                TokenType.STRING_END,
+            ],
         )
 
     def test_string_preserves_brackets(self, lex):

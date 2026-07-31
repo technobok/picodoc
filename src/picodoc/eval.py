@@ -263,16 +263,13 @@ def _is_block_or_structural(name: str) -> bool:
         resolved = resolve_name(resolved[8:])
     if resolved in BLOCK_MACROS or resolved in _STRUCTURAL_MACROS:
         return True
-    if resolved.startswith(("doc.", "env.")):
-        return True
-    return False
+    return resolved.startswith(("doc.", "env."))
 
 
 def _expanded_has_block(nodes: list[MacroCall | Text | Escape]) -> bool:
     for node in nodes:
-        if isinstance(node, MacroCall):
-            if resolve_name(node.name) in BLOCK_MACROS:
-                return True
+        if isinstance(node, MacroCall) and resolve_name(node.name) in BLOCK_MACROS:
+            return True
     return False
 
 
@@ -509,6 +506,10 @@ def _expand_user_macro(
             shadowed_names.append(param_name)
 
         try:
+            # Annotated because the branches below produce narrower element
+            # types (list[Text], list[]) and list is invariant, so without it
+            # the return does not match the declared type.
+            result: list[MacroCall | Text | Escape]
             # Expand definition body
             if isinstance(defn.body, Body):
                 result = _expand_body_children(defn.body.children, ctx)

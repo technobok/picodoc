@@ -987,10 +987,7 @@ class TestNestingValidation:
 class TestBuiltinOverride:
     def test_override_render_builtin(self) -> None:
         """User macro shadows #p, #builtin.p delegates to original."""
-        source = (
-            "[#set name=p body=? : [#builtin.p : [#b : #body]]]\n"
-            "#p: hello\n"
-        )
+        source = "[#set name=p body=? : [#builtin.p : [#b : #body]]]\n#p: hello\n"
         doc = parse(source)
         result = evaluate(doc)
         # Should produce a #p containing #b containing "hello"
@@ -1007,8 +1004,7 @@ class TestBuiltinOverride:
     def test_override_code_builtin(self) -> None:
         """User macro shadows #code, #builtin.code produces real code block."""
         source = (
-            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n"
-            "[#code : x=1]\n"
+            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n[#code : x=1]\n"
         )
         doc = parse(source)
         result = evaluate(doc)
@@ -1055,21 +1051,14 @@ class TestBuiltinOverride:
 
     def test_expansion_builtin_not_overridable(self) -> None:
         """Attempting to shadow an expansion-time builtin is an error."""
-        source = (
-            "[#set name=set : NOPE]\n"
-            "[#set name=x : hello]\n"
-            "#p: #x\n"
-        )
+        source = "[#set name=set : NOPE]\n[#set name=x : hello]\n#p: #x\n"
         doc = parse(source)
         with pytest.raises(EvalError, match="cannot override"):
             evaluate(doc)
 
     def test_ifeq_not_overridable(self) -> None:
         """Attempting to shadow #ifeq is an error."""
-        source = (
-            "[#set name=ifeq : NOPE]\n"
-            "[#ifeq lhs=a rhs=a : [#p : match]]\n"
-        )
+        source = "[#set name=ifeq : NOPE]\n[#ifeq lhs=a rhs=a : [#p : match]]\n"
         doc = parse(source)
         with pytest.raises(EvalError, match="cannot override"):
             evaluate(doc)
@@ -1077,10 +1066,7 @@ class TestBuiltinOverride:
     def test_override_trailing_dot(self) -> None:
         """Trailing dot works with user macro that shadows a render-time builtin."""
         # Override #b to wrap in uppercase marker, then use #b. (trailing dot)
-        source = (
-            "[#set name=b body=? : BOLD(#body)]\n"
-            "#p: this is [#b. : text]\n"
-        )
+        source = "[#set name=b body=? : BOLD(#body)]\n#p: this is [#b. : text]\n"
         doc = parse(source)
         result = evaluate(doc)
         assert len(result.children) == 1
@@ -1091,8 +1077,7 @@ class TestBuiltinOverride:
     def test_override_with_render(self) -> None:
         """End-to-end: override #code, render HTML, verify wrapper."""
         source = (
-            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n"
-            "[#code : x=1]\n"
+            "[#set name=code body=? : [#div class=cb : [#builtin.code : #body]]]\n[#code : x=1]\n"
         )
         doc = parse(source)
         result = evaluate(doc)

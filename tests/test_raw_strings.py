@@ -5,8 +5,6 @@ import pytest
 from picodoc.errors import LexError
 from picodoc.tokens import TokenType
 
-from .conftest import assert_types
-
 
 class TestBasicRawString:
     def test_triple_quoted(self, lex):

@@ -285,7 +285,10 @@ class TestTables:
         tr1 = _call("tr", body=_body(th))
         tr2 = _call("tr", body=_body(td))
         result = render(_doc(_call("table", body=_body(tr1, tr2))))
-        assert '<table>\n<thead>\n<tr><th style="text-align: left">Name</th></tr>\n</thead>\n<tbody>\n<tr><td>Alice</td></tr>\n</tbody>\n</table>' in result
+        assert (
+            '<table>\n<thead>\n<tr><th style="text-align: left">Name</th></tr>\n</thead>\n'
+            "<tbody>\n<tr><td>Alice</td></tr>\n</tbody>\n</table>" in result
+        )
 
     def test_colspan(self) -> None:
         td = _call("td", (_arg("span", "2"),), _body(_text("Wide")))
@@ -1019,35 +1022,20 @@ class TestSmartInternalLinks:
 
     def test_body_as_to_fragment_compile(self, compile_source) -> None:
         """Integration test: body-as-to fragment via compile_source."""
-        result = compile_source(
-            "#--: Section\n\n"
-            "#p: [#link : section]\n"
-        )
+        result = compile_source("#--: Section\n\n#p: [#link : section]\n")
         assert '<a href="#section">Section</a>' in result
 
     def test_macro_block_trailing_ws_string(self, compile_source) -> None:
         """Whitespace after a macro with string body must be preserved."""
-        result = compile_source(
-            '[#link to="https://example.com"] more text\n'
-        )
-        assert (
-            '<a href="https://example.com">https://example.com</a> more text'
-            in result
-        )
+        result = compile_source('[#link to="https://example.com"] more text\n')
+        assert '<a href="https://example.com">https://example.com</a> more text' in result
 
     def test_macro_block_trailing_ws_bracketed(self, compile_source) -> None:
         """Whitespace after a macro with bracketed body must be preserved."""
-        result = compile_source(
-            '[#link to="https://example.com" : Click] more text\n'
-        )
+        result = compile_source('[#link to="https://example.com" : Click] more text\n')
         assert '<a href="https://example.com">Click</a> more text' in result
 
     def test_macro_block_trailing_ws_unbracketed(self, compile_source) -> None:
         """Whitespace after an unbracketed macro with string body must be preserved."""
-        result = compile_source(
-            '#link"https://example.com" more text\n'
-        )
-        assert (
-            '<a href="https://example.com">https://example.com</a> more text'
-            in result
-        )
+        result = compile_source('#link"https://example.com" more text\n')
+        assert '<a href="https://example.com">https://example.com</a> more text' in result

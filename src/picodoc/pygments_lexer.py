@@ -3,11 +3,15 @@ from pygments.token import Comment, Escape, Keyword, Name, Punctuation, String, 
 
 
 class PicoDocLexer(RegexLexer):
+    # Pygments declares aliases, filenames and tokens as instance attributes on
+    # RegexLexer and expects subclasses to set them as plain class attributes.
+    # Annotating them ClassVar, as RUF012 suggests, is rejected by the type
+    # checker as an invalid override, so the rule is suppressed instead.
     name = "PicoDoc"
-    aliases = ["picodoc", "pdoc"]
-    filenames = ["*.pdoc"]
+    aliases = ["picodoc", "pdoc"]  # noqa: RUF012
+    filenames = ["*.pdoc"]  # noqa: RUF012
 
-    tokens = {
+    tokens = {  # noqa: RUF012
         "root": [
             (r"\[#(?:comment\b|//)", Comment, "bracket_comment"),
             (r"#(?:comment\b|//)[ \t]*:[ \t]*$", Comment, "paragraph_comment"),

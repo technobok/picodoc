@@ -31,7 +31,6 @@ class TestProseEscapes:
         assert tokens[0].value == "]"
 
 
-
 class TestHexEscapes:
     def test_prose_hex(self, lex):
         tokens = lex("\\xA9")

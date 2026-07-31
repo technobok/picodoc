@@ -20,7 +20,7 @@ highlighting = ["pygments>=2.0"]
 picodoc = "picodoc.pygments_lexer:PicoDocLexer"
 
 [dependency-groups]
-dev = ["pytest", "pytest-cov", "ruff", "picodoc[lsp]"]
+dev = ["pytest", "pytest-cov", "ruff", "ty", "picodoc[lsp]"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/picodoc"]

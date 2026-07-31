@@ -630,13 +630,14 @@ def _render_table(node: MacroCall, state: _RenderState) -> str:
                 cells = _count_row_cells(row)
                 if cells != len(col_specs):
                     raise RenderError(
-                        f"cols specifies {len(col_specs)} columns but row {i + 1} has {cells} cells"
+                        f"cols specifies {len(col_specs)} columns "
+                        f"but row {i + 1} has {cells} cells"
                     )
 
         # Split leading header rows from body rows.
         head: list[MacroCall] = []
         body: list[MacroCall] = []
-        for i, row in enumerate(rows):
+        for row in rows:
             if not body and _is_header_row(row):
                 head.append(row)
             else:
